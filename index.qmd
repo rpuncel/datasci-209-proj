@@ -2,6 +2,21 @@
 title: "Visualizing the AI Economy"
 ---
 
-This is a Quarto website.
 
-To learn more about Quarto websites visit <https://quarto.org/docs/websites>.
+```{python}
+import altair as alt
+
+from altair.datasets import data
+```
+
+```{python}
+# load a sample dataset as a pandas DataFrame
+cars = data.cars()
+
+# make the chart
+alt.Chart(cars).mark_point().encode(
+    x='Horsepower',
+    y='Miles_per_Gallon',
+    color='Origin',
+).interactive()
+```
