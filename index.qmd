@@ -3,17 +3,26 @@ title: "Visualizing the AI Economy"
 format: dashboard
 ---
 
+# Overview
 
 ```{python}
+#| include: false
+#| label: imports 
 import altair as alt
 import pandas as pd
 
 from altair.datasets import data
+
+import itables
+itables.init_notebook_mode(all_interactive=True)
+
 ```
 
 
 
 ```{python}
+#| include: false
+#| label: Download data center datasets 
 from zipfile import ZipFile
 import requests
 from io import BytesIO
@@ -27,6 +36,9 @@ z.extractall(path="data/data_centers")
 
 data_centers = pd.read_csv("data/data_centers/data_centers.csv")
 
+data_center_chillers = pd.read_csv("data/data_centers/data_center_chillers.csv")
+
+
 
 ```
 
@@ -35,14 +47,29 @@ data_centers = pd.read_csv("data/data_centers/data_centers.csv")
 #| title: "Current total capital cost (2025 USD billions)"
 #| color: primary
 
-
-
 dict(
   value = float(data_centers.agg({"Current total capital cost (2025 USD billions)": 'sum'}).values[0])
 )
 
 ```
 
+# Data center datasets
+
+## data_centers.csv
+```{python}
+#| title: data_centers.csv
+itables.init_notebook_mode(all_interactive=True)
+
+data_centers
+```
+
+## data_center_chillers.csv
+
+```{python}
+#| title: data_center_chillers.csv
+data_center_chillers
+
+```
 
 # Altair demo
 
