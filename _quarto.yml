@@ -1,5 +1,9 @@
 project:
   type: website
+  render:
+    - "!.*"
+    - "!_*"
+    - "*"
 
 website:
   title: "Visualizing the AI Economy"

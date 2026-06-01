@@ -1,13 +1,50 @@
 ---
 title: "Visualizing the AI Economy"
+format: dashboard
 ---
 
 
 ```{python}
 import altair as alt
+import pandas as pd
 
 from altair.datasets import data
 ```
+
+
+
+```{python}
+from zipfile import ZipFile
+import requests
+from io import BytesIO
+
+zip_file_url = 'https://epoch.ai/data/data_centers/data_centers.zip'
+r = requests.get(zip_file_url, stream=True)
+
+z = ZipFile(BytesIO(r.content))
+z.extractall(path="data/data_centers")
+
+
+data_centers = pd.read_csv("data/data_centers/data_centers.csv")
+
+
+```
+
+```{python}
+#| content: valuebox
+#| title: "Current total capital cost (2025 USD billions)"
+#| color: primary
+
+
+
+dict(
+  value = float(data_centers.agg({"Current total capital cost (2025 USD billions)": 'sum'}).values[0])
+)
+
+```
+
+
+# Altair demo
 
 ```{python}
 # load a sample dataset as a pandas DataFrame
@@ -20,3 +57,4 @@ alt.Chart(cars).mark_point().encode(
     color='Origin',
 ).interactive()
 ```
+
