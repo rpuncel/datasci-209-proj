@@ -91,3 +91,11 @@ _site/                 # rendered static output (gitignored)
 
 The project structure may evolve as we collaborate, and we may learn some initial setup doesn't work well. 
 We'll aim to do what works and evolve as we go; reach out over our Slack if you have some pain points.
+
+## Acknowledgements
+
+This project uses data from the following sources. We appreciate the work these organizations have done,
+and strive to appropriately give them credit and follow their license terms.
+
+- Epoch AI - provides curated data sets about data centers progress, usage, and more under [Creative Commons V4](https://creativecommons.org/licenses/by/4.0/).
+  - See their work [here](https://epoch.ai/data)
