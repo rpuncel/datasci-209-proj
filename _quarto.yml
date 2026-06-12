@@ -1,9 +1,8 @@
 project:
   type: website
   render:
-    - "!.*"
-    - "!_*"
-    - "*"
+    - "*.qmd"
+    - "!docs"
 
 website:
   title: "Visualizing the AI Economy"
