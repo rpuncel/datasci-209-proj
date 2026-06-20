@@ -58,9 +58,24 @@ VS Code also works fine with the right extensions. Step-by-step setup for both e
 
 If you're adding a whole new analysis page, create a new `.qmd` and add it to `_quarto.yml`'s `navbar`.
 
-### The exploratory report (PDF + DOCX)
+### Useful commands
 
-`exploratory-report.qmd` declares `format: [html, typst, docx]`, so `quarto render` produces the HTML page plus a PDF (Quarto's bundled Typst engine) and a DOCX. Connect Cloud runs the same render on deploy, so **the PDF/DOCX build server-side — there's nothing to pre-build, copy, or commit.** Just edit the `.qmd`; the "Other Formats" links on the report page serve the freshly rendered files. (Both artifacts are gitignored.)
+#### Render the whole project
+```shell
+quarto render # Renders everything in all formats
+```
+
+#### Render only the exploratory report, docx format only
+
+```shell 
+quarto render exploratory-report.qmd --to docx
+```
+
+#### Render only the exploratory report, pdf format only
+
+```shell
+quarto render exploratory-report.qmd --to pdf
+```
 
 ## Deployment
 
@@ -83,7 +98,6 @@ For `.Rmd` veterans: [Migrating from R Markdown](https://quarto.org/docs/faq/rma
 
 ```
 index.qmd                    # the dashboard homepage
-exploratory-report.qmd       # EDA report — renders to HTML + PDF (typst) + DOCX
 about.qmd                    # placeholder "About" page
 _quarto.yml                  # site + render config
 requirements.txt             # Python deps (used by local venv AND Connect Cloud)

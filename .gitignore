@@ -4,7 +4,3 @@
 **/*.quarto_ipynb
 _site/
 
-# Rendered report artifacts — built by `quarto render` (locally and on
-# Connect Cloud), never committed.
-exploratory-report.pdf
-exploratory-report.docx
