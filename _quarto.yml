@@ -3,9 +3,6 @@ project:
   render:
     - "*.qmd"
     - "!docs"
-  resources:
-    - exploratory-report.pdf
-    - exploratory-report.docx
 
 website:
   title: "Visualizing the AI Economy"

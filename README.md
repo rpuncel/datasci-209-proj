@@ -58,16 +58,9 @@ VS Code also works fine with the right extensions. Step-by-step setup for both e
 
 If you're adding a whole new analysis page, create a new `.qmd` and add it to `_quarto.yml`'s `navbar`.
 
-### Regenerating the exploratory report (PDF + DOCX)
+### The exploratory report (PDF + DOCX)
 
-The PDF and DOCX are pre-built and committed so Connect Cloud can serve them without needing Typst or a full PDF toolchain. After editing exploratory-report.qmd, regenerate and copy them back to the project root:
-
-quarto render exploratory-report.qmd --to typst --output exploratory-report.pdf
-cp _site/exploratory-report.pdf exploratory-report.pdf
-
-quarto render exploratory-report.qmd --to docx --output exploratory-report.docx
-cp _site/exploratory-report.docx exploratory-report.docx
-Then commit all three files (exploratory-report.qmd, .pdf, .docx) together.
+`exploratory-report.qmd` declares `format: [html, typst, docx]`, so `quarto render` produces the HTML page plus a PDF (Quarto's bundled Typst engine) and a DOCX. Connect Cloud runs the same render on deploy, so **the PDF/DOCX build server-side — there's nothing to pre-build, copy, or commit.** Just edit the `.qmd`; the "Other Formats" links on the report page serve the freshly rendered files. (Both artifacts are gitignored.)
 
 ## Deployment
 
@@ -90,9 +83,7 @@ For `.Rmd` veterans: [Migrating from R Markdown](https://quarto.org/docs/faq/rma
 
 ```
 index.qmd                    # the dashboard homepage
-exploratory-report.qmd       # EDA report (HTML on site + PDF/DOCX for submission)
-exploratory-report.pdf       # pre-rendered PDF — commit after regenerating (see below)
-exploratory-report.docx      # pre-rendered DOCX — commit after regenerating (see below)
+exploratory-report.qmd       # EDA report — renders to HTML + PDF (typst) + DOCX
 about.qmd                    # placeholder "About" page
 _quarto.yml                  # site + render config
 requirements.txt             # Python deps (used by local venv AND Connect Cloud)
@@ -102,20 +93,6 @@ docs/                        # this README's companion docs (not part of the dep
 data/                        # downloaded datasets (gitignored — fetched at render time)
 _site/                       # rendered static output (gitignored)
 ```
-
-### Regenerating the exploratory report (PDF + DOCX)
-
-The PDF and DOCX are pre-built and committed so Connect Cloud can serve them without needing Typst or a full PDF toolchain. After editing `exploratory-report.qmd`, regenerate and copy them back to the project root:
-
-```bash
-quarto render exploratory-report.qmd --to typst --output exploratory-report.pdf
-cp _site/exploratory-report.pdf exploratory-report.pdf
-
-quarto render exploratory-report.qmd --to docx --output exploratory-report.docx
-cp _site/exploratory-report.docx exploratory-report.docx
-```
-
-Then commit all three files (`exploratory-report.qmd`, `.pdf`, `.docx`) together.
 
 ## We'll evolve as we collaborate
 

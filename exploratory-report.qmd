@@ -6,6 +6,15 @@ date: last-modified
 date-format: long
 toc: true
 bibliography: references.bib
+format:
+  html: default
+  typst: default
+  docx: default
+format-links:
+  - format: typst
+    text: PDF
+    icon: file-pdf
+  - docx
 ---
 
 ::: {.callout-note appearance="minimal"}
