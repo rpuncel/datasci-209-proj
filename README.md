@@ -47,7 +47,9 @@ See [`docs/authoring.md`](./docs/authoring.md) for a 5-minute walkthrough that m
 
 VS Code also works fine with the right extensions. Step-by-step setup for both editors is in [`docs/ide-setup.md`](./docs/ide-setup.md).
 
-## Suggested workflow
+## Workflow
+ 
+### Suggested Workflow
 
 1. Branch from `main` (`git checkout -b your-name/new-section`).
 2. Edit the relevant `.qmd`. Keep `quarto preview` running — it hot-reloads on save.
@@ -55,6 +57,25 @@ VS Code also works fine with the right extensions. Step-by-step setup for both e
 4. **Merge to `main` → Posit Connect Cloud re-renders and deploys automatically.** The update should be live in no longer than 5 minutes.
 
 If you're adding a whole new analysis page, create a new `.qmd` and add it to `_quarto.yml`'s `navbar`.
+
+### Useful commands
+
+#### Render the whole project
+```shell
+quarto render # Renders everything in all formats
+```
+
+#### Render only the exploratory report, docx format only
+
+```shell 
+quarto render exploratory-report.qmd --to docx
+```
+
+#### Render only the exploratory report, pdf format only
+
+```shell
+quarto render exploratory-report.qmd --to pdf
+```
 
 ## Deployment
 
@@ -76,15 +97,15 @@ For `.Rmd` veterans: [Migrating from R Markdown](https://quarto.org/docs/faq/rma
 ## Repo layout
 
 ```
-index.qmd              # the dashboard homepage
-about.qmd              # placeholder "About" page
-_quarto.yml            # site + render config
-requirements.txt       # Python deps (used by local venv AND Connect Cloud)
-references.bib         # bibliography
-styles.css             # global site CSS
-docs/                  # this README's companion docs (not part of the deployed site)
-data/                  # downloaded datasets (gitignored — fetched at render time)
-_site/                 # rendered static output (gitignored)
+index.qmd                    # the dashboard homepage
+about.qmd                    # placeholder "About" page
+_quarto.yml                  # site + render config
+requirements.txt             # Python deps (used by local venv AND Connect Cloud)
+references.bib               # bibliography
+styles.css                   # global site CSS
+docs/                        # this README's companion docs (not part of the deployed site)
+data/                        # downloaded datasets (gitignored — fetched at render time)
+_site/                       # rendered static output (gitignored)
 ```
 
 ## We'll evolve as we collaborate
