@@ -1,7 +1,11 @@
 ---
-title: "Exploratory Data Analysis"
-subtitle: "Visualizing the AI Economy"
-author: "Student Name"
+title: "Visualizing the AI Economy - Exploratory Data Analysis"
+subtitle: "W209, Section 4"
+authors:
+  - name: Ellie Parker
+  - name: Mengyao Chen
+  - name: Tom Dobbs
+  - name: Rob Puncel 
 date: last-modified
 date-format: long
 toc: true
