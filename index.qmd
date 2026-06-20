@@ -85,3 +85,48 @@ alt.Chart(cars).mark_point().encode(
 ).interactive()
 ```
 
+# Exploratory Vis
+
+```{python}
+
+chart1 = alt.Chart(data_centers, title = "Data Center Cost vs Energy Use") \
+    .mark_circle() \
+    .encode(
+    x=alt.X('Current total capital cost (2025 USD billions):Q', title = 'Current total capital cost (2025 USD billions)'),
+    y=alt.Y('Current power (MW):Q', title = 'Current power (MW)'),
+    color=alt.Color('Owner:N',legend = None),                   
+    #size = alt.Size('avg_wage:Q', title='Average Wage (euros)'),
+
+    # Hoverable information
+    tooltip=[alt.Tooltip('Current total capital cost (2025 USD billions):Q'),
+             alt.Tooltip('Current power (MW):Q'),
+             alt.Tooltip('Owner:N')]
+
+).properties(
+    width = 800,
+    height = 400
+)
+
+chart1.show()
+
+```
+
+```{python}
+# Extract the state from data center address
+data_centers['state'] = data_centers['Address'].str.extract(r',\s*([A-Z]{2})\s*\d{5}')
+
+chart2 = alt.Chart(data_centers[data_centers['state'].notna()]).mark_bar(stroke='white', strokeWidth=1).encode(
+    x=alt.X('state:N', title='State'),
+    y=alt.Y('sum(Current power (MW)):Q', title='Total Power Use (MW)'),
+    #color=alt.Color('Name:N', title='Data Center'),
+    order=alt.Order('Name:N'),
+    tooltip=['state:N', 'Name:N', 'sum(Current power (MW)):Q']
+).properties(
+    title='Data Center Energy Use by State',
+    width = 800,
+    height = 400
+)
+
+chart2.show()
+
+```
