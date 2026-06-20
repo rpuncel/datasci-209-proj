@@ -1,0 +1,100 @@
+---
+title: "Exploratory Data Analysis"
+subtitle: "Visualizing the AI Economy"
+author: "Student Name"
+date: last-modified
+date-format: long
+toc: true
+bibliography: references.bib
+---
+
+::: {.callout-note appearance="minimal"}
+**Download:** [PDF](exploratory-report.pdf) | [Word](exploratory-report.docx)
+:::
+
+## Hypothesis 1: [Replace with your hypothesis]
+
+*Example: The amount of text messages (SMS) sent annually is on the decline in regions with the highest increase in smart phone market share.*
+
+### View 1: [Chart title]
+
+```{python}
+#| label: fig-h1-v1
+#| fig-cap: "[Caption describing what this chart shows]"
+#| fig-alt: "[Accessible description of the chart for screen readers]"
+#| eval: false
+
+# Replace with your chart code, e.g.:
+# import altair as alt
+# import pandas as pd
+# alt.Chart(df).mark_point().encode(...)
+```
+
+**What's informative about this view:** [Describe what the visualization reveals about your hypothesis. What patterns, trends, or relationships does it highlight?]
+
+**What could be improved about this view:** [Describe limitations or what a better view might show. What's missing or hard to see?]
+
+### View 2: [Chart title]
+
+```{python}
+#| label: fig-h1-v2
+#| fig-cap: "[Caption describing what this chart shows]"
+#| fig-alt: "[Accessible description of the chart for screen readers]"
+#| eval: false
+
+# Replace with your chart code
+```
+
+**What's informative about this view:** [text]
+
+**What could be improved about this view:** [text]
+
+### Conclusion
+
+[Do the data support the hypothesis, or not? Summarize what you found across the views above.]
+
+---
+
+## Hypothesis 2: [Replace with your hypothesis]
+
+### View 1: [Chart title]
+
+```{python}
+#| label: fig-h2-v1
+#| fig-cap: "[Caption]"
+#| fig-alt: "[Alt text]"
+#| eval: false
+
+# Replace with your chart code
+```
+
+**What's informative about this view:** [text]
+
+**What could be improved about this view:** [text]
+
+### View 2: [Chart title]
+
+```{python}
+#| label: fig-h2-v2
+#| fig-cap: "[Caption]"
+#| fig-alt: "[Alt text]"
+#| eval: false
+
+# Replace with your chart code
+```
+
+**What's informative about this view:** [text]
+
+**What could be improved about this view:** [text]
+
+### Conclusion
+
+[text]
+
+---
+
+## Overall Conclusion
+
+[Summarize the findings across all hypotheses. What do the data reveal about the AI economy? What questions remain open?]
+
+## References
