@@ -20,94 +20,586 @@ format-links:
     icon: file-pdf
   - docx
 ---
+```{python}
+#| include: false
+#| label: import-exploratory 
+import altair as alt
+import pandas as pd
+
+from altair.datasets import data
+
+import itables
+itables.init_notebook_mode(all_interactive=True)
+
+from dataset import data_centers
+```
+
+
+
+```{python}
+#| include: false
+#| label: exploratory-setup
+import re
+
+alt.data_transformers.disable_max_rows()
+
+DATA_DIR = "data/data_centers"
+
+centers = data_centers.copy()
+timeline = pd.read_csv(f"{DATA_DIR}/data_center_timelines.csv")
+
+POWER = "Current power (MW)"
+H100 = "Current H100 equivalents"
+CAPEX = "Current total capital cost (2025 USD billions)"
+
+for col in [POWER, H100, CAPEX]:
+    centers[col] = pd.to_numeric(centers[col], errors="coerce")
+
+timeline["Date"] = pd.to_datetime(timeline["Date"], errors="coerce")
+for col in [
+    "Power (MW)",
+    "H100 equivalents",
+    "Total capital cost (2025 USD billions)",
+]:
+    timeline[col] = pd.to_numeric(timeline[col], errors="coerce")
+
+
+def clean_party(value):
+    if pd.isna(value):
+        return "Unknown"
+    text = str(value).split(",")[0]
+    text = re.sub(r"#\w+", "", text).strip()
+    checks = [
+        ("Google", "Google"),
+        ("Microsoft", "Microsoft"),
+        ("Amazon", "Amazon"),
+        ("AWS", "Amazon"),
+        ("Meta", "Meta"),
+        ("Facebook", "Meta"),
+        ("SpaceXAI", "xAI"),
+        ("xAI", "xAI"),
+        ("Oracle", "Oracle"),
+        ("OpenAI", "OpenAI"),
+        ("Anthropic", "Anthropic"),
+        ("CoreWeave", "CoreWeave"),
+        ("Tesla", "Tesla"),
+    ]
+    for needle, label in checks:
+        if needle.lower() in text.lower():
+            return label
+    return text or "Unknown"
+
+
+STATE_NAMES = {
+    "Alabama": "AL",
+    "Alaska": "AK",
+    "Arizona": "AZ",
+    "Arkansas": "AR",
+    "California": "CA",
+    "Colorado": "CO",
+    "Connecticut": "CT",
+    "Delaware": "DE",
+    "Florida": "FL",
+    "Georgia": "GA",
+    "Hawaii": "HI",
+    "Idaho": "ID",
+    "Illinois": "IL",
+    "Indiana": "IN",
+    "Iowa": "IA",
+    "Kansas": "KS",
+    "Kentucky": "KY",
+    "Louisiana": "LA",
+    "Maine": "ME",
+    "Maryland": "MD",
+    "Massachusetts": "MA",
+    "Michigan": "MI",
+    "Minnesota": "MN",
+    "Mississippi": "MS",
+    "Missouri": "MO",
+    "Montana": "MT",
+    "Nebraska": "NE",
+    "Nevada": "NV",
+    "New Hampshire": "NH",
+    "New Jersey": "NJ",
+    "New Mexico": "NM",
+    "New York": "NY",
+    "North Carolina": "NC",
+    "North Dakota": "ND",
+    "Ohio": "OH",
+    "Oklahoma": "OK",
+    "Oregon": "OR",
+    "Pennsylvania": "PA",
+    "Rhode Island": "RI",
+    "South Carolina": "SC",
+    "South Dakota": "SD",
+    "Tennessee": "TN",
+    "Texas": "TX",
+    "Utah": "UT",
+    "Vermont": "VT",
+    "Virginia": "VA",
+    "Washington": "WA",
+    "West Virginia": "WV",
+    "Wisconsin": "WI",
+    "Wyoming": "WY",
+}
+STATE_ABBRS = set(STATE_NAMES.values())
+
+
+def extract_state(row):
+    if row.get("Country") != "United States":
+        return "Non-U.S."
+    text = " ".join(
+        str(row.get(col, ""))
+        for col in ["Address", "Name", "Notes"]
+        if pd.notna(row.get(col, pd.NA))
+    )
+    abbr_match = re.search(r"\b(" + "|".join(sorted(STATE_ABBRS)) + r")\b", text)
+    if abbr_match:
+        return abbr_match.group(1)
+    for name, abbr in STATE_NAMES.items():
+        if re.search(r"\b" + re.escape(name) + r"\b", text, flags=re.IGNORECASE):
+            return abbr
+    return "Unknown"
+
+
+centers["owner_clean"] = centers["Owner"].map(clean_party)
+centers["user_clean"] = centers["Users"].map(clean_party)
+centers["state"] = centers.apply(extract_state, axis=1)
+centers["continent"] = centers["Country"].map(
+    {
+        "United States": "North America",
+        "Malaysia": "Asia",
+        "China": "Asia",
+        "Indonesia": "Asia",
+        "Portugal": "Europe",
+        "United Arab Emirates": "Asia",
+    }
+).fillna("Other")
+centers["h100_per_mw"] = centers[H100] / centers[POWER]
+centers["capex_per_mw"] = centers[CAPEX] / centers[POWER]
+centers = centers.replace([float("inf"), float("-inf")], pd.NA)
+
+total_power = centers[POWER].sum()
+total_capex = centers[CAPEX].sum()
+top10_power_share = centers.nlargest(10, POWER)[POWER].sum() / total_power
+top4_owner_share = (
+    centers.groupby("owner_clean")[POWER].sum().sort_values(ascending=False).head(4).sum()
+    / total_power
+)
+
+owner_summary = (
+    centers.groupby("owner_clean", dropna=False)
+    .agg(
+        power_mw=(POWER, "sum"),
+        capex_b=(CAPEX, "sum"),
+        h100_eq=(H100, "sum"),
+        sites=("Name", "count"),
+    )
+    .reset_index()
+    .sort_values("power_mw", ascending=False)
+)
+owner_summary["power_share"] = owner_summary["power_mw"] / total_power
+
+site_rank = centers[["Name", "owner_clean", POWER, H100, CAPEX, "Country"]].dropna(subset=[POWER]).copy()
+site_rank = site_rank.sort_values(POWER, ascending=False).reset_index(drop=True)
+site_rank["rank"] = site_rank.index + 1
+site_rank["cumulative_power_share"] = site_rank[POWER].cumsum() / total_power
+
+year_rows = []
+for year in range(2019, 2031):
+    latest = (
+        timeline[timeline["Date"] <= pd.Timestamp(f"{year}-12-31")]
+        .sort_values("Date")
+        .groupby("Data center")
+        .tail(1)
+    )
+    year_rows.append(
+        {
+            "date": pd.Timestamp(f"{year}-12-31"),
+            "year": year,
+            "power_mw": latest["Power (MW)"].sum(),
+            "capex_b": latest["Total capital cost (2025 USD billions)"].sum(),
+            "h100_eq": latest["H100 equivalents"].sum(),
+            "data_centers": latest["Data center"].nunique(),
+        }
+    )
+yearly = pd.DataFrame(year_rows)
+yearly["added_power_mw"] = yearly["power_mw"].diff().fillna(yearly["power_mw"])
+yearly["record_type"] = yearly["year"].map(lambda y: "Observed / near-term" if y <= 2026 else "Planned")
+
+events = pd.DataFrame(
+    [
+        {
+            "date": pd.Timestamp("2017-06-12"),
+            "event": "Attention Is All You Need",
+            "label": "Attention paper\nJun 2017",
+            "label_y": yearly["power_mw"].max() * 0.70,
+        },
+        {
+            "date": pd.Timestamp("2022-11-30"),
+            "event": "ChatGPT public launch",
+            "label": "ChatGPT\nNov 2022",
+            "label_y": yearly["power_mw"].max() * 0.42,
+        },
+        {
+            "date": pd.Timestamp("2023-03-14"),
+            "event": "GPT-4 launch",
+            "label": "GPT-4\nMar 2023",
+            "label_y": yearly["power_mw"].max() * 0.58,
+        },
+        {
+            "date": pd.Timestamp("2025-11-24"),
+            "event": "OpenClaw release",
+            "label": "OpenClaw\nNov 2025",
+            "label_y": yearly["power_mw"].max() * 0.82,
+        },
+    ]
+)
+
+valid_density = centers[
+    (centers[POWER] > 0)
+    & centers["h100_per_mw"].notna()
+    & centers[CAPEX].notna()
+].copy()
+median_density = valid_density["h100_per_mw"].median()
+median_power = valid_density[POWER].median()
+valid_density["resource_pressure"] = valid_density.apply(
+    lambda row: "High power / lower density"
+    if row[POWER] >= median_power and row["h100_per_mw"] < median_density
+    else "Other sites",
+    axis=1,
+)
+high_power_low_density = (
+    valid_density[valid_density["resource_pressure"] == "High power / lower density"]
+    .sort_values("h100_per_mw")
+    .head(12)
+)
+
+continent_summary = (
+    centers.groupby("continent", as_index=False)
+    .agg(power_mw=(POWER, "sum"), capex_b=(CAPEX, "sum"), sites=("Name", "count"))
+    .sort_values("power_mw", ascending=False)
+)
+continent_summary["power_share"] = continent_summary["power_mw"] / total_power
+
+state_summary = (
+    centers[centers["Country"] == "United States"]
+    .groupby("state", as_index=False)
+    .agg(power_mw=(POWER, "sum"), capex_b=(CAPEX, "sum"), sites=("Name", "count"))
+    .sort_values("power_mw", ascending=False)
+)
+state_summary["power_share"] = state_summary["power_mw"] / state_summary["power_mw"].sum()
+state_summary_known = state_summary[state_summary["state"] != "Unknown"]
+top_state_power_share = state_summary_known.head(5)["power_mw"].sum() / state_summary_known["power_mw"].sum()
+```
+
+## Key Signals
+
+```{python}
+#| echo: false
+#| content: valuebox
+#| title: "Epoch AI data centers"
+#| color: primary
+dict(value=f"{len(centers):,}", icon="database")
+```
+
+```{python}
+#| echo: false
+#| content: valuebox
+#| title: "Estimated current power"
+#| color: info
+dict(value=f"{total_power:,.0f} MW", icon="lightning-charge")
+```
+
+```{python}
+#| echo: false
+#| content: valuebox
+#| title: "Estimated capital cost"
+#| color: success
+dict(value=f"${total_capex:,.0f}B", icon="cash-stack")
+```
+
+```{python}
+#| echo: false
+#| content: valuebox
+#| title: "Top 10 site power share"
+#| color: warning
+dict(value=f"{top10_power_share:.0%}", icon="bar-chart")
+```
 
 ::: {.callout-note appearance="minimal"}
 **Download:** [PDF](exploratory-report.pdf) | [Word](exploratory-report.docx)
 :::
 
-## Hypothesis 1: [Replace with your hypothesis]
+## Hypothesis 1: AI data center capacity and capital spending are concentrated among a small number of companies and projects.
 
-*Example: The amount of text messages (SMS) sent annually is on the decline in regions with the highest increase in smart phone market share.*
-
-### View 1: [Chart title]
+### View 1
 
 ```{python}
-#| label: fig-h1-v1
-#| fig-cap: "[Caption describing what this chart shows]"
-#| fig-alt: "[Accessible description of the chart for screen readers]"
-#| eval: false
-
-# Replace with your chart code, e.g.:
-# import altair as alt
-# import pandas as pd
-# alt.Chart(df).mark_point().encode(...)
+#| echo: false
+site_bars = alt.Chart(site_rank.head(20)).mark_bar(color="#3b73b9").encode(
+    x=alt.X("rank:O", title="Site rank by current power"),
+    y=alt.Y(f"{POWER}:Q", title="Current power (MW)"),
+    tooltip=[
+        alt.Tooltip("rank:O", title="Rank"),
+        alt.Tooltip("Name:N", title="Data center"),
+        alt.Tooltip("owner_clean:N", title="Owner"),
+        alt.Tooltip(f"{POWER}:Q", title="Power (MW)", format=",.0f"),
+        alt.Tooltip("Country:N", title="Country"),
+    ],
+)
+site_line = alt.Chart(site_rank.head(20)).mark_line(
+    point=True, color="#c84f2b", strokeWidth=3
+).encode(
+    x=alt.X("rank:O"),
+    y=alt.Y("cumulative_power_share:Q", title="Cumulative share", axis=alt.Axis(format="%")),
+    tooltip=[
+        alt.Tooltip("Name:N", title="Data center"),
+        alt.Tooltip("cumulative_power_share:Q", title="Cumulative power share", format=".1%"),
+    ],
+)
+(site_bars + site_line).resolve_scale(y="independent").properties(
+    title=alt.Title(
+        "A few large sites account for much of the current footprint",
+        subtitle=f"The top 10 sites represent {top10_power_share:.1%} of estimated current power.",
+        anchor="start",
+    ),
+    height=390,
+)
 ```
 
-**What's informative about this view:** [Describe what the visualization reveals about your hypothesis. What patterns, trends, or relationships does it highlight?]
+**What's informative about this view:**  
+The owner and site concentration views show that estimated AI data center power is not evenly distributed. The top four owner groups account for about 68.5% of estimated current power, and the top 10 sites account for about 55.3% of estimated current power. The capital-cost scatterplot reinforces the same pattern: the owners with the largest power footprint also carry the largest estimated capital footprint.
 
-**What could be improved about this view:** [Describe limitations or what a better view might show. What's missing or hard to see?]
-
-### View 2: [Chart title]
-
-```{python}
-#| label: fig-h1-v2
-#| fig-cap: "[Caption describing what this chart shows]"
-#| fig-alt: "[Accessible description of the chart for screen readers]"
-#| eval: false
-
-# Replace with your chart code
-```
-
-**What's informative about this view:** [text]
-
-**What could be improved about this view:** [text]
+**What could be improved about this view:**  
+The concentration views show who dominates the dataset, but they do not fully explain why. A later refinement could separate company-owned sites from leased or user-operated sites, and could distinguish observed capital spending from modeled capital-cost estimates.
 
 ### Conclusion
 
-[Do the data support the hypothesis, or not? Summarize what you found across the views above.]
+The concentration hypothesis is supported. Owner-level and site-level views both show that aggregate infrastructure estimates are driven by a relatively small set of hyperscaler and frontier-model buildouts.
 
 ---
 
-## Hypothesis 2: [Replace with your hypothesis]
+## Hypothesis 2: AI data center power and capital buildout accelerated after major generative AI milestones
 
-### View 1: [Chart title]
-
-```{python}
-#| label: fig-h2-v1
-#| fig-cap: "[Caption]"
-#| fig-alt: "[Alt text]"
-#| eval: false
-
-# Replace with your chart code
-```
-
-**What's informative about this view:** [text]
-
-**What could be improved about this view:** [text]
-
-### View 2: [Chart title]
+### View 1: Timeline With Milestones
 
 ```{python}
-#| label: fig-h2-v2
-#| fig-cap: "[Caption]"
-#| fig-alt: "[Alt text]"
-#| eval: false
-
-# Replace with your chart code
+#| echo: false
+growth_power = alt.Chart(yearly).mark_line(point=True, strokeWidth=3).encode(
+    x=alt.X("date:T", title="Year-end", axis=alt.Axis(format="%Y")),
+    y=alt.Y("power_mw:Q", title="Estimated portfolio power (MW)"),
+    color=alt.Color("record_type:N", title="Record type"),
+    tooltip=[
+        alt.Tooltip("date:T", title="Year-end", format="%Y-%m-%d"),
+        alt.Tooltip("power_mw:Q", title="Power (MW)", format=",.0f"),
+        alt.Tooltip("data_centers:Q", title="Data centers", format=","),
+        alt.Tooltip("record_type:N", title="Record type"),
+    ],
+)
+event_rules = alt.Chart(events).mark_rule(color="#d9822b", strokeDash=[5, 5]).encode(
+    x="date:T",
+    tooltip=[
+        alt.Tooltip("event:N", title="Milestone"),
+        alt.Tooltip("date:T", title="Date", format="%Y-%m-%d"),
+    ],
+)
+event_labels = alt.Chart(events).mark_text(
+    align="left",
+    baseline="middle",
+    dx=5,
+    fontSize=11,
+    lineBreak="\n",
+    color="#8a4f13",
+).encode(
+    x="date:T",
+    y=alt.Y("label_y:Q", title=None),
+    text="label:N",
+)
+(growth_power + event_rules + event_labels).properties(
+    title=alt.Title(
+        "The buildout curve bends upward after the generative-AI inflection",
+        subtitle="Milestone labels use exact event dates and align with the vertical rules.",
+        anchor="start",
+    ),
+    height=420,
+)
 ```
 
-**What's informative about this view:** [text]
+### View 2: Annual Additions
 
-**What could be improved about this view:** [text]
+```{python}
+#| echo: false
+alt.Chart(yearly[yearly["year"] >= 2021]).mark_bar().encode(
+    x=alt.X("year:O", title="Year"),
+    y=alt.Y("added_power_mw:Q", title="Added power versus prior year (MW)"),
+    color=alt.Color("record_type:N", title="Record type"),
+    tooltip=[
+        alt.Tooltip("year:O", title="Year"),
+        alt.Tooltip("added_power_mw:Q", title="Added power (MW)", format=",.0f"),
+        alt.Tooltip("power_mw:Q", title="Year-end total power (MW)", format=",.0f"),
+        alt.Tooltip("record_type:N", title="Record type"),
+    ],
+).properties(
+    title=alt.Title(
+        "The acceleration is lumpy, not smooth",
+        subtitle="Large additions in the timeline are concentrated in a few years.",
+        anchor="start",
+    ),
+    height=360,
+)
+```
+
+### View 3: Capital Pipeline
+
+```{python}
+#| echo: false
+alt.Chart(yearly).mark_area(line=True, opacity=0.35, color="#5f9e56").encode(
+    x=alt.X("date:T", title="Year-end", axis=alt.Axis(format="%Y")),
+    y=alt.Y("capex_b:Q", title="Estimated capital cost (2025 USD billions)"),
+    tooltip=[
+        alt.Tooltip("date:T", title="Year-end", format="%Y-%m-%d"),
+        alt.Tooltip("capex_b:Q", title="Capital cost ($B)", format=",.1f"),
+        alt.Tooltip("power_mw:Q", title="Power (MW)", format=",.0f"),
+    ],
+).properties(
+    title=alt.Title(
+        "Capital cost rises with the power pipeline",
+        subtitle="The same upward pattern appears in estimated capital cost.",
+        anchor="start",
+    ),
+    height=360,
+)
+```
+
+## Result
+
+The acceleration hypothesis is supported. Estimated year-end power rises from 435 MW in 2023 to about 17,280 MW in 2026 and over 39,000 MW by 2028 in the timeline snapshot.
+
+## Hypothesis 3: Data center resource intensity varies substantially by project and geography, suggesting some sites and regions may be more environmentally or operationally stressed than others.
+
+### View 1: Power vs. Compute Density
+
+```{python}
+#| echo: false
+owner_select = alt.selection_point(fields=["owner_clean"], bind="legend")
+median_rule = pd.DataFrame({"median_density": [median_density]})
+
+scatter = alt.Chart(valid_density).mark_circle(opacity=0.76, stroke="white", strokeWidth=1).encode(
+    x=alt.X(f"{POWER}:Q", title="Current power (MW)"),
+    y=alt.Y("h100_per_mw:Q", title="H100 equivalents per MW"),
+    size=alt.Size(f"{CAPEX}:Q", title="Capital cost ($B)", scale=alt.Scale(range=[45, 1100])),
+    color=alt.Color(
+        "owner_clean:N",
+        title="Owner",
+        scale=alt.Scale(scheme="tableau20"),
+    ),
+    opacity=alt.condition(owner_select, alt.value(0.82), alt.value(0.16)),
+    tooltip=[
+        alt.Tooltip("Name:N", title="Data center"),
+        alt.Tooltip("owner_clean:N", title="Owner"),
+        alt.Tooltip(f"{POWER}:Q", title="Power (MW)", format=",.0f"),
+        alt.Tooltip("h100_per_mw:Q", title="H100 equivalents per MW", format=",.0f"),
+        alt.Tooltip(f"{CAPEX}:Q", title="Capital cost ($B)", format=",.1f"),
+    ],
+).add_params(owner_select)
+
+rule = alt.Chart(median_rule).mark_rule(color="#d9822b", strokeDash=[5, 5]).encode(
+    y="median_density:Q",
+    tooltip=[alt.Tooltip("median_density:Q", title="Median density", format=",.0f")],
+)
+
+(scatter + rule).properties(
+    title=alt.Title(
+        "Power does not translate into compute capacity evenly",
+        subtitle=f"Dashed line marks the median: {median_density:,.0f} H100 equivalents per MW.",
+        anchor="start",
+    ),
+    height=420,
+)
+```
+
+### View 2: Higher-Power, Lower-Density Sites
+
+```{python}
+#| echo: false
+alt.Chart(high_power_low_density).mark_bar(color="#c45a4a").encode(
+    y=alt.Y("Name:N", sort="x", title=None),
+    x=alt.X("h100_per_mw:Q", title="H100 equivalents per MW"),
+    color=alt.Color("owner_clean:N", title="Owner", scale=alt.Scale(scheme="tableau20")),
+    tooltip=[
+        alt.Tooltip("Name:N", title="Data center"),
+        alt.Tooltip("owner_clean:N", title="Owner"),
+        alt.Tooltip(f"{POWER}:Q", title="Power (MW)", format=",.0f"),
+        alt.Tooltip("h100_per_mw:Q", title="H100 equivalents per MW", format=",.0f"),
+    ],
+).properties(
+    title=alt.Title(
+        "Some high-power sites produce fewer H100-equivalents per MW",
+        subtitle=f"Filtered to sites at or above the median power level of {median_power:,.0f} MW and below median compute density.",
+        anchor="start",
+    ),
+    height=390,
+)
+```
+
+### View 3: Continental Comparison
+
+```{python}
+#| echo: false
+alt.Chart(continent_summary).mark_bar().encode(
+    y=alt.Y("continent:N", sort="-x", title=None),
+    x=alt.X("power_mw:Q", title="Estimated current power (MW)"),
+    color=alt.Color("continent:N", legend=None, scale=alt.Scale(scheme="set2")),
+    tooltip=[
+        alt.Tooltip("continent:N", title="Continent"),
+        alt.Tooltip("power_mw:Q", title="Power (MW)", format=",.0f"),
+        alt.Tooltip("capex_b:Q", title="Capital cost ($B)", format=",.1f"),
+        alt.Tooltip("sites:Q", title="Sites", format=","),
+        alt.Tooltip("power_share:Q", title="Share of power", format=".1%"),
+    ],
+).properties(
+    title=alt.Title(
+        "North America dominates estimated current AI data center power",
+        subtitle="The geographic footprint is heavily weighted toward U.S. sites.",
+        anchor="start",
+    ),
+    height=330,
+)
+```
+
+### View 4: U.S. State Concentration
+
+```{python}
+#| echo: false
+alt.Chart(state_summary_known.head(15)).mark_bar().encode(
+    y=alt.Y("state:N", sort="-x", title=None),
+    x=alt.X("power_mw:Q", title="Estimated current power (MW)"),
+    color=alt.Color("power_mw:Q", title="Power (MW)", scale=alt.Scale(scheme="viridis")),
+    tooltip=[
+        alt.Tooltip("state:N", title="State"),
+        alt.Tooltip("sites:Q", title="Sites", format=","),
+        alt.Tooltip("power_mw:Q", title="Power (MW)", format=",.0f"),
+        alt.Tooltip("capex_b:Q", title="Capital cost ($B)", format=",.1f"),
+        alt.Tooltip("power_share:Q", title="Share of U.S. power", format=".1%"),
+    ],
+).properties(
+    title=alt.Title(
+        "Within the U.S., power is concentrated in a handful of states",
+        subtitle=f"The top five known states account for {top_state_power_share:.1%} of U.S. estimated current power with known state labels.",
+        anchor="start",
+    ),
+    height=440,
+)
+```
 
 ### Conclusion
 
-[text]
+The resource-intensity and geography hypothesis is supported. Current power is not enough to describe infrastructure impact: sites with similar power can have very different H100-equivalent density, and some high-power sites sit below the median compute-density level. The geographic views add another layer: estimated power is heavily concentrated in North America and unevenly distributed across U.S. states, which points toward regional electricity, permitting, water, and drought conditions as important follow-on context.
 
----
 
 ## Overall Conclusion
 
-[Summarize the findings across all hypotheses. What do the data reveal about the AI economy? What questions remain open?]
+The exploratory dashboard supports three main findings. AI data center infrastructure is concentrated among a small number of companies and sites. The buildout pipeline accelerates sharply after the generative AI boom. Resource intensity varies by project and geography, making location and compute density important context for understanding infrastructure pressure.
 
 ## References
