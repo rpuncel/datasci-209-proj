@@ -330,6 +330,15 @@ dict(value=f"${total_capex:,.0f}B", icon="cash-stack")
 dict(value=f"{top10_power_share:.0%}", icon="bar-chart")
 ```
 
+## Preliminary exploration
+
+See some of our intermediate artifacts outside of our report at these links:
+
+- [Overview](https://019e8093-0783-ce2c-6773-7172db1a16e9.share.connect.posit.cloud/#)
+- [Table widgets for exploring raw dataset](https://019e8093-0783-ce2c-6773-7172db1a16e9.share.connect.posit.cloud/#data-center-datasets)
+- [Simple visualizations](https://019e8093-0783-ce2c-6773-7172db1a16e9.share.connect.posit.cloud/#exploratory-vis-1)
+- [Single summary statistic dashboard](https://019e8093-0783-ce2c-6773-7172db1a16e9.share.connect.posit.cloud/#exploratory-story)
+
 ## Hypothesis 1: AI data center capacity and capital spending are concentrated among a small number of companies and projects.
 
 ### View 1: Owner Power
