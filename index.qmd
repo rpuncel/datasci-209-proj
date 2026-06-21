@@ -71,20 +71,6 @@ data_center_chillers
 
 ```
 
-# Altair demo
-
-```{python}
-# load a sample dataset as a pandas DataFrame
-cars = data.cars()
-
-# make the chart
-alt.Chart(cars).mark_point().encode(
-    x='Horsepower',
-    y='Miles_per_Gallon',
-    color='Origin',
-).interactive()
-```
-
 # Exploratory Vis 1
 
 ```{python}
