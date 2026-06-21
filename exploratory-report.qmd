@@ -673,3 +673,4 @@ The resource-intensity and geography hypothesis is supported. Current power is n
 The exploratory dashboard supports three main findings. AI data center infrastructure is concentrated among a small number of companies and sites. The buildout pipeline accelerates sharply after the generative AI boom. Resource intensity varies by project and geography, making location and compute density important context for understanding infrastructure pressure.
 
 ## References
+Epoch AI. Data on AI Data Centers. Available at: https://epoch.ai/data (accessed June 2026)
