@@ -293,13 +293,13 @@ state_summary_known = state_summary[state_summary["state"] != "Unknown"]
 top_state_power_share = state_summary_known.head(5)["power_mw"].sum() / state_summary_known["power_mw"].sum()
 ```
 
-## Key Signals
 
 ```{python}
 #| echo: false
 #| content: valuebox
 #| title: "Epoch AI data centers"
 #| color: primary
+#| output: false
 dict(value=f"{len(centers):,}", icon="database")
 ```
 
@@ -308,6 +308,7 @@ dict(value=f"{len(centers):,}", icon="database")
 #| content: valuebox
 #| title: "Estimated current power"
 #| color: info
+#| output: false
 dict(value=f"{total_power:,.0f} MW", icon="lightning-charge")
 ```
 
@@ -316,6 +317,7 @@ dict(value=f"{total_power:,.0f} MW", icon="lightning-charge")
 #| content: valuebox
 #| title: "Estimated capital cost"
 #| color: success
+#| output: false
 dict(value=f"${total_capex:,.0f}B", icon="cash-stack")
 ```
 
@@ -324,12 +326,9 @@ dict(value=f"${total_capex:,.0f}B", icon="cash-stack")
 #| content: valuebox
 #| title: "Top 10 site power share"
 #| color: warning
+#| output: false
 dict(value=f"{top10_power_share:.0%}", icon="bar-chart")
 ```
-
-::: {.callout-note appearance="minimal"}
-**Download:** [PDF](exploratory-report.pdf) | [Word](exploratory-report.docx)
-:::
 
 ## Hypothesis 1: AI data center capacity and capital spending are concentrated among a small number of companies and projects.
 
