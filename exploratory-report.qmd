@@ -32,7 +32,7 @@ from altair.datasets import data
 import itables
 itables.init_notebook_mode(all_interactive=True)
 
-from dataset import data_centers
+import datasets
 ```
 
 
@@ -44,10 +44,8 @@ import re
 
 alt.data_transformers.disable_max_rows()
 
-DATA_DIR = "data/data_centers"
-
-centers = data_centers.copy()
-timeline = pd.read_csv(f"{DATA_DIR}/data_center_timelines.csv")
+centers = datasets.data_centers().copy()
+timeline = datasets.data_center_timelines()
 
 POWER = "Current power (MW)"
 H100 = "Current H100 equivalents"

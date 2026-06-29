@@ -5,3 +5,6 @@
 _site/
 
 generated_figures/
+
+# Downloaded datasets — fetched/cached at render time by the `datasets` package.
+data/
