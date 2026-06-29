@@ -7,6 +7,16 @@ format:
 
 # Overview
 
+```{ojs}
+//| output: false
+//| echo: false
+ 
+require("vega-embed@6") // When OJS is included in runtime environment, this require is required for altair
+
+
+
+```
+
 ```{python}
 #| include: false
 #| label: imports 
@@ -17,6 +27,9 @@ from altair.datasets import data
 
 import itables
 itables.init_notebook_mode(all_interactive=True)
+
+import altair as alt
+alt.renderers.enable('html')
 
 ```
 
@@ -733,3 +746,59 @@ alt.Chart(state_summary_known.head(15)).mark_bar().encode(
 ## Result
 
 The resource-intensity and geography hypothesis is supported. Current power is not enough to describe infrastructure impact: sites with similar power can have very different H100-equivalent density, and some high-power sites sit below the median compute-density level. The geographic views add another layer: estimated power is heavily concentrated in North America and unevenly distributed across U.S. states, which points toward regional electricity, permitting, water, and drought conditions as important follow-on context.
+
+
+# OJS and Altair Together
+
+
+Quarto can support python and Observable JS (OJS) cells  in the same page. Here's a little demo:
+
+```{python}
+#| height: 600
+
+chart = (
+    alt.Chart(centers).mark_bar().encode(
+        y="count():Q",
+        x="Current power (MW):Q",
+        color = "Owner:N"
+    )
+)
+
+chart
+
+```
+
+```{python}
+#| echo: false
+#| output: false
+
+ojs_define(data = centers)
+
+```
+
+```{ojs}
+//| echo: false
+//| output: false
+filtered = transpose(data).filter(function(p) {
+    return p;
+         
+}) 
+```
+
+
+```{ojs}
+//| title: Owner
+
+Plot.rectY(filtered, 
+  Plot.binX(
+    {y: "count"}, 
+    {x: "Current power (MW)", fill: "Owner", thresholds: 20}
+  ))
+  .plot({
+    height: 600, // Set the height explicitly - otherwise quarto dashboard doesn't render right away
+    marks: [
+      Plot.frame(),
+    ]
+  }
+)
+```
