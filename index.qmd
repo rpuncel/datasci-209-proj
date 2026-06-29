@@ -3,33 +3,53 @@ title: "Dashboard"
 format:
   dashboard:
     scrolling: true
+    embed-resources: true
 ---
 
 # Overview
 
-```{ojs}
-//| output: false
-//| echo: false
- 
-require("vega-embed@6") // When OJS is included in runtime environment, this require is required for altair
-
-
-
-```
-
 ```{python}
 #| include: false
-#| label: imports 
+#| label: imports
+import json
+import uuid
+
 import altair as alt
 import pandas as pd
 
 from altair.datasets import data
 
-import itables
-itables.init_notebook_mode(all_interactive=True)
 
-import altair as alt
-alt.renderers.enable('html')
+# This page mixes Altair (Vega) charts with Observable JS (OJS) cells. Adding OJS
+# makes Quarto load RequireJS, which sends Altair's default HTML renderer down its
+# AMD branch, where "vega-embed" no longer resolves to the callable embed function
+# -> "vegaEmbed is not a function" and every chart fails to render.
+#
+# Fix: a custom renderer that embeds each chart with a native ES-module <script>
+# (`import embed from ".../vega-embed@7/+esm"`). ES modules use the browser's own
+# loader, which is completely independent of RequireJS/AMD, so the OJS/RequireJS
+# conflict disappears while charts keep full interactivity (tooltips, selections).
+def esm_vega_renderer(spec, **metadata):
+    div_id = "vega-" + uuid.uuid4().hex
+    spec_json = json.dumps(spec)
+    html = (
+        f'<div id="{div_id}" class="vega-embed-esm"></div>\n'
+        f'<script type="module">\n'
+        f'  import embed from "https://cdn.jsdelivr.net/npm/vega-embed@7/+esm";\n'
+        f'  embed(document.getElementById("{div_id}"), {spec_json}, {{actions: true}})\n'
+        f'    .catch((err) => console.error("vega-embed error:", err));\n'
+        f'</script>'
+    )
+    return {"text/html": html}
+
+
+alt.renderers.register("esm", esm_vega_renderer)
+alt.renderers.enable("esm")
+
+
+#import itables
+#itables.init_notebook_mode(all_interactive=True)
+
 
 ```
 
@@ -71,7 +91,7 @@ dict(
 ## data_centers.csv
 ```{python}
 #| title: data_centers.csv
-itables.init_notebook_mode(all_interactive=True)
+#itables.init_notebook_mode(all_interactive=True)
 
 data_centers
 ```
