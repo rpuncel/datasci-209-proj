@@ -25,6 +25,7 @@ format-links:
 #| label: import-exploratory 
 import altair as alt
 import pandas as pd
+from pathlib import Path
 
 from altair.datasets import data
 
@@ -329,6 +330,15 @@ dict(value=f"${total_capex:,.0f}B", icon="cash-stack")
 #| output: false
 dict(value=f"{top10_power_share:.0%}", icon="bar-chart")
 ```
+
+
+```{python}
+#| echo: false
+#| label: create generated figures dir
+
+Path('generated_figures').mkdir(exist_ok=True)
+``` 
+
 
 ## Preliminary exploration
 
