@@ -821,7 +821,7 @@ Plot.rectY(filtered,
 
 #df_aqua_annual = datasets.aqueduct.baseline_annual()
 df_aqua_geo = datasets.aqueduct.gdb()
-
+#df_aqua_geo = df_aqua_geo.dissolve(by=['gid_1'])
 ```
 
 ```{python}

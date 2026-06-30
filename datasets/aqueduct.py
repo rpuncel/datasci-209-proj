@@ -38,7 +38,7 @@ def _read_gdb(name: str) -> gpd.GeoDataFrame:
     use_arrow=True,
     layer='baseline_annual',
     where="gid_0='USA'",
-    columns=['geomeotry', 'bws_label', 'gid_0']
+    columns=['geometry', 'bws_label', 'gid_0']
     )
 
 
