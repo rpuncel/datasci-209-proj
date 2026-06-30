@@ -34,7 +34,11 @@ def _read(name: str) -> pd.DataFrame:
     return pd.read_csv(_SOURCE.ensure() / _CSV_DIR / name)
 
 def _read_gdb(name: str) -> gpd.GeoDataFrame:
-    return gpd.read_file(_SOURCE.ensure() / _GDB_DIR / name, layer='baseline_annual')
+    return gpd.read_file(_SOURCE.ensure() / _GDB_DIR / name,
+    use_arrow=True,
+    layer='baseline_annual',
+    where="gid_0='USA'"
+    )
 
 
 @lru_cache(maxsize=None)
