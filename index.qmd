@@ -21,6 +21,8 @@ import pandas as pd
 
 from altair.datasets import data
 
+alt.data_transformers.enable("vegafusion")
+
 
 # This page mixes Altair (Vega) charts with Observable JS (OJS) cells. Adding OJS
 # makes Quarto load RequireJS, which sends Altair's default HTML renderer down its
