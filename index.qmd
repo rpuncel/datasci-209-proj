@@ -4,6 +4,8 @@ format:
   dashboard:
     scrolling: true
     embed-resources: true
+nocite: |
+  @*
 ---
 
 # Overview
@@ -809,4 +811,21 @@ Plot.rectY(filtered,
     ]
   }
 )
+```
+
+# Aquadect Data
+
+```{python}
+
+df_aqua_annual = datasets.aqueduct.baseline_annual()
+df_aqua_geo = datasets.aqueduct.gdb()
+
+df_aqua_geo = df_aqua_geo[df_aqua_geo["gid_0"] == 'USA']
+```
+
+```{python}
+
+alt.Chart(df_aqua_geo, title="Water Stress Map").mark_geoshape().encode(
+    alt.Color("bws_label:O")
+).project(type="albersUsa", reflectY=True)
 ```
