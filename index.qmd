@@ -823,6 +823,7 @@ df_aqua_geo = datasets.aqueduct.gdb()
 ```
 
 ```{python}
+#| label: Water Stress Choropleth
 
 alt.Chart(df_aqua_geo, title="Water Stress Map").mark_geoshape().encode(
     alt.Color("bws_label:O")
