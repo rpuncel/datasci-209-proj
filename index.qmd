@@ -817,10 +817,9 @@ Plot.rectY(filtered,
 
 ```{python}
 
-df_aqua_annual = datasets.aqueduct.baseline_annual()
+#df_aqua_annual = datasets.aqueduct.baseline_annual()
 df_aqua_geo = datasets.aqueduct.gdb()
 
-df_aqua_geo = df_aqua_geo[df_aqua_geo["gid_0"] == 'USA']
 ```
 
 ```{python}
