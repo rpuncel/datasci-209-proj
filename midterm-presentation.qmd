@@ -1,0 +1,76 @@
+---
+title: Visualizing the AI Economy
+subtitle: Midterm presentation
+format:
+    revealjs:
+        navigation-mode: vertical
+
+---
+
+# Introduction
+
+## Project Overview
+
+Explore infrastructure behind the recent AI boom. 
+Use visualization to help wrap our heads around mind-boggling numbers related to:
+
+- Money
+- Energy
+- Water
+
+::: {.notes}
+ - As companies invest heavily in generative AI, the growth of AI is no longer just about software models,  it also depends on data centers, chips, electricity, water, and large-scale capital spending.
+ - Our project will visualize how AI-related investment and infrastructure have grown over time, where major data centers are located, and how this growth may affect energy demand and environmental resources.
+
+:::
+
+## Visualization challenges
+
+- Three interconnected, but distinct, dimensions to relate
+- The money and financial aspect screams for network and temporal visualizations
+- The power and water dimensions are natural for geographic visualizations
+- Data sources tend to have one of the dimensions, not multiple
+- Where data centers are being built connect to water and energy availability in the region
+- Who is building the data center and who the tenants will be connects to the money 
+
+# Evolution so far
+
+::: {.todo}
+Take the exporatory report and come up with the story of how these evolve
+going forward. 
+
+:::
+
+# Current prototype
+
+::: {.todo}
+
+This will be what we have by the time we give the presentation
+
+:::
+
+
+# Path forward
+
+## Pending Improvements
+
+## Testing Plan
+
+::: {.todo}
+
+Fill in conclusion
+
+:::
+
+# Conclusion
+
+::: {.todo}
+
+Fill in conclusion
+
+:::
+
+
+
+
+

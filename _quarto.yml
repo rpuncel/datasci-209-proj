@@ -12,6 +12,8 @@ website:
         text: Home
       - href: exploratory-report.qmd
         text: Exploratory Report
+      - href: midterm-presentation.qmd
+        text: Midterm Presentation
       - about.qmd
 
 format:
@@ -22,5 +24,8 @@ format:
     css: styles.css
     toc: true
 
-
-
+authors:
+  - name: Ellie Parker
+  - name: Mengyao Chen
+  - name: Tom Dobbs
+  - name: Rob Puncel 
