@@ -837,7 +837,7 @@ alt.Chart(df_aqua_geo, title="Water Stress Map").mark_geoshape().encode(
 Use World Resource Institute Aqueduct data to plot the water stress score of each state. 
 ```{python}
 # Use the WRI province data to get a better average of state water stress levels 
-state_water_df = pd.read_csv("data/province_baseline.csv")
+state_water_df = pd.read_csv("datasets/province_baseline.csv")
 
 us_water_stress = state_water_df[
     (state_water_df["gid_0"] == "USA") &
@@ -942,6 +942,4 @@ state_chart_datacenters.show()
 
 ```{python}
 # create a dot map that shows the water risk at the coordinates of each aqueduct? 
-
-
 ```
