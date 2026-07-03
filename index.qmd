@@ -447,7 +447,7 @@ dict(value=f"{top10_power_share:.0%}", icon="bar-chart")
 
 AI infrastructure is concentrated, the buildout pipeline rises sharply after the generative-AI boom, and resource intensity varies substantially from site to site.
 
-## Owner Power
+## Owner Power {height="470px"}
 
 ```{python}
 #| echo: false
@@ -472,15 +472,21 @@ alt.Chart(owner_summary.head(10)).mark_bar().encode(
 )
 ```
 
-# Hypothesis 1
+## Hypotheses {.tabset}
 
-## Claim
+### Hypothesis 1
+
+::: {.card title="Claim" fill="false"}
 
 **AI data center capacity and capital spending are concentrated among a small number of companies and projects.**
 
-## Site Concentration
+:::
+
+#### Plots
 
 ```{python}
+#| title: Site Concentration
+#| label: plot-site-concentration
 #| echo: false
 site_bars = alt.Chart(site_rank.head(20)).mark_bar(color="#3b73b9").encode(
     x=alt.X("rank:O", title="Site rank by current power"),
@@ -513,9 +519,10 @@ site_line = alt.Chart(site_rank.head(20)).mark_line(
 )
 ```
 
-## Power vs. Capital Cost
 
 ```{python}
+#| title: Power vs. Capital Cost
+#| label: plot-power-vs-capital-cost
 #| echo: false
 alt.Chart(owner_summary.head(10)).mark_circle(opacity=0.78, stroke="white", strokeWidth=1).encode(
     x=alt.X("power_mw:Q", title="Estimated current power (MW)"),
@@ -538,17 +545,21 @@ alt.Chart(owner_summary.head(10)).mark_circle(opacity=0.78, stroke="white", stro
 )
 ```
 
-## Result
+#### Result
+
+::: {.card title="Result" fill="false"}
 
 The concentration hypothesis is supported. Owner-level and site-level views both show that aggregate infrastructure estimates are driven by a relatively small set of hyperscaler and frontier-model buildouts.
 
-# Hypothesis 2
+:::
 
-## Claim
+### Hypothesis 2
+
+#### Claim
 
 **AI data center power and capital buildout accelerated after major generative AI milestones.**
 
-## Timeline With Milestones
+#### Timeline With Milestones
 
 ```{python}
 #| echo: false
@@ -592,7 +603,7 @@ event_labels = alt.Chart(events).mark_text(
 )
 ```
 
-## Annual Additions
+#### Annual Additions
 
 ```{python}
 #| echo: false
@@ -616,7 +627,7 @@ alt.Chart(yearly[yearly["year"] >= 2021]).mark_bar().encode(
 )
 ```
 
-## Capital Pipeline
+#### Capital Pipeline
 
 ```{python}
 #| echo: false
@@ -638,17 +649,17 @@ alt.Chart(yearly).mark_area(line=True, opacity=0.35, color="#5f9e56").encode(
 )
 ```
 
-## Result
+#### Result
 
 The acceleration hypothesis is supported. Estimated year-end power rises from 435 MW in 2023 to about 17,280 MW in 2026 and over 39,000 MW by 2028 in the timeline snapshot.
 
-# Hypothesis 3
+### Hypothesis 3
 
-## Claim
+#### Claim
 
 **Data center resource intensity varies substantially by project and geography, suggesting some sites and regions may be more environmentally or operationally stressed than others.**
 
-## Power vs. Compute Density
+#### Power vs. Compute Density
 
 ```{python}
 #| echo: false
@@ -689,7 +700,7 @@ rule = alt.Chart(median_rule).mark_rule(color="#d9822b", strokeDash=[5, 5]).enco
 )
 ```
 
-## Higher-Power, Lower-Density Sites
+#### Higher-Power, Lower-Density Sites
 
 ```{python}
 #| echo: false
@@ -713,7 +724,7 @@ alt.Chart(high_power_low_density).mark_bar(color="#c45a4a").encode(
 )
 ```
 
-## Continental Comparison
+#### Continental Comparison
 
 ```{python}
 #| echo: false
@@ -738,7 +749,7 @@ alt.Chart(continent_summary).mark_bar().encode(
 )
 ```
 
-## U.S. State Concentration
+#### U.S. State Concentration
 
 ```{python}
 #| echo: false
@@ -763,7 +774,7 @@ alt.Chart(state_summary_known.head(15)).mark_bar().encode(
 )
 ```
 
-## Result
+#### Result
 
 The resource-intensity and geography hypothesis is supported. Current power is not enough to describe infrastructure impact: sites with similar power can have very different H100-equivalent density, and some high-power sites sit below the median compute-density level. The geographic views add another layer: estimated power is heavily concentrated in North America and unevenly distributed across U.S. states, which points toward regional electricity, permitting, water, and drought conditions as important follow-on context.
 
