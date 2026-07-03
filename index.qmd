@@ -20,6 +20,7 @@ import altair as alt
 import pandas as pd
 
 from altair.datasets import data
+from altair.utils.display import compile_with_vegafusion, using_vegafusion
 
 alt.data_transformers.enable("vegafusion")
 #alt.data_transformers.enable("default")
@@ -36,6 +37,11 @@ alt.data_transformers.enable("vegafusion")
 # loader, which is completely independent of RequireJS/AMD, so the OJS/RequireJS
 # conflict disappears while charts keep full interactivity (tooltips, selections).
 def esm_vega_renderer(spec, **metadata):
+    # With the vegafusion data transformer, the spec handed to renderers still
+    # contains vegafusion+dataset:// placeholders; built-in renderers resolve
+    # them via compile_with_vegafusion, so this renderer must too.
+    if using_vegafusion():
+        spec = compile_with_vegafusion(spec)
     div_id = "vega-" + uuid.uuid4().hex
     spec_json = json.dumps(spec)
     html = (
@@ -831,7 +837,7 @@ df_aqua_geo = df_aqua_geo.dissolve(by=['gid_1'])
 
 alt.Chart(df_aqua_geo, title="Water Stress Map").mark_geoshape().encode(
     alt.Color("bws_label:O")
-).project(type="albersUsa", reflectY=True)
+).project(type="albersUsa", reflectY=True).properties(width=600)
 ```
 
 Use World Resource Institute Aqueduct data to plot the water stress score of each state. 
@@ -935,12 +941,12 @@ state_chart_datacenters = (state_chart + points).properties(
     width=800, height=500, title="Baseline Water Stress by US State with Current AI Data Center Locations"
 )
 
-state_chart_datacenters.show()
+state_chart_datacenters
 
 ```
 
 Create a cholorpleth that shows the projected water scarcity in states as well as locations of porposed future data centers. 
-**Note that this includes all proposed future data centers, not just data centers that are AI specific 
+**Note that this includes all proposed future data centers, not just data centers that are AI specific**
 ```{python}
 # create a cholorpleth that shows the projected water scarcity in states, as well as locations of proposed future data centers 
 
