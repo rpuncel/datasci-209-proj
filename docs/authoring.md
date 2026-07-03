@@ -78,6 +78,39 @@ Say you want to add a new tab showing chiller capacity by region.
 2. **Preview it** — `quarto preview` is already watching; save the file and the new tab appears.
 3. **Want two charts side by side?** Wrap them in `##` headings under your `#` page, and add `orientation: columns` to the page or front matter.
 
+Writing the chart inline like this is fine for a quick spike. Once a chart is worth keeping — and especially if another document (report, slides) might want it — move it into the `charts` package (next section).
+
+## Reusable charts: the `wrangle/` + `charts/` pattern
+
+Charts are defined once and shared by every document. The layering is:
+
+```
+datasets/   raw loaders (download + cache, no cleaning)
+wrangle/    derived frames & stats (cleaning, joins, aggregation) — memoized
+charts/     zero-arg functions returning an Altair chart
+*.qmd       one-liner cells: charts.datacenters.owner_power()
+```
+
+Every document that shows charts calls `charts.setup()` once in its first (hidden) cell — it enables the vegafusion data transformer and the ES-module vega renderer that keeps Altair working next to OJS cells.
+
+### Adding a new chart
+
+1. **Data shaping goes in `wrangle/`** — add an `@lru_cache`-decorated, zero-arg function to `wrangle/datacenters.py` or `wrangle/water.py` that returns the DataFrame your chart needs. Memoization means every chart and document shares one computation per render. Don't mutate a frame you got from another cached function — `.copy()` first if you need new columns.
+2. **The chart goes in `charts/`** — add a zero-arg function to `charts/datacenters.py` or `charts/water.py` that returns the chart object (don't call `.show()`). Give it a fixed default `height`; callers resize per document with `.properties(...)` (dashboards vs. slides need different sizes).
+3. **Register it in the smoke test** — append the function to `CHART_FUNCS` in `charts/test_charts.py`, then run `.venv/bin/python -m pytest charts/`.
+4. **Use it** — in any `.qmd` cell:
+
+   ````markdown
+   ```{python}
+   #| title: "Owner Power"
+   charts.datacenters.owner_power()
+   ```
+   ````
+
+   On a revealjs slide, chain a resize: `charts.datacenters.owner_power().properties(width=900, height=380)`.
+
+Shared lookup tables (state names, FIPS codes) live in `constants/` — add there rather than redefining inline.
+
 ## When to add a whole new `.qmd`
 
 If you're building something that doesn't fit the dashboard (a long-form writeup, a methodology page), create a new `.qmd` at the repo root and add it to the navbar in `_quarto.yml`:
