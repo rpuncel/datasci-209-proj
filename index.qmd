@@ -21,9 +21,9 @@ import pandas as pd
 
 from altair.datasets import data
 
-#alt.data_transformers.enable("vegafusion")
-alt.data_transformers.enable("default")
-alt.data_transformers.disable_max_rows() 
+alt.data_transformers.enable("vegafusion")
+#alt.data_transformers.enable("default")
+#alt.data_transformers.disable_max_rows() 
 
 
 # This page mixes Altair (Vega) charts with Observable JS (OJS) cells. Adding OJS
