@@ -555,13 +555,17 @@ The concentration hypothesis is supported. Owner-level and site-level views both
 
 ### Hypothesis 2
 
-#### Claim
+::: {.card title="Claim" fill="false"}
 
 **AI data center power and capital buildout accelerated after major generative AI milestones.**
 
-#### Timeline With Milestones
+:::
+
+#### Plots
 
 ```{python}
+#| title: Timeline with Milestones
+#| label: plot-timeline-with-milestones
 #| echo: false
 growth_power = alt.Chart(yearly).mark_line(point=True, strokeWidth=3).encode(
     x=alt.X("date:T", title="Year-end", axis=alt.Axis(format="%Y")),
@@ -603,9 +607,9 @@ event_labels = alt.Chart(events).mark_text(
 )
 ```
 
-#### Annual Additions
-
 ```{python}
+#| title: Annual Additions
+#| label: plot-annual-additions
 #| echo: false
 alt.Chart(yearly[yearly["year"] >= 2021]).mark_bar().encode(
     x=alt.X("year:O", title="Year"),
@@ -627,9 +631,9 @@ alt.Chart(yearly[yearly["year"] >= 2021]).mark_bar().encode(
 )
 ```
 
-#### Capital Pipeline
-
 ```{python}
+#| title: Capital Pipeline
+#| label: plot-capital-pipeline
 #| echo: false
 alt.Chart(yearly).mark_area(line=True, opacity=0.35, color="#5f9e56").encode(
     x=alt.X("date:T", title="Year-end", axis=alt.Axis(format="%Y")),
@@ -651,7 +655,11 @@ alt.Chart(yearly).mark_area(line=True, opacity=0.35, color="#5f9e56").encode(
 
 #### Result
 
+::: {.card title="Result" fill="false"}
+
 The acceleration hypothesis is supported. Estimated year-end power rises from 435 MW in 2023 to about 17,280 MW in 2026 and over 39,000 MW by 2028 in the timeline snapshot.
+
+:::
 
 ### Hypothesis 3
 
