@@ -827,7 +827,7 @@ df_aqua_geo = df_aqua_geo.dissolve(by=['gid_1'])
 ```
 
 ```{python}
-#| label: Water Stress Choropleth
+#| label: water-stress-choropleth
 
 alt.Chart(df_aqua_geo, title="Water Stress Map").mark_geoshape().encode(
     alt.Color("bws_label:O")
