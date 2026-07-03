@@ -7,6 +7,14 @@ format:
 
 ---
 
+```{python}
+#| include: false
+#| label: setup
+import charts
+
+charts.setup()
+```
+
 # Introduction
 
 ## Project Overview
@@ -48,6 +56,22 @@ going forward.
 This will be what we have by the time we give the presentation
 
 :::
+
+## Example: any dashboard chart is a one-liner
+
+Every chart from the dashboard lives in the `charts` package; drop one on a
+slide like this (chain `.properties(...)` to resize for the slide):
+
+```{python}
+#| echo: true
+charts.datacenters.owner_power().properties(width=900, height=380)
+```
+
+## Example: water stress map
+
+```{python}
+charts.water.baseline_stress_with_datacenters().properties(width=850, height=450)
+```
 
 
 # Path forward
