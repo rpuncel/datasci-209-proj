@@ -406,7 +406,14 @@ state_summary_known = state_summary[state_summary["state"] != "Unknown"]
 top_state_power_share = state_summary_known.head(5)["power_mw"].sum() / state_summary_known["power_mw"].sum()
 ```
 
-## Key Signals
+## Tab container
+
+### Tabs {.tabset}
+
+#### Key Values
+
+##### Value boxes
+
 
 ```{python}
 #| echo: false
@@ -440,13 +447,21 @@ dict(value=f"${total_capex:,.0f}B", icon="cash-stack")
 dict(value=f"{top10_power_share:.0%}", icon="bar-chart")
 ```
 
-## Summary
+
+##### Summary
+
+::: {.card title="Summary" fill="false"}
 
 AI infrastructure is concentrated, the buildout pipeline rises sharply after the generative-AI boom, and resource intensity varies substantially from site to site.
 
-## Owner Power {height="470px"}
+:::
+
+##### Plot
+
 
 ```{python}
+#| title: Owner Power
+#| label: plot-owner-power 
 #| echo: false
 alt.Chart(owner_summary.head(10)).mark_bar().encode(
     y=alt.Y("owner_clean:N", sort="-x", title=None),
@@ -469,9 +484,7 @@ alt.Chart(owner_summary.head(10)).mark_bar().encode(
 )
 ```
 
-## Hypotheses {.tabset}
-
-### Hypothesis 1
+#### Hypothesis 1
 
 ::: {.card title="Claim" fill="false"}
 
@@ -479,7 +492,7 @@ alt.Chart(owner_summary.head(10)).mark_bar().encode(
 
 :::
 
-#### Plots
+##### Plots
 
 ```{python}
 #| title: Site Concentration
@@ -542,7 +555,7 @@ alt.Chart(owner_summary.head(10)).mark_circle(opacity=0.78, stroke="white", stro
 )
 ```
 
-#### Result
+##### Result
 
 ::: {.card title="Result" fill="false"}
 
@@ -550,7 +563,7 @@ The concentration hypothesis is supported. Owner-level and site-level views both
 
 :::
 
-### Hypothesis 2
+#### Hypothesis 2
 
 ::: {.card title="Claim" fill="false"}
 
@@ -558,7 +571,7 @@ The concentration hypothesis is supported. Owner-level and site-level views both
 
 :::
 
-#### Plots
+##### Plots
 
 ```{python}
 #| title: Timeline with Milestones
@@ -650,7 +663,7 @@ alt.Chart(yearly).mark_area(line=True, opacity=0.35, color="#5f9e56").encode(
 )
 ```
 
-#### Result
+##### Result
 
 ::: {.card title="Result" fill="false"}
 
@@ -658,7 +671,7 @@ The acceleration hypothesis is supported. Estimated year-end power rises from 43
 
 :::
 
-### Hypothesis 3
+#### Hypothesis 3
 
 ::: {.card title="Claim" fill="false"}
 
@@ -666,7 +679,7 @@ The acceleration hypothesis is supported. Estimated year-end power rises from 43
 
 ::: 
 
-#### Plots
+##### Plots
 
 ```{python}
 #| title: Power vs. Compute Density
@@ -758,7 +771,6 @@ alt.Chart(continent_summary).mark_bar().encode(
 )
 ```
 
-#### U.S. State Concentration
 
 ```{python}
 #| title: US State Concentration
@@ -785,7 +797,7 @@ alt.Chart(state_summary_known.head(15)).mark_bar().encode(
 )
 ```
 
-#### Result
+##### Result
 
 ::: {.card title="Result" fill="false"}
 
