@@ -59,8 +59,6 @@ alt.renderers.register("esm", esm_vega_renderer)
 alt.renderers.enable("esm")
 
 
-#import itables
-#itables.init_notebook_mode(all_interactive=True)
 
 
 ```
@@ -93,7 +91,6 @@ dict(
 ## data_centers.csv
 ```{python}
 #| title: data_centers.csv
-#itables.init_notebook_mode(all_interactive=True)
 
 data_centers
 ```
@@ -663,13 +660,17 @@ The acceleration hypothesis is supported. Estimated year-end power rises from 43
 
 ### Hypothesis 3
 
-#### Claim
+::: {.card title="Claim" fill="false"}
 
 **Data center resource intensity varies substantially by project and geography, suggesting some sites and regions may be more environmentally or operationally stressed than others.**
 
-#### Power vs. Compute Density
+::: 
+
+#### Plots
 
 ```{python}
+#| title: Power vs. Compute Density
+#| label: plot-power-vs-compute-density
 #| echo: false
 owner_select = alt.selection_point(fields=["owner_clean"], bind="legend")
 median_rule = pd.DataFrame({"median_density": [median_density]})
@@ -708,9 +709,9 @@ rule = alt.Chart(median_rule).mark_rule(color="#d9822b", strokeDash=[5, 5]).enco
 )
 ```
 
-#### Higher-Power, Lower-Density Sites
-
 ```{python}
+#| title: Higher-Power, Lower-Density Sites
+#| label: plot-higher-power-lower-density-sites
 #| echo: false
 alt.Chart(high_power_low_density).mark_bar(color="#c45a4a").encode(
     y=alt.Y("Name:N", sort="x", title=None),
@@ -732,9 +733,9 @@ alt.Chart(high_power_low_density).mark_bar(color="#c45a4a").encode(
 )
 ```
 
-#### Continental Comparison
-
 ```{python}
+#| title: Continental Comparison
+#| label: plot-continental-comparison
 #| echo: false
 alt.Chart(continent_summary).mark_bar().encode(
     y=alt.Y("continent:N", sort="-x", title=None),
@@ -760,6 +761,8 @@ alt.Chart(continent_summary).mark_bar().encode(
 #### U.S. State Concentration
 
 ```{python}
+#| title: US State Concentration
+#| label: plot-us-state-concentration
 #| echo: false
 alt.Chart(state_summary_known.head(15)).mark_bar().encode(
     y=alt.Y("state:N", sort="-x", title=None),
@@ -784,7 +787,11 @@ alt.Chart(state_summary_known.head(15)).mark_bar().encode(
 
 #### Result
 
+::: {.card title="Result" fill="false"}
+
 The resource-intensity and geography hypothesis is supported. Current power is not enough to describe infrastructure impact: sites with similar power can have very different H100-equivalent density, and some high-power sites sit below the median compute-density level. The geographic views add another layer: estimated power is heavily concentrated in North America and unevenly distributed across U.S. states, which points toward regional electricity, permitting, water, and drought conditions as important follow-on context.
+
+:::
 
 
 # OJS and Altair Together
@@ -897,7 +904,7 @@ states_map = alt.topo_feature(data.us_10m.url, feature = 'states') #import count
 # Build cholorpleth
 state_chart = (
     alt.Chart(states_map)
-    .mark_geoshape(stroke="white", strokeWidth=0.5)
+    .mark_geoshape()
     .encode(
         color=alt.Color(
             "score:Q",
@@ -918,7 +925,7 @@ state_chart = (
     .properties(width=800, height=500, title="Baseline Water Stress by US State (Aqueduct 4.0)")
 )
 
-state_chart.show()
+state_chart
 ```
 
 
@@ -1009,7 +1016,7 @@ future_state_chart = (
     .properties(width=800, height=500, title="Future Water Stress by US State (Aqueduct 4.0)")
 )
 
-future_state_chart.show()
+future_state_chart
 
 ```
 
@@ -1048,11 +1055,11 @@ future_state_chart_datacenters = (future_state_chart + points).properties(
     width=800, height=500, title="Future Water Stress by US State with Proposed Data Center Locations"
 )
 
-future_state_chart_datacenters.show()
+future_state_chart_datacenters
 
 ```
 
 ```{python}
 water_plot =state_chart_datacenters | future_state_chart_datacenters
-water_plot.show()
+water_plot
 ```
