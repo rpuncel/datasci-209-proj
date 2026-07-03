@@ -105,3 +105,4 @@ vl-convert-python==1.9.0.post1
 geopandas==1.1.4
 pyarrow==24.0.0
 vegafusion==2.0.3
+pgeocode==0.5.0
