@@ -22,6 +22,8 @@ import pandas as pd
 from altair.datasets import data
 
 alt.data_transformers.enable("vegafusion")
+#alt.data_transformers.enable("default")
+#alt.data_transformers.disable_max_rows() 
 
 
 # This page mixes Altair (Vega) charts with Observable JS (OJS) cells. Adding OJS
@@ -830,4 +832,202 @@ df_aqua_geo = df_aqua_geo.dissolve(by=['gid_1'])
 alt.Chart(df_aqua_geo, title="Water Stress Map").mark_geoshape().encode(
     alt.Color("bws_label:O")
 ).project(type="albersUsa", reflectY=True)
+```
+
+Use World Resource Institute Aqueduct data to plot the water stress score of each state. 
+```{python}
+# Use the WRI province data to get a better average of state water stress levels 
+state_water_df = pd.read_csv("datasets/province_baseline.csv")
+
+us_water_stress = state_water_df[
+    (state_water_df["gid_0"] == "USA") &
+    (state_water_df["indicator_name"] == "bws") &
+    (state_water_df["weight"] == "Tot")   # weighted by total gross water withdrawal
+][["name_1", "score", "label", "score_ranked"]]
+
+# State FIPS code to match with altair
+state_fips = {
+    "Alabama": "01", "Alaska": "02", "Arizona": "04", "Arkansas": "05",
+    "California": "06", "Colorado": "08", "Connecticut": "09", "Delaware": "10",
+    "District of Columbia": "11", "Florida": "12", "Georgia": "13", "Hawaii": "15",
+    "Idaho": "16", "Illinois": "17", "Indiana": "18", "Iowa": "19", "Kansas": "20",
+    "Kentucky": "21", "Louisiana": "22", "Maine": "23", "Maryland": "24",
+    "Massachusetts": "25", "Michigan": "26", "Minnesota": "27", "Mississippi": "28",
+    "Missouri": "29", "Montana": "30", "Nebraska": "31", "Nevada": "32",
+    "New Hampshire": "33", "New Jersey": "34", "New Mexico": "35", "New York": "36",
+    "North Carolina": "37", "North Dakota": "38", "Ohio": "39", "Oklahoma": "40",
+    "Oregon": "41", "Pennsylvania": "42", "Rhode Island": "44", "South Carolina": "45",
+    "South Dakota": "46", "Tennessee": "47", "Texas": "48", "Utah": "49",
+    "Vermont": "50", "Virginia": "51", "Washington": "53", "West Virginia": "54",
+    "Wisconsin": "55", "Wyoming": "56",
+}
+
+us_water_stress = us_water_stress.copy()
+us_water_stress["id"] = us_water_stress["name_1"].map(state_fips).astype(int)
+
+# Load state topo
+#states_topo = alt.topo_feature(data.us_10m.url, "states")
+states_map = alt.topo_feature(data.us_10m.url, feature = 'states') #import county level geographic data
+
+# Build cholorpleth
+state_chart = (
+    alt.Chart(states_map)
+    .mark_geoshape(stroke="white", strokeWidth=0.5)
+    .encode(
+        color=alt.Color(
+            "score:Q",
+            scale=alt.Scale(scheme="reds", domain=[0, 5]),
+            legend=alt.Legend(title="Baseline Water Stress"),
+        ),
+        tooltip=[
+            alt.Tooltip("name_1:N", title="State"),
+            alt.Tooltip("score:Q", title="Score", format=".2f"),
+            alt.Tooltip("label:N", title="Category"),
+        ],
+    )
+    .transform_lookup(
+        lookup="id",
+        from_=alt.LookupData(us_water_stress, "id", ["name_1", "score", "label"]),
+    )
+    .project(type="albersUsa")
+    .properties(width=800, height=500, title="Baseline Water Stress by US State (Aqueduct 4.0)")
+)
+
+state_chart.show()
+```
+
+
+Add a marker for the data center locations to the cholorpleth
+```{python}
+import re
+import pgeocode
+
+us_centers = centers[centers["Country"] == "United States"].copy()
+
+# Extract the ZIP code from the end of the address
+us_centers["zip"] = us_centers["Address"].str.extract(r"(\d{5})(?:-\d{4})?\s*$")
+
+# Lookup latitude and longitude for each zip code
+nomi = pgeocode.Nominatim("us")
+zip_lookup = nomi.query_postal_code(us_centers["zip"].dropna().unique().tolist())[
+    ["postal_code", "latitude", "longitude"]
+].rename(columns={"postal_code": "zip", "latitude": "Latitude", "longitude": "Longitude"})
+
+us_centers = us_centers.merge(zip_lookup, on="zip", how="left")
+
+# Create points to add to cholorpleth
+points = (
+    alt.Chart(us_centers.dropna(subset=["Latitude", "Longitude"]))
+    .mark_circle(color="black", opacity=0.7, stroke="blue", strokeWidth=1)
+    .encode(
+        size = alt.Size(
+            "Current power (MW)",
+            scale=alt.Scale(range=[20, 1000]),  # min/max pixel area; tune to taste
+            legend=alt.Legend(title="Power Capacity (MW)")
+        ),
+        longitude="Longitude:Q",
+        latitude="Latitude:Q",
+        tooltip=["Name:N", "Address:N", "Current power (MW):Q"],
+    )
+)
+
+state_chart_datacenters = (state_chart + points).properties(
+    width=800, height=500, title="Baseline Water Stress by US State with Current AI Data Center Locations"
+)
+
+state_chart_datacenters.show()
+
+```
+
+Create a cholorpleth that shows the projected water scarcity in states as well as locations of porposed future data centers. 
+**Note that this includes all proposed future data centers, not just data centers that are AI specific 
+```{python}
+# create a cholorpleth that shows the projected water scarcity in states, as well as locations of proposed future data centers 
+
+future_state_water_df = pd.read_csv("datasets/province_future.csv")
+
+future_us_water_stress = future_state_water_df[
+    (future_state_water_df["gid_0"] == "USA") &
+    (future_state_water_df["indicator_name"] == "bws") &
+    (future_state_water_df["weight"] == "Tot")   # weighted by total gross water withdrawal
+][["name_1", "score", "label", "score_ranked"]]
+
+
+future_us_water_stress = future_us_water_stress.copy()
+future_us_water_stress["id"] = future_us_water_stress["name_1"].map(state_fips).astype(int)
+
+# Load state topo
+#states_topo = alt.topo_feature(data.us_10m.url, "states")
+states_map = alt.topo_feature(data.us_10m.url, feature = 'states') #import county level geographic data
+
+# Build cholorpleth
+future_state_chart = (
+    alt.Chart(states_map)
+    .mark_geoshape(stroke="white", strokeWidth=0.5)
+    .encode(
+        color=alt.Color(
+            "score:Q",
+            scale=alt.Scale(scheme="reds", domain=[0, 5]),
+            legend=alt.Legend(title="Future Water Stress"),
+        ),
+        tooltip=[
+            alt.Tooltip("name_1:N", title="State"),
+            alt.Tooltip("score:Q", title="Score", format=".2f"),
+            alt.Tooltip("label:N", title="Category"),
+        ],
+    )
+    .transform_lookup(
+        lookup="id",
+        from_=alt.LookupData(future_us_water_stress, "id", ["name_1", "score", "label"]),
+    )
+    .project(type="albersUsa")
+    .properties(width=800, height=500, title="Future Water Stress by US State (Aqueduct 4.0)")
+)
+
+future_state_chart.show()
+
+```
+
+```{python}
+future_data_centers = pd.read_csv("datasets/Data_Centers_Database.csv")
+
+
+# Extract the ZIP code from the end of the address
+#us_centers["zip"] = us_centers["Address"].str.extract(r"(\d{5})(?:-\d{4})?\s*$")
+
+# Lookup latitude and longitude for each zip code
+#nomi = pgeocode.Nominatim("us")
+#future_zip_lookup = nomi.query_postal_code(future_data_centers["zip"].dropna().unique().tolist##())[
+   # ["postal_code", "latitude", "longitude"]
+#].rename(columns={"postal_code": "zip", "latitude": "Latitude", "longitude": "Longitude"})
+
+#us_centers = us_centers.merge(zip_lookup, on="zip", how="left")
+
+# Create points to add to cholorpleth
+points = (
+    alt.Chart(future_data_centers.dropna(subset=["lat", "long"]))
+    .mark_circle(color="black", opacity=0.7, stroke="blue", strokeWidth=1)
+    .encode(
+        #size = alt.Size(
+        #    "Current power (MW)",
+        #    scale=alt.Scale(range=[20, 1000]),  # min/max pixel area; tune to taste
+        #    legend=alt.Legend(title="Power Capacity (MW)")
+        #),
+        longitude="long:Q",
+        latitude="lat:Q",
+        tooltip=["Name:N", "Address:N", "mw:Q"],
+    )
+)
+
+future_state_chart_datacenters = (future_state_chart + points).properties(
+    width=800, height=500, title="Future Water Stress by US State with Proposed Data Center Locations"
+)
+
+future_state_chart_datacenters.show()
+
+```
+
+```{python}
+water_plot =state_chart_datacenters | future_state_chart_datacenters
+water_plot.show()
 ```
