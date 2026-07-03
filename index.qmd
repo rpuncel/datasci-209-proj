@@ -59,8 +59,6 @@ alt.renderers.register("esm", esm_vega_renderer)
 alt.renderers.enable("esm")
 
 
-#import itables
-#itables.init_notebook_mode(all_interactive=True)
 
 
 ```
@@ -93,7 +91,6 @@ dict(
 ## data_centers.csv
 ```{python}
 #| title: data_centers.csv
-#itables.init_notebook_mode(all_interactive=True)
 
 data_centers
 ```
@@ -409,7 +406,14 @@ state_summary_known = state_summary[state_summary["state"] != "Unknown"]
 top_state_power_share = state_summary_known.head(5)["power_mw"].sum() / state_summary_known["power_mw"].sum()
 ```
 
-## Key Signals
+## Tab container
+
+### Tabs {.tabset}
+
+#### Key Values
+
+##### Value boxes
+
 
 ```{python}
 #| echo: false
@@ -443,13 +447,21 @@ dict(value=f"${total_capex:,.0f}B", icon="cash-stack")
 dict(value=f"{top10_power_share:.0%}", icon="bar-chart")
 ```
 
-## Summary
+
+##### Summary
+
+::: {.card title="Summary" fill="false"}
 
 AI infrastructure is concentrated, the buildout pipeline rises sharply after the generative-AI boom, and resource intensity varies substantially from site to site.
 
-## Owner Power
+:::
+
+##### Plot
+
 
 ```{python}
+#| title: Owner Power
+#| label: plot-owner-power 
 #| echo: false
 alt.Chart(owner_summary.head(10)).mark_bar().encode(
     y=alt.Y("owner_clean:N", sort="-x", title=None),
@@ -472,15 +484,19 @@ alt.Chart(owner_summary.head(10)).mark_bar().encode(
 )
 ```
 
-# Hypothesis 1
+#### Hypothesis 1
 
-## Claim
+::: {.card title="Claim" fill="false"}
 
 **AI data center capacity and capital spending are concentrated among a small number of companies and projects.**
 
-## Site Concentration
+:::
+
+##### Plots
 
 ```{python}
+#| title: Site Concentration
+#| label: plot-site-concentration
 #| echo: false
 site_bars = alt.Chart(site_rank.head(20)).mark_bar(color="#3b73b9").encode(
     x=alt.X("rank:O", title="Site rank by current power"),
@@ -513,9 +529,10 @@ site_line = alt.Chart(site_rank.head(20)).mark_line(
 )
 ```
 
-## Power vs. Capital Cost
 
 ```{python}
+#| title: Power vs. Capital Cost
+#| label: plot-power-vs-capital-cost
 #| echo: false
 alt.Chart(owner_summary.head(10)).mark_circle(opacity=0.78, stroke="white", strokeWidth=1).encode(
     x=alt.X("power_mw:Q", title="Estimated current power (MW)"),
@@ -538,19 +555,27 @@ alt.Chart(owner_summary.head(10)).mark_circle(opacity=0.78, stroke="white", stro
 )
 ```
 
-## Result
+##### Result
+
+::: {.card title="Result" fill="false"}
 
 The concentration hypothesis is supported. Owner-level and site-level views both show that aggregate infrastructure estimates are driven by a relatively small set of hyperscaler and frontier-model buildouts.
 
-# Hypothesis 2
+:::
 
-## Claim
+#### Hypothesis 2
+
+::: {.card title="Claim" fill="false"}
 
 **AI data center power and capital buildout accelerated after major generative AI milestones.**
 
-## Timeline With Milestones
+:::
+
+##### Plots
 
 ```{python}
+#| title: Timeline with Milestones
+#| label: plot-timeline-with-milestones
 #| echo: false
 growth_power = alt.Chart(yearly).mark_line(point=True, strokeWidth=3).encode(
     x=alt.X("date:T", title="Year-end", axis=alt.Axis(format="%Y")),
@@ -592,9 +617,9 @@ event_labels = alt.Chart(events).mark_text(
 )
 ```
 
-## Annual Additions
-
 ```{python}
+#| title: Annual Additions
+#| label: plot-annual-additions
 #| echo: false
 alt.Chart(yearly[yearly["year"] >= 2021]).mark_bar().encode(
     x=alt.X("year:O", title="Year"),
@@ -616,9 +641,9 @@ alt.Chart(yearly[yearly["year"] >= 2021]).mark_bar().encode(
 )
 ```
 
-## Capital Pipeline
-
 ```{python}
+#| title: Capital Pipeline
+#| label: plot-capital-pipeline
 #| echo: false
 alt.Chart(yearly).mark_area(line=True, opacity=0.35, color="#5f9e56").encode(
     x=alt.X("date:T", title="Year-end", axis=alt.Axis(format="%Y")),
@@ -638,19 +663,27 @@ alt.Chart(yearly).mark_area(line=True, opacity=0.35, color="#5f9e56").encode(
 )
 ```
 
-## Result
+##### Result
+
+::: {.card title="Result" fill="false"}
 
 The acceleration hypothesis is supported. Estimated year-end power rises from 435 MW in 2023 to about 17,280 MW in 2026 and over 39,000 MW by 2028 in the timeline snapshot.
 
-# Hypothesis 3
+:::
 
-## Claim
+#### Hypothesis 3
+
+::: {.card title="Claim" fill="false"}
 
 **Data center resource intensity varies substantially by project and geography, suggesting some sites and regions may be more environmentally or operationally stressed than others.**
 
-## Power vs. Compute Density
+::: 
+
+##### Plots
 
 ```{python}
+#| title: Power vs. Compute Density
+#| label: plot-power-vs-compute-density
 #| echo: false
 owner_select = alt.selection_point(fields=["owner_clean"], bind="legend")
 median_rule = pd.DataFrame({"median_density": [median_density]})
@@ -689,9 +722,9 @@ rule = alt.Chart(median_rule).mark_rule(color="#d9822b", strokeDash=[5, 5]).enco
 )
 ```
 
-## Higher-Power, Lower-Density Sites
-
 ```{python}
+#| title: Higher-Power, Lower-Density Sites
+#| label: plot-higher-power-lower-density-sites
 #| echo: false
 alt.Chart(high_power_low_density).mark_bar(color="#c45a4a").encode(
     y=alt.Y("Name:N", sort="x", title=None),
@@ -713,9 +746,9 @@ alt.Chart(high_power_low_density).mark_bar(color="#c45a4a").encode(
 )
 ```
 
-## Continental Comparison
-
 ```{python}
+#| title: Continental Comparison
+#| label: plot-continental-comparison
 #| echo: false
 alt.Chart(continent_summary).mark_bar().encode(
     y=alt.Y("continent:N", sort="-x", title=None),
@@ -738,9 +771,10 @@ alt.Chart(continent_summary).mark_bar().encode(
 )
 ```
 
-## U.S. State Concentration
 
 ```{python}
+#| title: US State Concentration
+#| label: plot-us-state-concentration
 #| echo: false
 alt.Chart(state_summary_known.head(15)).mark_bar().encode(
     y=alt.Y("state:N", sort="-x", title=None),
@@ -763,9 +797,13 @@ alt.Chart(state_summary_known.head(15)).mark_bar().encode(
 )
 ```
 
-## Result
+##### Result
+
+::: {.card title="Result" fill="false"}
 
 The resource-intensity and geography hypothesis is supported. Current power is not enough to describe infrastructure impact: sites with similar power can have very different H100-equivalent density, and some high-power sites sit below the median compute-density level. The geographic views add another layer: estimated power is heavily concentrated in North America and unevenly distributed across U.S. states, which points toward regional electricity, permitting, water, and drought conditions as important follow-on context.
+
+:::
 
 
 # OJS and Altair Together
@@ -878,7 +916,7 @@ states_map = alt.topo_feature(data.us_10m.url, feature = 'states') #import count
 # Build cholorpleth
 state_chart = (
     alt.Chart(states_map)
-    .mark_geoshape(stroke="white", strokeWidth=0.5)
+    .mark_geoshape()
     .encode(
         color=alt.Color(
             "score:Q",
@@ -899,7 +937,7 @@ state_chart = (
     .properties(width=800, height=500, title="Baseline Water Stress by US State (Aqueduct 4.0)")
 )
 
-state_chart.show()
+state_chart
 ```
 
 
@@ -990,7 +1028,7 @@ future_state_chart = (
     .properties(width=800, height=500, title="Future Water Stress by US State (Aqueduct 4.0)")
 )
 
-future_state_chart.show()
+future_state_chart
 
 ```
 
@@ -1029,11 +1067,11 @@ future_state_chart_datacenters = (future_state_chart + points).properties(
     width=800, height=500, title="Future Water Stress by US State with Proposed Data Center Locations"
 )
 
-future_state_chart_datacenters.show()
+future_state_chart_datacenters
 
 ```
 
 ```{python}
 water_plot =state_chart_datacenters | future_state_chart_datacenters
-water_plot.show()
+water_plot
 ```
