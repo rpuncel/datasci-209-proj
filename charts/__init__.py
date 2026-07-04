@@ -9,10 +9,12 @@ Typical .qmd usage::
 
 from . import datacenters
 from . import water
+from . import electricity
 from ._theme import setup
 
 __all__ = [
     "datacenters",
     "water",
+    "electricity",
     "setup",
 ]

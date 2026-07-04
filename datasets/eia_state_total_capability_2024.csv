@@ -1,0 +1,53 @@
+stateId,stateDescription,capability
+AL,Alabama,157794.2
+AK,Alaska,15430.4
+AZ,Arizona,170872.4
+AR,Arkansas,79242.8
+CA,California,505201.39999999997
+CO,Colorado,97348.59999999999
+CT,Connecticut,55166.6
+DE,Delaware,18695.6
+DC,District of Columbia,346.8
+FL,Florida,413761.8
+GA,Georgia,204146.6
+HI,Hawaii,18425.0
+ID,Idaho,25416.600000000002
+IL,Illinois,224749.8
+IN,Indiana,132952.0
+IA,Iowa,103480.4
+KS,Kansas,86273.0
+KY,Kentucky,90604.6
+LA,Louisiana,137621.0
+ME,Maine,28861.4
+MD,Maryland,62565.2
+MA,Massachusetts,63468.4
+MI,Michigan,159304.4
+MN,Minnesota,88776.4
+MS,Mississippi,89018.4
+MO,Missouri,95828.8
+MT,Montana,30299.2
+NE,Nebraska,48407.200000000004
+NV,Nevada,92891.8
+NH,New Hampshire,21339.0
+NJ,New Jersey,91172.2
+NM,New Mexico,58675.6
+NY,New York,222102.8
+NC,North Carolina,190406.2
+ND,North Dakota,40342.8
+OH,Ohio,162462.8
+OK,Oklahoma,157105.2
+OR,Oregon,80408.2
+PA,Pennsylvania,253485.2
+RI,Rhode Island,13684.0
+SC,South Carolina,115764.0
+SD,South Dakota,32292.4
+TN,Tennessee,96551.4
+TX,Texas,864705.8
+US,United States,6238615.0
+UT,Utah,50953.0
+VT,Vermont,4016.4
+VA,Virginia,154851.8
+WA,Washington,131253.8
+WV,West Virginia,63192.0
+WI,Wisconsin,89679.8
+WY,Wyoming,47219.8

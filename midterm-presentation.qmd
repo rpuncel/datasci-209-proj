@@ -78,24 +78,38 @@ charts.water.baseline_stress_with_datacenters().properties(width=850, height=450
 
 ## Pending Improvements
 -Narrative building
+
 -Improve consistency between visualization in color and encoding methodology 
+
 -Addition of animations between current water stress and data centers and and projected water stress and data centers
 
 ## Testing Plan
 
 ::: {.todo}
 -Plan to conduct a usability study with 12 test subjects (recorded over zoom), with the goal of understanding whether our visualizations are successful in enabling users to understand the presented data and perform key task.
+
 -Key things we want to understand
+    
     - Does the user understand what they are looking at? 
+    
     - Are features such as hover tooltip accessible? 
+    
     - Are the encoded values being communicated? 
+    
     - Where can we make improvments to minimize user error?
+    
     - How can we improve the information around the visualizations to clarify the narrative and user short-term memory load?    
+
 -Example tasks include: 
+    
     - Identify which state currently has the highest AI data center power consumption.
+    
     - Compare the difference in power capacity between Ohio and Idaho.
+    
     - Compare the correlation between capital cost and data center power capacity.
+    
     - How many sites make up Google's AI data center portfolio? 
+    
     - Identify Texas's water scarcity score. 
 
 :::
