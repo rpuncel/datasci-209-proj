@@ -103,8 +103,3 @@ def electricity_capacity_with_datacenters() -> alt.LayerChart:
     ).properties(
         title="2024 Installed Electricity Capacity and AI Data Centers"
     )
-
-
-
-chart = electricity_capacity_with_datacenters()
-chart.show()
