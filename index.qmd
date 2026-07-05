@@ -27,6 +27,8 @@ charts.setup()
 stats = dc.stats()
 ```
 
+## Breakdown 
+
 ```{python}
 #| content: valuebox
 #| title: "Current total capital cost (2025 USD billions)"
@@ -38,22 +40,40 @@ dict(
 
 ```
 
-# Data center datasets
 
-## data_centers.csv
-```{python}
-#| title: data_centers.csv
-
-datasets.data_centers()
-```
-
-## data_center_chillers.csv
 
 ```{python}
-#| title: data_center_chillers.csv
-datasets.data_center_chillers()
-
+#| echo: false
+#| content: valuebox
+#| title: "Epoch AI data centers"
+#| color: primary
+dict(value=f"{stats.sites:,}", icon="database")
 ```
+
+```{python}
+#| echo: false
+#| content: valuebox
+#| title: "Estimated current power"
+#| color: info
+dict(value=f"{stats.total_power:,.0f} MW", icon="lightning-charge")
+```
+
+```{python}
+#| echo: false
+#| content: valuebox
+#| title: "Estimated capital cost"
+#| color: success
+dict(value=f"${stats.total_capex:,.0f}B", icon="cash-stack")
+```
+
+```{python}
+#| echo: false
+#| content: valuebox
+#| title: "Top 10 site power share"
+#| color: warning
+dict(value=f"{stats.top10_power_share:.0%}", icon="bar-chart")
+```
+
 
 # Exploratory Vis 1
 
@@ -247,61 +267,6 @@ The resource-intensity and geography hypothesis is supported. Current power is n
 :::
 
 
-# OJS and Altair Together
-
-
-Quarto can support python and Observable JS (OJS) cells  in the same page. Here's a little demo:
-
-```{python}
-#| height: 600
-
-chart = (
-    alt.Chart(dc.enriched_centers()).mark_bar().encode(
-        y="count():Q",
-        x="Current power (MW):Q",
-        color = "Owner:N"
-    )
-)
-
-chart
-
-```
-
-```{python}
-#| echo: false
-#| output: false
-
-ojs_define(data = dc.enriched_centers())
-
-```
-
-```{ojs}
-//| echo: false
-//| output: false
-filtered = transpose(data).filter(function(p) {
-    return p;
-
-})
-```
-
-
-```{ojs}
-//| title: Owner
-
-Plot.rectY(filtered,
-  Plot.binX(
-    {y: "count"},
-    {x: "Current power (MW)", fill: "Owner", thresholds: 20}
-  ))
-  .plot({
-    height: 600, // Set the height explicitly - otherwise quarto dashboard doesn't render right away
-    marks: [
-      Plot.frame(),
-    ]
-  }
-)
-```
-
 # Aquadect Data
 
 ```{python}
@@ -331,6 +296,7 @@ charts.water.future_stress_with_datacenters()
 ```
 
 ```{python}
+#| label: plot-water-stress-comparison
 charts.water.stress_comparison()
 ```
 
