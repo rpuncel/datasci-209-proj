@@ -14,8 +14,6 @@ website:
         text: Exploratory Report
       - href: midterm-presentation.qmd
         text: Midterm Presentation
-      - href: observable_and_altair.qmd
-        text: OJS and Altair Together
       - about.qmd
 
 format:

@@ -20,7 +20,7 @@ You'll need [Quarto](https://quarto.org/docs/get-started/) (≥ 1.4) and Python 
 git clone https://github.com/rpuncel/datasci-209-proj.git
 cd datasci-209-proj
 
-python -m venv .venv
+python3 -m venv .venv           # Windows: py -3 -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 
@@ -63,6 +63,12 @@ If you're adding a whole new analysis page, create a new `.qmd` and add it to `_
 #### Render the whole project
 ```shell
 quarto render # Renders everything in all formats
+```
+
+#### Run the Python smoke tests
+
+```shell
+python -m pytest datasets charts
 ```
 
 #### Render only the exploratory report, docx format only

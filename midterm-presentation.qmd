@@ -19,27 +19,58 @@ charts.setup()
 
 ## Project Overview
 
-Explore infrastructure behind the recent AI boom.
-Use visualization to help wrap our heads around mind-boggling numbers related to:
+AI is often discussed as models, benchmarks, and chatbots.
 
-- Money
-- Energy
-- Water
+But the current boom is also a physical infrastructure story:
+
+- **Money:** billions in capital spending
+- **Energy:** large new power demands
+- **Water:** resource stress around where data centers are built
+
+> **Central question:** How can visualization help people reason about the infrastructure behind the AI boom?
 
 ::: {.notes}
- - As companies invest heavily in generative AI, the growth of AI is no longer just about software models,  it also depends on data centers, chips, electricity, water, and large-scale capital spending.
- - Our project will visualize how AI-related investment and infrastructure have grown over time, where major data centers are located, and how this growth may affect energy demand and environmental resources.
+When people talk about AI, the conversation usually starts with models:
+which model is smartest, which benchmark it beats, or what it can do in a
+chat interface. But the recent AI boom is not only a software story. It is also
+becoming a physical infrastructure story.
 
+Behind those models are data centers, chips, power contracts, cooling systems,
+land, and very large capital investments. Our project is focused on that layer:
+the infrastructure behind AI growth. We are not evaluating model performance;
+we are trying to make the scale and geography of the buildout more visible.
+
+To make that manageable, we organize the story around three dimensions: money,
+energy, and water. The central question is how visualization can help people
+reason across those dimensions. That makes this a visualization problem.
 :::
 
-## Visualization challenges {.smaller}
+## Visualization challenges
 
-- Three interconnected, but distinct, dimensions to relate
-- The money and financial aspect screams for network and temporal visualizations
-- The power and water dimensions are natural for geographic visualizations
-- Data sources tend to have one of the dimensions, not multiple
-- Where data centers are being built connect to water and energy availability in the region
-- Who is building the data center and who the tenants will be connects to the money
+- **Multiple dimensions:** money, energy, and water need to be read together
+- **Mismatched datasets:** each source captures only part of the picture
+- **Geography matters:** sites connect to local grids and water conditions
+- **Actors matter:** owners, users, and tenants shape the financial story
+
+**Design task:** connect what is being built, where it is located, who is behind it, and which resources are under pressure.
+
+::: {.notes}
+The main visualization challenge is that no single chart or dataset tells the
+whole story.
+
+Money, energy, and water are related, but they behave differently. Capital
+spending has a time dimension and connects to owners, investors, and tenants.
+Energy and water are more geographic: the same data center can look very
+different depending on local grid or water-stress conditions.
+
+The data sources also do not line up perfectly. One source may tell us about
+frontier AI data centers, another about water stress, and another about
+electricity capacity. So our design task is to help the audience hold those
+pieces together without overwhelming them.
+
+The rest of the presentation shows how we moved from simpler exploratory views
+toward charts that start connecting these dimensions more clearly.
+:::
 
 # Evolution so far
 

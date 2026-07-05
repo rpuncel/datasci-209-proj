@@ -19,9 +19,8 @@ import charts
 import datasets
 from wrangle import datacenters as dc
 
-# Enables the vegafusion transformer and the ES-module vega renderer (required
-# because the OJS cells below load RequireJS, which breaks Altair's default
-# renderer — see charts/_theme.py for the full story).
+# Enables the vegafusion transformer and local SVG renderer, avoiding
+# browser-side Vega/RequireJS/CDN issues; see charts/_theme.py for details.
 charts.setup()
 
 stats = dc.stats()

@@ -91,7 +91,7 @@ charts/     zero-arg functions returning an Altair chart
 *.qmd       one-liner cells: charts.datacenters.owner_power()
 ```
 
-Every document that shows charts calls `charts.setup()` once in its first (hidden) cell — it enables the vegafusion data transformer and the ES-module vega renderer that keeps Altair working next to OJS cells.
+Every document that shows charts calls `charts.setup()` once in its first (hidden) cell — it enables the vegafusion data transformer and a local SVG renderer that keeps Altair output independent of browser-side Vega scripts and CDNs.
 
 ### Adding a new chart
 
