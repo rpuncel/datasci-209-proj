@@ -38,23 +38,6 @@ dict(
 
 ```
 
-# Data center datasets
-
-## data_centers.csv
-```{python}
-#| title: data_centers.csv
-
-datasets.data_centers()
-```
-
-## data_center_chillers.csv
-
-```{python}
-#| title: data_center_chillers.csv
-datasets.data_center_chillers()
-
-```
-
 # Exploratory Vis 1
 
 ```{python}
@@ -246,61 +229,6 @@ The resource-intensity and geography hypothesis is supported. Current power is n
 
 :::
 
-
-# OJS and Altair Together
-
-
-Quarto can support python and Observable JS (OJS) cells  in the same page. Here's a little demo:
-
-```{python}
-#| height: 600
-
-chart = (
-    alt.Chart(dc.enriched_centers()).mark_bar().encode(
-        y="count():Q",
-        x="Current power (MW):Q",
-        color = "Owner:N"
-    )
-)
-
-chart
-
-```
-
-```{python}
-#| echo: false
-#| output: false
-
-ojs_define(data = dc.enriched_centers())
-
-```
-
-```{ojs}
-//| echo: false
-//| output: false
-filtered = transpose(data).filter(function(p) {
-    return p;
-
-})
-```
-
-
-```{ojs}
-//| title: Owner
-
-Plot.rectY(filtered,
-  Plot.binX(
-    {y: "count"},
-    {x: "Current power (MW)", fill: "Owner", thresholds: 20}
-  ))
-  .plot({
-    height: 600, // Set the height explicitly - otherwise quarto dashboard doesn't render right away
-    marks: [
-      Plot.frame(),
-    ]
-  }
-)
-```
 
 # Aquadect Data
 
