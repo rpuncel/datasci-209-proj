@@ -27,6 +27,8 @@ charts.setup()
 stats = dc.stats()
 ```
 
+## Breakdown 
+
 ```{python}
 #| content: valuebox
 #| title: "Current total capital cost (2025 USD billions)"
@@ -37,6 +39,41 @@ dict(
 )
 
 ```
+
+
+
+```{python}
+#| echo: false
+#| content: valuebox
+#| title: "Epoch AI data centers"
+#| color: primary
+dict(value=f"{stats.sites:,}", icon="database")
+```
+
+```{python}
+#| echo: false
+#| content: valuebox
+#| title: "Estimated current power"
+#| color: info
+dict(value=f"{stats.total_power:,.0f} MW", icon="lightning-charge")
+```
+
+```{python}
+#| echo: false
+#| content: valuebox
+#| title: "Estimated capital cost"
+#| color: success
+dict(value=f"${stats.total_capex:,.0f}B", icon="cash-stack")
+```
+
+```{python}
+#| echo: false
+#| content: valuebox
+#| title: "Top 10 site power share"
+#| color: warning
+dict(value=f"{stats.top10_power_share:.0%}", icon="bar-chart")
+```
+
 
 # Exploratory Vis 1
 
@@ -259,6 +296,7 @@ charts.water.future_stress_with_datacenters()
 ```
 
 ```{python}
+#| label: plot-water-stress-comparison
 charts.water.stress_comparison()
 ```
 
