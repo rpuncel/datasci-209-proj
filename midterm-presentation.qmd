@@ -19,7 +19,7 @@ charts.setup()
 
 ## Project Overview
 
-Explore infrastructure behind the recent AI boom. 
+Explore infrastructure behind the recent AI boom.
 Use visualization to help wrap our heads around mind-boggling numbers related to:
 
 - Money
@@ -32,111 +32,223 @@ Use visualization to help wrap our heads around mind-boggling numbers related to
 
 :::
 
-## Visualization challenges
+## Visualization challenges {.smaller}
 
 - Three interconnected, but distinct, dimensions to relate
 - The money and financial aspect screams for network and temporal visualizations
 - The power and water dimensions are natural for geographic visualizations
 - Data sources tend to have one of the dimensions, not multiple
 - Where data centers are being built connect to water and energy availability in the region
-- Who is building the data center and who the tenants will be connects to the money 
+- Who is building the data center and who the tenants will be connects to the money
 
 # Evolution so far
 
-::: {.todo}
-Take the exporatory report and come up with the story of how these evolve
-going forward. 
+We started with an [exploratory report](exploratory-report.qmd) of rough,
+self-contained charts. Each round of critique drove a refinement. Four arcs
+tell that story:
+
+1. Simple summaries
+2. Static exploration -> interactive analysis
+3. Water: layering geography incrementally
+
+::: {.notes}
+- Even before the exploratory report there were rougher prototypes: raw-table
+  widgets, simple one-off visualizations, and a single-summary-statistic
+  dashboard, all still linked from the report's "Preliminary exploration"
+  section.
+- The report recorded "what could be improved" notes under every chart —
+  those notes are literally the backlog that produced the current dashboard.
+:::
+
+## Before: states from a ZIP-code regex
+
+```{python}
+#| label: evolution-state-power-before
+charts.datacenters.state_power().properties(width=850, height=380)
+```
+
+## After: robust state matching, ranked and quantified
+
+```{python}
+#| label: evolution-state-power-after
+charts.datacenters.us_state_concentration().properties(height=400)
+```
+
+## Static exploration  to interactive analysis
+
+- Early scatters answered exactly one question each, for us
+- The refined charts let the *audience* interrogate them: legend-bound
+  highlighting, tooltips, and reference lines
+- Interactivity became practical after we enabled VegaFusion and fixed the
+  renderer to coexist with Observable JS cells
+
+::: {.notes}
+The interaction on the next "after" slide: click an owner in the legend to
+highlight that owner's sites; the dashed rule marks the median compute
+density so the audience can anchor comparisons.
+:::
+
+## Before: a one-question scatter
+
+```{python}
+#| label: evolution-scatter-before
+charts.datacenters.cost_vs_energy().properties(width=800, height=380)
+```
+
+## After: interactive — click a legend entry
+
+```{python}
+#| label: evolution-scatter-after
+charts.datacenters.power_vs_compute_density().properties(height=400)
+```
+
+## Evolving towards geo viz
+
+The water story was built up one layer at a time, following the exploratory
+report's own improvement notes:
+
+
+```{python}
+#| label: evolution-water-choropleth
+charts.datacenters.us_state_concentration().properties(width=750, height=430)
+```
+
+::: {.notes}
+
+- In our exploratory visualization, start with straightforward bar chart
+- Very simple to answer "in what US states are data centers most concentrated"?
+- But for understanding resource constraints - power and water availability - we want to tap into geographic and political intuition.
+- So, we brough in data on "water stress" and  overlay the AI data centers on it
+
+:::
+
+## Water stress choropleth with AI data centers overlay
+
+```{python}
+#| label: evolution-water-comparison
+(
+    charts.water.baseline_stress_with_datacenters().properties(width=400, height=280)
+    | charts.water.future_stress_with_datacenters().properties(width=400, height=280)
+)
+```
+
+::: {.notes}
+
+- Within the choropleth, power capacity of data center is encoded as size of dot
+- Position is used to encode actual approximate geographic location
+- A temporal element is introduced - past vs future
+- Can roughly understand via dot density the concentration we had seen with the bars
+- Future improvment: combine the concentration bar chart with the choropleth via brushing
+
+:::
+
+## Adding energy - additional dimensions
+
+```{python}
+#| label: evolution-electricity
+charts.electricity.electricity_capacity_with_datacenters().properties(width=750, height=430)
+```
+
+::: {.notes}
+
+- Since the power dimension is so important, we wanted to join another data source for power
+- Because electric grids are often somewhat characteristic of a state, encode overall capacity for a state as color
+- Continue using position of circle marks for actual geographic position
+- Continue using size of dots for individual data center capacity
 
 :::
 
 # Current prototype
 
-::: {.todo}
+The [live dashboard](https://019e8093-0783-ce2c-6773-7172db1a16e9.share.connect.posit.cloud)
+auto-deploys on every merge and organizes the charts around the same three
+dimensions from the introduction: **money**, **energy**, and **water**.
 
-This will be what we have by the time we give the presentation
+## Money: capital keeps pace with power
 
+```{python}
+#| label: prototype-capital-pipeline
+charts.datacenters.capital_pipeline().properties(width=850, height=400)
+```
+
+## Money: the buildout inflection
+
+```{python}
+#| label: prototype-timeline
+charts.datacenters.timeline_with_milestones().properties(width=850, height=400)
+```
+
+## Energy: data centers meet the grid
+
+```{python}
+#| label: prototype-electricity
+charts.electricity.electricity_capacity_with_datacenters().properties(width=750, height=430)
+```
+
+::: {.notes}
+Water already appeared in the evolution section — the side-by-side
+current-vs-future stress comparison is the current water prototype.
 :::
-
-## Example: any dashboard chart is a one-liner
-
-Every chart from the dashboard lives in the `charts` package; drop one on a
-slide like this (chain `.properties(...)` to resize for the slide):
-
-```{python}
-#| echo: true
-charts.datacenters.owner_power().properties(width=900, height=380)
-```
-
-## Example: water stress map
-
-```{python}
-charts.water.baseline_stress_with_datacenters().properties(width=850, height=450)
-```
-
 
 # Path forward
 
-## Pending Improvements
--Narrative building
+## Pending Improvements {.smaller}
 
--Improve consistency between visualization in color and encoding methodology 
-
--Addition of animations between current water stress and data centers and and projected water stress and data centers
+- Narrative building
+  - Contextual prose to guide user?
+  - Can temporal element (present vs future) be more clearly expressed and integrated?
+- Improve consistency between visualization in color and encoding methodology
+- Addition of animations between current water stress and data centers and
+  projected water stress and data centers
+- Filter choropleth by data center owner?
+- Filter choropleth by data center user / tenant
+- Co-locate investment / cost next in choropleth
 
 ## Testing Plan
 
-::: {.todo}
--Plan to conduct a usability study with 12 test subjects (recorded over zoom), with the goal of understanding whether our visualizations are successful in enabling users to understand the presented data and perform key task.
+- Plan to conduct a usability study with 12 test subjects (recorded over Zoom),
+  with the goal of understanding whether our visualizations are successful in
+  enabling users to understand the presented data and perform key tasks
+- Ask to record each session, take notes during, and review recording and summarize takeaways within 24 hours
 
--Key things we want to understand
-    
-    - Does the user understand what they are looking at? 
-    
-    - Are features such as hover tooltip accessible? 
-    
-    - Are the encoded values being communicated? 
-    
-    - Where can we make improvments to minimize user error?
-    
-    - How can we improve the information around the visualizations to clarify the narrative and user short-term memory load?    
+## Testing Plan: key things we want to understand
 
--Example tasks include: 
-    
-    - Identify which state currently has the highest AI data center power consumption.
-    
-    - Compare the difference in power capacity between Ohio and Idaho.
-    
-    - Compare the correlation between capital cost and data center power capacity.
-    
-    - How many sites make up Google's AI data center portfolio? 
-    
-    - Identify Texas's water scarcity score. 
+- Does the user understand what they are looking at?
+- Are features such as hover tooltips accessible?
+- Are the three dimensions of the problem space overwhelming?
+- How can we improve the information around the visualizations to clarify the
+  narrative and reduce user short-term memory load?
 
-:::
+## Testing Plan: example tasks
 
-# Conclusion
+- Identify which state currently has the highest AI data center power
+  consumption
+- Compare the difference in power capacity between Ohio and Idaho
+- Compare the correlation between capital cost and data center power capacity
+- How many sites make up Google's AI data center portfolio?
+- Identify Texas's water scarcity score
 
-::: {.todo}
+# Wrap-up {.smaller}
 
-Fill in conclusion
-
-:::
+- Rich data set - temporal, geographical, tabular
+- AI infrastructure is highly concentrated: a few owners, a few sites, and a
+  few states account for most current power and capital
+- Sites already intersects with resource stress — several large clusters sit
+  in states with high current or projected water stress
+- Next: sharpen the narrative, unify encodings, and validate with the
+  usability study
+- To provide feedback, please email: `<ellie_parker@berkeley.edu>,<mengyao_chen@berkeley.edu>,<sluggero7@berkeley.edu>,<rpuncel@berkeley.edu>`
 
 # References
 
-::: {.todo}
-Current data center specs: 
-Epoch AI. Data on AI Data Centers. Available at: https://epoch.ai/data (accessed June 2026)
-
-Water scarcity data: 
-World Resources Institute. (2023, August 16). Aqueduct 4.0 current and future country rankings [Data set]. https://www.wri.org/data/aqueduct-40-country-rankings
-
-Proposed Data Centers: 
-FracTracker Alliance. (2025). Open U.S. Data Centers Tracker [Dataset]. https://experience.arcgis.com/experience/5a4d072ad01449bba5698a80103fb909
-
-:::
-
-
-
-
-
+- Current data center specs: Epoch AI. *Data on AI Data Centers.*
+  Available at: <https://epoch.ai/data> (accessed June 2026)
+- Water scarcity data: World Resources Institute. (2023, August 16).
+  *Aqueduct 4.0 current and future country rankings* [Data set].
+  <https://www.wri.org/data/aqueduct-40-country-rankings>
+- Proposed data centers: FracTracker Alliance. (2025).
+  *Open U.S. Data Centers Tracker* [Data set].
+  <https://experience.arcgis.com/experience/5a4d072ad01449bba5698a80103fb909>
+- Electricity capacity: U.S. Energy Information Administration. (2024).
+  *State Electricity Profiles — generating capability* [Data set].
+  <https://www.eia.gov/electricity/state/>
