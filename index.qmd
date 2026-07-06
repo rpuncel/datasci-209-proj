@@ -68,7 +68,7 @@ charts.electricity.electricity_capacity_with_datacenters()
 
 ```{python}
 #| echo: false
-charts.water.stress_comparison()
+charts.water.baseline_stress_with_datacenters().properties(width=500) | charts.water.future_stress_with_datacenters().properties(width=500)
 ```
 
 # Exploratory Vis 1
