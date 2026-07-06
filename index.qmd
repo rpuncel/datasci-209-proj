@@ -28,51 +28,48 @@ stats = dc.stats()
 
 ## Breakdown 
 
-```{python}
-#| content: valuebox
-#| title: "Current total capital cost (2025 USD billions)"
-#| color: primary
+A surge of investment in AI has driven the US economy over the past year. Use the tabs below to explore different dimensions of both the present and the future of the AI economy.
 
-dict(
-  value = float(stats.total_capex)
-)
+1. Start with 💰 **money** - how much is being spent, and why?
+2. Money buys processing power for AI models, use then ⚡ **Power** tab to explore how and where companies are investing in data centers.
+3. Data centers generate a lot of heat - use the 💧 **Water**  tab to see where data centers need are relative to the reality of water availability.
 
-```
+## Tab container
 
+### Tabs {.tabset}
 
-
-```{python}
-#| echo: false
-#| content: valuebox
-#| title: "Epoch AI data centers"
-#| color: primary
-dict(value=f"{stats.sites:,}", icon="database")
-```
+#### 💰 Money
 
 ```{python}
 #| echo: false
-#| content: valuebox
-#| title: "Estimated current power"
-#| color: info
-dict(value=f"{stats.total_power:,.0f} MW", icon="lightning-charge")
+charts.datacenters.power_vs_capital_cost() | charts.datacenters.capital_pipeline()
 ```
+
+#### ⚡ Power
+
+##### Row
+
+```{python}
+#| title: Owner Power
+#| echo: false
+charts.datacenters.owner_power() | charts.datacenters.site_concentration()
+ 
+```
+
+##### Row
+
+```{python}
+#| title: Electricity Capacity with Data Centers
+#| echo: false
+charts.electricity.electricity_capacity_with_datacenters()
+```
+
+#### 💧 Water
 
 ```{python}
 #| echo: false
-#| content: valuebox
-#| title: "Estimated capital cost"
-#| color: success
-dict(value=f"${stats.total_capex:,.0f}B", icon="cash-stack")
+charts.water.stress_comparison()
 ```
-
-```{python}
-#| echo: false
-#| content: valuebox
-#| title: "Top 10 site power share"
-#| color: warning
-dict(value=f"{stats.top10_power_share:.0%}", icon="bar-chart")
-```
-
 
 # Exploratory Vis 1
 
@@ -267,11 +264,6 @@ The resource-intensity and geography hypothesis is supported. Current power is n
 
 
 # Aquadect Data
-
-```{python}
-#| label: water-stress-choropleth
-charts.water.water_stress_geo_map()
-```
 
 Use World Resource Institute Aqueduct data to plot the water stress score of each state.
 ```{python}
