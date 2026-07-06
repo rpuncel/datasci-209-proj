@@ -1,0 +1,71 @@
+
+# OJS and Altair Together
+
+```{python}
+#| include: false
+#| label: setup
+import altair as alt
+
+import charts
+import datasets
+from wrangle import datacenters as dc
+
+# Enables the vegafusion transformer and the ES-module vega renderer (required
+# because the OJS cells below load RequireJS, which breaks Altair's default
+# renderer — see charts/_theme.py for the full story).
+charts.setup()
+
+stats = dc.stats()
+```
+
+Quarto can support python and Observable JS (OJS) cells  in the same page. Here's a little demo:
+
+```{python}
+#| height: 600
+
+chart = (
+    alt.Chart(dc.enriched_centers()).mark_bar().encode(
+        y="count():Q",
+        x="Current power (MW):Q",
+        color = "Owner:N"
+    )
+)
+
+chart
+
+```
+
+```{python}
+#| echo: false
+#| output: false
+
+ojs_define(data = dc.enriched_centers())
+
+```
+
+```{ojs}
+//| echo: false
+//| output: false
+filtered = transpose(data).filter(function(p) {
+    return p;
+
+})
+```
+
+
+```{ojs}
+//| title: Owner
+
+Plot.rectY(filtered,
+  Plot.binX(
+    {y: "count"},
+    {x: "Current power (MW)", fill: "Owner", thresholds: 20}
+  ))
+  .plot({
+    height: 600, // Set the height explicitly - otherwise quarto dashboard doesn't render right away
+    marks: [
+      Plot.frame(),
+    ]
+  }
+)
+```

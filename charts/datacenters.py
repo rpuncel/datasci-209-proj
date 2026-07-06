@@ -71,7 +71,7 @@ def owner_power() -> alt.Chart:
     )
 
 
-def site_concentration() -> alt.LayerChart:
+def site_concentration(lines=True) -> alt.LayerChart:
     site_rank = dc.site_rank()
     site_bars = alt.Chart(site_rank.head(20)).mark_bar(color="#3b73b9").encode(
         x=alt.X("rank:O", title="Site rank by current power"),
@@ -84,24 +84,34 @@ def site_concentration() -> alt.LayerChart:
             alt.Tooltip("Country:N", title="Country"),
         ],
     )
-    site_line = alt.Chart(site_rank.head(20)).mark_line(
-        point=True, color="#c84f2b", strokeWidth=3
-    ).encode(
-        x=alt.X("rank:O"),
-        y=alt.Y("cumulative_power_share:Q", title="Cumulative share", axis=alt.Axis(format="%")),
-        tooltip=[
-            alt.Tooltip("Name:N", title="Data center"),
-            alt.Tooltip("cumulative_power_share:Q", title="Cumulative power share", format=".1%"),
-        ],
-    )
-    return (site_bars + site_line).resolve_scale(y="independent").properties(
-        title=alt.Title(
-            "A few large sites account for much of the current footprint",
-            subtitle=f"The top 10 sites represent {dc.stats().top10_power_share:.1%} of estimated current power.",
-            anchor="start",
-        ),
-        height=390,
-    )
+    if lines:
+        site_line = alt.Chart(site_rank.head(20)).mark_line(
+            point=True, color="#c84f2b", strokeWidth=3
+        ).encode(
+            x=alt.X("rank:O"),
+            y=alt.Y("cumulative_power_share:Q", title="Cumulative share", axis=alt.Axis(format="%")),
+            tooltip=[
+                alt.Tooltip("Name:N", title="Data center"),
+                alt.Tooltip("cumulative_power_share:Q", title="Cumulative power share", format=".1%"),
+            ],
+        )
+        return (site_bars + site_line).resolve_scale(y="independent").properties(
+            title=alt.Title(
+                "A few large sites account for much of the current footprint",
+                subtitle=f"The top 10 sites represent {dc.stats().top10_power_share:.1%} of estimated current power.",
+                anchor="start",
+            ),
+            height=390,
+        )
+    else:
+        return  site_bars.properties(
+            title=alt.Title(
+                "A few large sites account for much of the current footprint",
+                subtitle=f"The top 10 sites represent {dc.stats().top10_power_share:.1%} of estimated current power.",
+                anchor="start",
+            ),
+            height=390,
+        )
 
 
 def power_vs_capital_cost() -> alt.Chart:
