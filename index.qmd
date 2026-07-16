@@ -72,7 +72,8 @@ Click a bar or a map point to highlight one owner's data centers in both views; 
 
 ```{python}
 #| echo: false
-charts.interactive(charts.water.baseline_stress_owner_linked())
+#charts.interactive(charts.water.baseline_stress_owner_linked())
+charts.interactive(charts.datacenters.owner_power() | charts.datacenters.site_concentration())
 ```
 
 ##### Row
