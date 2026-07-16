@@ -42,7 +42,7 @@ A surge of investment in AI has driven the US economy over the past year. Use th
 
 ```{python}
 #| echo: false
-charts.datacenters.power_vs_capital_cost() | charts.datacenters.capital_pipeline()
+charts.interactive(charts.datacenters.power_vs_capital_cost() | charts.datacenters.capital_pipeline())
 ```
 
 #### ⚡ Power
@@ -62,7 +62,7 @@ charts.interactive(charts.datacenters.owner_power() | charts.datacenters.site_co
 ```{python}
 #| title: Electricity Capacity with Data Centers
 #| echo: false
-charts.electricity.electricity_capacity_with_datacenters()
+charts.interactive(charts.electricity.electricity_capacity_with_datacenters())
 ```
 
 #### 💧 Water
