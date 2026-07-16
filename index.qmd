@@ -52,7 +52,8 @@ charts.datacenters.power_vs_capital_cost() | charts.datacenters.capital_pipeline
 ```{python}
 #| title: Owner Power
 #| echo: false
-charts.datacenters.owner_power() | charts.datacenters.site_concentration()
+#charts.datacenters.owner_power() | charts.datacenters.site_concentration()
+charts.interactive(charts.datacenters.owner_power() | charts.datacenters.site_concentration())
  
 ```
 
@@ -72,8 +73,7 @@ Click a bar or a map point to highlight one owner's data centers in both views; 
 
 ```{python}
 #| echo: false
-#charts.interactive(charts.water.baseline_stress_owner_linked())
-charts.interactive(charts.datacenters.owner_power() | charts.datacenters.site_concentration())
+charts.interactive(charts.water.baseline_stress_owner_linked())
 ```
 
 ##### Row
