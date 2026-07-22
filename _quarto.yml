@@ -1,20 +1,12 @@
 project:
   type: website
   render:
-    - "*.qmd"
+    - "index.qmd"
     - "!docs"
+  
 
 website:
   title: "Visualizing the AI Economy"
-  navbar:
-    left:
-      - href: index.qmd
-        text: Home
-      - href: exploratory-report.qmd
-        text: Exploratory Report
-      - href: midterm-presentation.qmd
-        text: Midterm Presentation
-      - about.qmd
 
 format:
   html:
