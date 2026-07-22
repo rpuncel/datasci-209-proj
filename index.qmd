@@ -1,5 +1,6 @@
 ---
 title: "Visualizing the AI Economy"
+bibliography: references.bib
 format:
   dashboard:
     scrolling: true
@@ -8,6 +9,7 @@ nocite: |
   @*
 ---
 
+# Dashboard
 
 ```{python}
 #| include: false
@@ -81,3 +83,8 @@ charts.interactive(charts.water.baseline_stress_owner_linked())
 #| echo: false
 charts.water.future_stress_with_datacenters().properties(width=800)
 ```
+
+# Acknowledgements
+
+::: {#refs}
+:::
