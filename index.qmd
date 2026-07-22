@@ -11,6 +11,11 @@ format:
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@latest/dist/driver.css" />
         <script src="https://cdn.jsdelivr.net/npm/driver.js@latest/dist/hints.iife.js"></script>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@latest/dist/hints.css" />
+        <style>
+          /* Vega tooltip defaults to z-index:2000; driver.js overlay is 1e9.
+             Lift the tooltip above the overlay so it stays visible during the tour. */
+          #vg-tooltip-element { z-index: 1000000001 !important; }
+        </style>
     include-after-body:
       text: |
           <script src="driver_config.js" />
