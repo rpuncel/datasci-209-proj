@@ -26,13 +26,15 @@ def svg_renderer(spec, **metadata):
 # modules use the browser's own loader, completely independent of RequireJS/AMD,
 # so the OJS/RequireJS conflict does not apply and the chart keeps full
 # interactivity (tooltips, selections).
-def esm_vega_renderer(spec, **metadata):
+def esm_vega_renderer(spec, div_id=None, **metadata):
+    # Resolve the wrapper id BEFORE compile_with_vegafusion, which nulls the
+    # top-level `name`. Precedence: explicit div_id > chart name > random uuid.
+    div_id = div_id or spec.get("name") or ("vega-" + uuid.uuid4().hex)
     # With the vegafusion data transformer, the spec handed to renderers still
     # contains vegafusion+dataset:// placeholders; built-in renderers resolve
     # them via compile_with_vegafusion, so this renderer must too.
     if using_vegafusion():
         spec = compile_with_vegafusion(spec)
-    div_id = "vega-" + uuid.uuid4().hex
     spec_json = json.dumps(spec)
     html = (
         f'<div id="{div_id}" class="vega-embed-esm"></div>\n'
@@ -45,13 +47,17 @@ def esm_vega_renderer(spec, **metadata):
     return {"text/html": html}
 
 
-def interactive(chart):
+def interactive(chart, id=None):
     """Render one chart with the browser-side ESM vega-embed instead of the
-    static SVG default, keeping selections and tooltips alive."""
+    static SVG default, keeping selections and tooltips alive.
+
+    Pass ``id`` to give the wrapper div a deterministic id (e.g. for a
+    driver.js tour selector) instead of a random per-render uuid.
+    """
     from IPython.display import HTML
 
     spec = chart.to_dict(context={"pre_transform": False})
-    return HTML(esm_vega_renderer(spec)["text/html"])
+    return HTML(esm_vega_renderer(spec, div_id=id)["text/html"])
 
 
 def setup():

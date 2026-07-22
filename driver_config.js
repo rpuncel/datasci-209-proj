@@ -17,7 +17,7 @@ window.addEventListener("load", () => {
                 },
             },
             {
-                element: "#vega-105d4866dc0f48a3b49c43ed5d8e2070 > div > svg > g > g > g > g > g.mark-group.role-scope.concat_0_group > g > g > g.mark-rect.role-mark.concat_0_marks > path:nth-child(1)",
+                element: "#tour-power-owner [class*='site_bars'] path",
                 popover: {
                     title: "Hover over",
                     description: "Hover over each bar to see more details",
