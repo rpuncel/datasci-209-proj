@@ -31,3 +31,34 @@ window.addEventListener("load", () => {
     });
 
 });
+
+button = document.getElementById("power-help")
+button.addEventListener('click', () => {
+    console.log("power-help clicked");
+    const driver = window.driver.js.driver;
+
+    const driverObj = driver();
+
+    driverObj.setConfig({
+        showProgress: true,
+        steps: [{
+            element: 'a[data-value="⚡ Power"]',
+            popover: {
+                title: "Dimension tabs",
+                description: "Sese water tabs specifically",
+                align: "start",
+                side: "bottom",
+            },
+        },
+        {
+            element: "#tour-power-owner [class*='site_bars'] path",
+            popover: {
+                title: "Hover over",
+                description: "Hover over each bar to see more details",
+            }
+        },
+        ]
+    });
+    driverObj.drive();
+
+});
