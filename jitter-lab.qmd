@@ -18,6 +18,14 @@ controls (below the chart):
 The controls scale each mark's precomputed spiral offset in the browser, so
 they respond instantly without re-running Python.
 
+**Which marks move** is decided in pandas by proximity clustering: marks within
+`charts.overlay.CLUSTER_DIST` degrees of each other (single linkage) form a
+cluster and fan apart; the largest mark in each cluster stays anchored at its
+true spot. `CLUSTER_DIST = 0` would separate only exact ZIP-centroid collisions;
+the current value also splits nearby-but-distinct metro sites (Ashburn, San
+Antonio, Columbus…) whose big marks overlap. Because clustering runs in Python,
+changing `CLUSTER_DIST` needs a **re-render** — it is not a live slider.
+
 > This page is intentionally **not** in the `_quarto.yml` render list, so it does
 > not ship to the deployed dashboard. Render it on its own with
 > `quarto render jitter-lab.qmd`.

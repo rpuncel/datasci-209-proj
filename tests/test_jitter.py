@@ -93,3 +93,34 @@ def test_unit_offsets_zero_for_singletons_and_centroid():
     out = jitter_unit_offsets(_colocated(3, size_col=True), size="power")
     biggest = out.loc[out["power"].idxmax()]
     assert biggest["dlat_unit"] == 0.0 and biggest["dlon_unit"] == 0.0
+
+
+def _two_near(dlat=0.1):
+    return pd.DataFrame(
+        {"Latitude": [40.0, 40.0 + dlat], "Longitude": [-100.0, -100.0], "Name": ["A", "B"]}
+    )
+
+
+def test_proximity_clusters_nearby_distinct_points():
+    # 0.1 deg apart: grouped (and jittered) when cluster_dist covers it...
+    out = jitter_overlaps(_two_near(0.1), spread=0.2, cluster_dist=0.2)
+    assert (out["lat_jit"].to_numpy() != [40.0, 40.1]).any()
+    # ...but left alone at the exact-only default
+    out0 = jitter_overlaps(_two_near(0.1), spread=0.2, cluster_dist=0.0)
+    assert out0["lat_jit"].tolist() == [40.0, 40.1]
+
+
+def test_single_linkage_chains_a_cluster():
+    # three points each 0.1 deg apart in a chain: all one cluster at dist 0.15
+    df = pd.DataFrame(
+        {
+            "Latitude": [40.0, 40.1, 40.2],
+            "Longitude": [-100.0, -100.0, -100.0],
+            "Name": ["A", "B", "C"],
+            "power": [3, 2, 1],
+        }
+    )
+    out = jitter_unit_offsets(df, size="power", cluster_dist=0.15)
+    # every member is part of one 3-cluster, so two of them get nonzero offsets
+    nonzero = (out[["dlat_unit", "dlon_unit"]].abs().sum(axis=1) > 0).sum()
+    assert nonzero == 2  # largest stays anchored, other two fan out

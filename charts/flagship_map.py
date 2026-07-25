@@ -39,6 +39,7 @@ def baseline_stress_owner_linked() -> alt.HConcatChart:
         ww.us_centers_geocoded().dropna(subset=["Latitude", "Longitude"]),
         size=POWER,
         spread=overlay.JITTER_SPREAD,
+        cluster_dist=overlay.CLUSTER_DIST,
     )
     points = overlay.datacenter_points(df, color=condition)
 

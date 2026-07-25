@@ -22,10 +22,18 @@ import altair as alt
 
 from wrangle.datacenters import POWER
 
-# Single knob for how far co-located marks spread, in degrees. Applied by the
-# map chart functions via wrangle.jitter.jitter_overlaps so every map jitters
-# consistently. Eye-tuned against the albersUsa pixel scale.
+# Single knob for how far a cluster's marks spread, in degrees. Applied by the
+# map chart functions via wrangle.jitter so every map jitters consistently.
+# Eye-tuned against the albersUsa pixel scale. This is the one control the
+# in-browser slider scales live.
 JITTER_SPREAD = 0.2
+
+# How close two marks must be (degrees, single linkage) to count as the same
+# cluster and get spread apart. 0 = only exact ZIP-centroid collisions; larger
+# values also separate nearby-but-distinct metro sites whose big marks overlap.
+# Clustering happens in pandas, so changing this needs a re-render (unlike the
+# live spread slider).
+CLUSTER_DIST = 0.35
 
 
 def datacenter_points(

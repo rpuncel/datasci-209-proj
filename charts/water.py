@@ -73,6 +73,7 @@ def baseline_stress_with_datacenters(controls: bool = False) -> alt.LayerChart:
         ww.us_centers_geocoded().dropna(subset=["Latitude", "Longitude"]),
         size=POWER,
         spread=overlay.JITTER_SPREAD,
+        cluster_dist=overlay.CLUSTER_DIST,
     )
     points = overlay.datacenter_points(df, jitter_controls=controls)
     return (baseline_stress_choropleth() + points).properties(
