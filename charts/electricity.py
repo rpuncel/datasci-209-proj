@@ -70,8 +70,12 @@ def electricity_capacity_choropleth():
         )
     )
 
-def electricity_capacity_with_datacenters() -> alt.LayerChart:
-    """Installed generation capacity with AI data centers."""
+def electricity_capacity_with_datacenters(controls: bool = False) -> alt.LayerChart:
+    """Installed generation capacity with AI data centers.
+
+    ``controls=True`` adds live jitter slider/checkbox (needs an interactive
+    renderer); see ``jitter-lab.qmd``.
+    """
     df = jitter_overlaps(
         ww.us_centers_geocoded().dropna(subset=["Latitude", "Longitude"]),
         size=POWER,
@@ -84,6 +88,7 @@ def electricity_capacity_with_datacenters() -> alt.LayerChart:
             "Address:N",
             alt.Tooltip(f"{POWER}:Q", title="Data Center MW"),
         ],
+        jitter_controls=controls,
     )
 
     return (

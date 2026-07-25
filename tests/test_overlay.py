@@ -2,6 +2,7 @@
 
 import altair as alt
 import pandas as pd
+import pytest
 
 from charts.overlay import datacenter_points
 from wrangle.datacenters import POWER
@@ -52,3 +53,26 @@ def test_color_encoding_optional():
     assert "color" not in datacenter_points(_frame()).to_dict()["encoding"]
     colored = datacenter_points(_frame(), color=alt.Color("owner_clean:N"))
     assert "color" in colored.to_dict()["encoding"]
+
+
+def _frame_with_units():
+    df = _frame()
+    df["dlat_unit"] = [0.0, 0.0, 0.0]
+    df["dlon_unit"] = [0.0, 0.0, 0.0]
+    return df
+
+
+def test_jitter_controls_adds_params_and_calc():
+    spec = datacenter_points(_frame_with_units(), jitter_controls=True).to_dict()
+    param_names = {p["name"] for p in spec.get("params", [])}
+    assert {"jitter_spread", "jitter_on"} <= param_names
+    # coordinates come from the calculated fields, not raw columns
+    assert spec["encoding"]["longitude"]["field"] == "lon_plot"
+    assert spec["encoding"]["latitude"]["field"] == "lat_plot"
+    calc_targets = {t["as"] for t in spec["transform"]}
+    assert {"lon_plot", "lat_plot"} <= calc_targets
+
+
+def test_jitter_controls_requires_unit_columns():
+    with pytest.raises(ValueError, match="unit-offset columns"):
+        datacenter_points(_frame(), jitter_controls=True)

@@ -11,6 +11,11 @@ tune overlap legibility:
   stacks apart; otherwise the raw ``Latitude``/``Longitude`` are used, so this
   helper works with or without the jitter step.
 - **opacity / stroke** — tunable so overlapping fills stay readable.
+
+Passing ``jitter_controls=True`` instead ships each point's *unit offset*
+(``dlat_unit``/``dlon_unit`` from ``wrangle.jitter``) to the browser and adds a
+slider + checkbox so the jitter amount can be scaled live (needs an interactive
+renderer). See ``jitter-lab.qmd``.
 """
 
 import altair as alt
@@ -36,6 +41,7 @@ def datacenter_points(
     opacity: float = 0.7,
     stroke: str = "white",
     stroke_width: float = 0.6,
+    jitter_controls: bool = False,
     **mark_kwargs,
 ) -> alt.Chart:
     """Build the circle overlay layer for a data center choropleth.
@@ -43,7 +49,9 @@ def datacenter_points(
     Parameters
     ----------
     df : geocoded data center frame; ``lat_jit``/``lon_jit`` are used when
-        present, else ``lat``/``lon``.
+        present, else ``lat``/``lon``. With ``jitter_controls`` the frame must
+        instead carry ``dlat_unit``/``dlon_unit`` (from ``jitter_unit_offsets``
+        or ``jitter_overlaps``).
     size_field : column driving mark area (power, capex, compute, ...).
     size_title : legend title and default size tooltip label.
     size_range : ``[min, max]`` mark-area range for the size scale — tune per
@@ -51,11 +59,11 @@ def datacenter_points(
     tooltip : override the default tooltip list.
     color : optional Altair color encoding/condition (e.g. an owner brush).
     opacity, stroke, stroke_width, **mark_kwargs : circle mark styling.
+    jitter_controls : add a live slider (jitter amount) + checkbox (jitter on)
+        that scale the unit offsets in the browser. Needs an interactive
+        renderer.
     """
     plot_df = df.sort_values(size_field, ascending=False, kind="stable")
-
-    lat_ch = "lat_jit" if "lat_jit" in plot_df.columns else lat
-    lon_ch = "lon_jit" if "lon_jit" in plot_df.columns else lon
 
     if tooltip is None:
         tooltip = [
@@ -66,8 +74,6 @@ def datacenter_points(
         ]
 
     encodings = dict(
-        longitude=f"{lon_ch}:Q",
-        latitude=f"{lat_ch}:Q",
         size=alt.Size(
             size_field,
             scale=alt.Scale(range=list(size_range)),
@@ -78,10 +84,43 @@ def datacenter_points(
     if color is not None:
         encodings["color"] = color
 
+    mark = dict(opacity=opacity, stroke=stroke, strokeWidth=stroke_width, **mark_kwargs)
+
+    if jitter_controls:
+        missing = {"dlat_unit", "dlon_unit"} - set(plot_df.columns)
+        if missing:
+            raise ValueError(
+                f"jitter_controls=True requires unit-offset columns {missing}; "
+                "build the frame with wrangle.jitter.jitter_overlaps / "
+                "jitter_unit_offsets first."
+            )
+        spread_param = alt.param(
+            name="jitter_spread",
+            value=JITTER_SPREAD,
+            bind=alt.binding_range(min=0, max=0.6, step=0.01, name="Jitter amount (°) "),
+        )
+        enable_param = alt.param(
+            name="jitter_on",
+            value=True,
+            bind=alt.binding_checkbox(name="Jitter on "),
+        )
+        # plotted coord = base + (on ? spread : 0) * unit offset, computed live
+        scale = "(jitter_on ? jitter_spread : 0)"
+        return (
+            alt.Chart(plot_df)
+            .transform_calculate(
+                lon_plot=f"datum['{lon}'] + {scale} * datum.dlon_unit",
+                lat_plot=f"datum['{lat}'] + {scale} * datum.dlat_unit",
+            )
+            .mark_circle(**mark)
+            .encode(longitude="lon_plot:Q", latitude="lat_plot:Q", **encodings)
+            .add_params(spread_param, enable_param)
+        )
+
+    lat_ch = "lat_jit" if "lat_jit" in plot_df.columns else lat
+    lon_ch = "lon_jit" if "lon_jit" in plot_df.columns else lon
     return (
         alt.Chart(plot_df)
-        .mark_circle(
-            opacity=opacity, stroke=stroke, strokeWidth=stroke_width, **mark_kwargs
-        )
-        .encode(**encodings)
+        .mark_circle(**mark)
+        .encode(longitude=f"{lon_ch}:Q", latitude=f"{lat_ch}:Q", **encodings)
     )

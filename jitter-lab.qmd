@@ -1,0 +1,52 @@
+---
+title: "Jitter Lab — data center overlap controls"
+format:
+  html:
+    embed-resources: true
+    toc: true
+---
+
+A scratch page for tuning the data center jitter. Each map exposes two live
+controls (below the chart):
+
+- **Jitter on** — checkbox to toggle the overlap-spreading on/off, so you can
+  A/B the raw stacked marks against the jittered ones.
+- **Jitter amount (°)** — slider for the spread in degrees. The current baked
+  default is `charts.overlay.JITTER_SPREAD`; once you settle on a value, set that
+  constant (in `charts/overlay.py`) to make it the default everywhere.
+
+The controls scale each mark's precomputed spiral offset in the browser, so
+they respond instantly without re-running Python.
+
+> This page is intentionally **not** in the `_quarto.yml` render list, so it does
+> not ship to the deployed dashboard. Render it on its own with
+> `quarto render jitter-lab.qmd`.
+
+```{python}
+#| include: false
+#| label: setup
+import charts
+
+charts.setup()
+```
+
+## Baseline water stress (sized by power)
+
+```{python}
+#| echo: false
+charts.interactive(charts.water.baseline_stress_with_datacenters(controls=True))
+```
+
+## Installed electricity capacity (sized by power)
+
+```{python}
+#| echo: false
+charts.interactive(charts.electricity.electricity_capacity_with_datacenters(controls=True))
+```
+
+## Data center capital (sized by capex)
+
+```{python}
+#| echo: false
+charts.interactive(charts.capital.capital_with_datacenters(controls=True))
+```

@@ -63,14 +63,18 @@ def future_stress_choropleth() -> alt.Chart:
     )
 
 
-def baseline_stress_with_datacenters() -> alt.LayerChart:
-    """Baseline stress choropleth with current AI data centers sized by power."""
+def baseline_stress_with_datacenters(controls: bool = False) -> alt.LayerChart:
+    """Baseline stress choropleth with current AI data centers sized by power.
+
+    ``controls=True`` adds live jitter slider/checkbox (needs an interactive
+    renderer); see ``jitter-lab.qmd``.
+    """
     df = jitter_overlaps(
         ww.us_centers_geocoded().dropna(subset=["Latitude", "Longitude"]),
         size=POWER,
         spread=overlay.JITTER_SPREAD,
     )
-    points = overlay.datacenter_points(df)
+    points = overlay.datacenter_points(df, jitter_controls=controls)
     return (baseline_stress_choropleth() + points).properties(
         width=800,
         height=500,

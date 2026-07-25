@@ -6,6 +6,10 @@ __pycache__/
 **/*.quarto_ipynb
 _site/
 
+# Standalone render of the jitter tuning page (source is jitter-lab.qmd)
+/jitter-lab.html
+/jitter-lab_files/
+
 generated_figures/
 
 # Downloaded datasets — fetched/cached at render time by the `datasets` package.

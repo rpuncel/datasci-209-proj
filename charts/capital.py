@@ -73,8 +73,12 @@ def capital_choropleth() -> alt.Chart:
     )
 
 
-def capital_with_datacenters() -> alt.LayerChart:
-    """Per-state capital choropleth with current AI data centers sized by capex."""
+def capital_with_datacenters(controls: bool = False) -> alt.LayerChart:
+    """Per-state capital choropleth with current AI data centers sized by capex.
+
+    ``controls=True`` adds live jitter slider/checkbox (needs an interactive
+    renderer); see ``jitter-lab.qmd``.
+    """
     df = jitter_overlaps(
         ww.us_centers_geocoded().dropna(subset=["Latitude", "Longitude"]),
         size=CAPEX,
@@ -91,6 +95,7 @@ def capital_with_datacenters() -> alt.LayerChart:
             alt.Tooltip(f"{CAPEX}:Q", title="Capital (USD B)", format=",.1f"),
             alt.Tooltip("owner_clean:N", title="Owner"),
         ],
+        jitter_controls=controls,
     )
     return (capital_choropleth() + points).properties(
         title="AI Data Center Capital by State with Site Locations",
