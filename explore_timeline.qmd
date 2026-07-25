@@ -1,0 +1,130 @@
+---
+
+---
+
+```{python}
+import datasets
+import wrangle
+from itertools import groupby
+
+import altair as alt
+import pandas as pd
+```
+
+```{python}
+df_dc = wrangle.datacenters.enriched_centers()
+
+```
+
+```{python}
+df_dc_timelines = (
+    datasets.data_center_timelines()
+    .assign(
+        date=lambda x: pd.to_datetime(x['Date']),
+        date_year=lambda x: x['date'].dt.year,
+        total_capital_cost=lambda x: x['Total capital cost (2025 USD billions)'].fillna(0),
+    )
+)
+
+```
+
+```{python}
+
+(
+    alt.Chart(df_dc_timelines)
+        .mark_bar()
+       .encode(x='date_year:O', y='count()')
+       .properties(title="Timeline events per year")
+)
+
+```
+
+```{python}
+
+def fill_data_center_timeline_forward(df: pd.DataFrame):
+    all_dcs = df['Data center'].unique()
+    all_years = sorted(df['date_year'].unique())
+
+
+    multi_index = pd.MultiIndex.from_product(
+        [all_dcs, all_years], names=['Data center', 'date_year']
+    )
+
+    unique_end_of_year = df.groupby(['Data center', 'date_year']).agg('last').reset_index()
+
+    return (unique_end_of_year.set_index(['Data center', 'date_year'])
+        .reindex(multi_index)
+        .groupby(level='Data center')
+        .ffill()
+        .reset_index()
+        .dropna(subset=['owner_clean'])
+    )
+```
+
+```{python}
+df_dc_yearly = wrangle.datacenters.yearly()
+
+df_dc_timelines_aug = pd.merge(df_dc_timelines, df_dc, how='left', left_on="Data center", right_on='Name').dropna(subset=['owner_clean'])
+
+```
+
+
+```{python}
+
+def plot_cumulative_cost_by_year_by_owner(df: pd.DataFrame):
+    selection = alt.selection_point(fields=['owner_clean'], bind='legend')
+    return (
+        alt.Chart(
+            df
+        )
+        .mark_area(point='transparent',)
+        .encode(
+            x='date_year',
+            y='sum(total_capital_cost):Q',
+            color='owner_clean',
+            opacity=alt.when(selection).then(alt.value(0.8)).otherwise(alt.value(0.2)),
+            tooltip=['owner_clean:N',],
+        )
+    ).add_params(selection)
+
+chart = (
+    df_dc_timelines_aug
+    .pipe(fill_data_center_timeline_forward )
+    .pipe(plot_cumulative_cost_by_year_by_owner)
+)
+```
+
+
+```{python}
+
+df_dc_timelines_aug[df_dc_timelines_aug['owner_clean'].isna()]['Data center']
+
+```
+
+
+```{python}
+def year_end_costs_by_data_center(df: pd.DataFrame):
+    return (
+        df.groupby(["date_year", 'Data center'])
+        .agg({'Total capital cost (2025 USD billions)': 'last', 'date': 'count'})
+        .reset_index()
+    )
+fill_data_center_timeline_forward(df_dc_timelines_aug)
+```
+
+```{python}
+
+def year_end_costs_by_owner(df: pd.DataFrame):
+    return (
+        df.groupby(["owner_clean", "date_year", 'Data center'])
+        .agg({'total_capital_cost': 'sum', 'date': 'count'})
+    .reset_index()
+    )
+
+df_dc_timelines_aug.pipe(
+    fill_data_center_timeline_forward
+).describe().T
+
+
+
+```

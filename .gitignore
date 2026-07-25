@@ -5,10 +5,10 @@ __pycache__/
 /.quarto/
 **/*.quarto_ipynb
 _site/
+explore_timeline_files/
 
 generated_figures/
 
 # Downloaded datasets — fetched/cached at render time by the `datasets` package.
 data/
-
 
