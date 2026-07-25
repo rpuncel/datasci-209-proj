@@ -17,21 +17,24 @@ POWER = "Current power (MW)"
 H100 = "Current H100 equivalents"
 CAPEX = "Current total capital cost (2025 USD billions)"
 
-_OWNER_CHECKS = [
-    ("Google", "Google"),
-    ("Microsoft", "Microsoft"),
-    ("Amazon", "Amazon"),
-    ("AWS", "Amazon"),
-    ("Meta", "Meta"),
-    ("Facebook", "Meta"),
-    ("SpaceXAI", "xAI"),
-    ("xAI", "xAI"),
-    ("Oracle", "Oracle"),
-    ("OpenAI", "OpenAI"),
-    ("Anthropic", "Anthropic"),
-    ("CoreWeave", "CoreWeave"),
-    ("Tesla", "Tesla"),
-]
+# Only genuine aliases where the raw label differs from the canonical one.
+# Companies not listed here pass through under their own name — no maintenance
+# needed when Epoch adds a new operator.
+_OWNER_ALIASES = {
+    "aws": "Amazon",
+    "facebook": "Meta",
+    "spacexai": "xAI",
+    "spacex": "xAI",
+}
+
+# Sites Epoch leaves without an Owner: the operator brand leads the site Name.
+_NAME_OWNER_FALLBACK = {
+    "QTS": "QTS",
+    "STACK": "STACK",
+    "Stream": "Stream",
+    "Vantage": "Vantage",
+    "DayOne": "DayOne",
+}
 
 _CONTINENTS = {
     "United States": "North America",
@@ -47,10 +50,9 @@ def clean_party(value):
     """Collapse free-text owner/user strings onto a canonical company label."""
     if pd.isna(value):
         return "Unknown"
-    text = str(value).split(",")[0]
-    text = re.sub(r"#\w+", "", text).strip()
-    for needle, label in _OWNER_CHECKS:
-        if needle.lower() in text.lower():
+    text = re.sub(r"#\w+", "", str(value).split(",")[0]).strip()
+    for needle, label in _OWNER_ALIASES.items():
+        if needle in text.lower():
             return label
     return text or "Unknown"
 
@@ -81,6 +83,9 @@ def enriched_centers() -> pd.DataFrame:
         centers[col] = pd.to_numeric(centers[col], errors="coerce")
 
     centers["owner_clean"] = centers["Owner"].map(clean_party)
+    still_unknown = centers["owner_clean"] == "Unknown"
+    for prefix, owner in _NAME_OWNER_FALLBACK.items():
+        centers.loc[still_unknown & centers["Name"].str.startswith(prefix, na=False), "owner_clean"] = owner
     centers["user_clean"] = centers["Users"].map(clean_party)
     centers["state"] = centers.apply(extract_state, axis=1)
     centers["continent"] = centers["Country"].map(_CONTINENTS).fillna("Other")
