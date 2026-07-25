@@ -11,6 +11,7 @@ from . import datacenters
 from . import water
 from . import electricity
 from . import overlay
+from . import flagship_map
 from ._theme import interactive, setup
 
 __all__ = [
@@ -18,6 +19,7 @@ __all__ = [
     "water",
     "electricity",
     "overlay",
+    "flagship_map",
     "interactive",
     "setup",
 ]
