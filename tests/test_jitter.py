@@ -5,7 +5,7 @@ import math
 import numpy as np
 import pandas as pd
 
-from wrangle.jitter import jitter_overlaps
+from wrangle.jitter import jitter_overlaps, jitter_unit_offsets
 
 
 def _colocated(n, lat=40.0, lon=-100.0, size_col=False):
@@ -76,3 +76,20 @@ def test_distinct_locations_not_grouped():
     )
     out = jitter_overlaps(df)
     assert out["lat_jit"].tolist() == [40.0, 40.5]
+
+
+def test_unit_offsets_scale_linearly_with_spread():
+    df = _colocated(4)
+    unit = jitter_unit_offsets(df)
+    for spread in (0.1, 0.3):
+        baked = jitter_overlaps(df, spread=spread)
+        expected_lat = df["Latitude"] + spread * unit["dlat_unit"]
+        expected_lon = df["Longitude"] + spread * unit["dlon_unit"]
+        assert np.allclose(baked["lat_jit"], expected_lat)
+        assert np.allclose(baked["lon_jit"], expected_lon)
+
+
+def test_unit_offsets_zero_for_singletons_and_centroid():
+    out = jitter_unit_offsets(_colocated(3, size_col=True), size="power")
+    biggest = out.loc[out["power"].idxmax()]
+    assert biggest["dlat_unit"] == 0.0 and biggest["dlon_unit"] == 0.0
