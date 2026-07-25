@@ -68,7 +68,7 @@ quarto render # Renders everything in all formats
 #### Run the Python smoke tests
 
 ```shell
-python -m pytest datasets charts
+python -m pytest datasets charts wrangle
 ```
 
 #### Render only the exploratory report, docx format only
