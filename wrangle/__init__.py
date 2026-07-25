@@ -5,9 +5,11 @@ and repeated calls across .qmd cells share one computation.
 """
 
 from . import datacenters
+from . import jitter
 from . import water
 
 __all__ = [
     "datacenters",
+    "jitter",
     "water",
 ]
