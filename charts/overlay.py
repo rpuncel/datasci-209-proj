@@ -17,6 +17,11 @@ import altair as alt
 
 from wrangle.datacenters import POWER
 
+# Single knob for how far co-located marks spread, in degrees. Applied by the
+# map chart functions via wrangle.jitter.jitter_overlaps so every map jitters
+# consistently. Eye-tuned against the albersUsa pixel scale.
+JITTER_SPREAD = 0.2
+
 
 def datacenter_points(
     df,

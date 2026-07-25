@@ -3,9 +3,11 @@
 import altair as alt
 from altair.datasets import data
 
+from charts import overlay
 from wrangle import datacenters as wd
 from wrangle import water as ww
 from wrangle.datacenters import POWER
+from wrangle.jitter import jitter_overlaps
 
 
 def _states_map():
@@ -64,20 +66,12 @@ def future_stress_choropleth() -> alt.Chart:
 
 def baseline_stress_with_datacenters() -> alt.LayerChart:
     """Baseline stress choropleth with current AI data centers sized by power."""
-    points = (
-        alt.Chart(ww.us_centers_geocoded().dropna(subset=["Latitude", "Longitude"]))
-        .mark_circle(opacity=0.7, stroke="blue", strokeWidth=1)
-        .encode(
-            size=alt.Size(
-                POWER,
-                scale=alt.Scale(range=[20, 1000]),
-                legend=alt.Legend(title="Power Capacity (MW)"),
-            ),
-            longitude="Longitude:Q",
-            latitude="Latitude:Q",
-            tooltip=["Name:N", "Address:N", f"{POWER}:Q", "owner_clean:N"],
-        )
+    df = jitter_overlaps(
+        ww.us_centers_geocoded().dropna(subset=["Latitude", "Longitude"]),
+        size=POWER,
+        spread=overlay.JITTER_SPREAD,
     )
+    points = overlay.datacenter_points(df)
     return (baseline_stress_choropleth() + points).properties(
         width=800,
         height=500,
