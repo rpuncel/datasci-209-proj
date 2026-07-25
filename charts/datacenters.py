@@ -73,7 +73,7 @@ def owner_power() -> alt.Chart:
 
 def site_concentration(lines=True) -> alt.LayerChart:
     site_rank = dc.site_rank()
-    site_bars = alt.Chart(site_rank.head(20)).mark_bar(color="#3b73b9").encode(
+    site_bars = alt.Chart(site_rank.head(20), name="site_bars").mark_bar(color="#3b73b9").encode(
         x=alt.X("rank:O", title="Site rank by current power"),
         y=alt.Y(f"{POWER}:Q", title="Current power (MW)"),
         tooltip=[
