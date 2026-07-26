@@ -56,6 +56,14 @@ def clean_party(value):
             return label
     return text or "Unknown"
 
+def fill_unknown_owners_from_name(df: pd.DataFrame):
+    def known_owner_from_name(s: pd.Series):
+        def f(value: str):
+            for n in _NAME_OWNER_FALLBACK:
+                if value.startswith(n):
+                    return _NAME_OWNER_FALLBACK[n]
+        return s.map(f)
+    return df["Owner"].where(~df["Owner"].isna(), known_owner_from_name(df["Name"]))
 
 def extract_state(row):
     """Best-effort U.S. state abbreviation from address, name, and notes."""
@@ -74,18 +82,21 @@ def extract_state(row):
             return abbr
     return "Unknown"
 
-
 @lru_cache(maxsize=None)
 def enriched_centers() -> pd.DataFrame:
     """Epoch data centers with numeric coercion and derived analysis columns."""
     centers = datasets.data_centers().copy()
-    for col in [POWER, H100, CAPEX]:
-        centers[col] = pd.to_numeric(centers[col], errors="coerce")
-
-    centers["owner_clean"] = centers["Owner"].map(clean_party)
-    still_unknown = centers["owner_clean"] == "Unknown"
-    for prefix, owner in _NAME_OWNER_FALLBACK.items():
-        centers.loc[still_unknown & centers["Name"].str.startswith(prefix, na=False), "owner_clean"] = owner
+    centers = centers.assign(
+        **{
+           POWER: lambda x: pd.to_numeric(x[POWER], errors="coerce"),
+           H100: lambda x: pd.to_numeric(x[H100], errors="coerce"),
+           CAPEX: lambda x: pd.to_numeric(x[CAPEX], errors="coerce")
+        }
+    ).assign(
+        owner_clean = lambda x: x["Owner"].map(clean_party)
+    ).assign(
+        owner_clean = lambda x: fill_unknown_owners_from_name(x)
+    )
     centers["user_clean"] = centers["Users"].map(clean_party)
     centers["state"] = centers.apply(extract_state, axis=1)
     centers["continent"] = centers["Country"].map(_CONTINENTS).fillna("Other")
