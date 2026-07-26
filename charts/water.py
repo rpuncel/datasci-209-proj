@@ -5,7 +5,7 @@ from altair.datasets import data
 
 from wrangle import datacenters as wd
 from wrangle import water as ww
-from wrangle.datacenters import POWER
+from wrangle.datacenters import POWER, us_centers_geocoded
 
 
 def _states_map():
@@ -65,7 +65,7 @@ def future_stress_choropleth() -> alt.Chart:
 def baseline_stress_with_datacenters() -> alt.LayerChart:
     """Baseline stress choropleth with current AI data centers sized by power."""
     points = (
-        alt.Chart(ww.us_centers_geocoded().dropna(subset=["Latitude", "Longitude"]))
+        alt.Chart(us_centers_geocoded().dropna(subset=["Latitude", "Longitude"]))
         .mark_circle(opacity=0.7, stroke="blue", strokeWidth=1)
         .encode(
             size=alt.Size(
@@ -119,23 +119,25 @@ def baseline_stress_owner_linked() -> alt.HConcatChart:
 
     owners = sorted(
         set(wd.high_power_low_density()["owner_clean"].dropna())
-        | set(ww.us_centers_geocoded()["owner_clean"].dropna())
+        | set(us_centers_geocoded()["owner_clean"].dropna())
     )
     owner_scale = alt.Scale(domain=owners, scheme="tableau20")
 
     brush = alt.selection_point(fields=["owner_clean"])
-    condition = alt.when(brush).then(
-        alt.Color("owner_clean:N", scale=owner_scale, title="Owner")
+    brush_legend = alt.selection_point(fields=["owner_clean"], bind='legend')
+    owner_color = alt.Color("owner_clean:N", scale=owner_scale, title="Owner")
+    condition = alt.when(brush | brush_legend).then(
+        owner_color
     ).otherwise(alt.value("grey"))
     # the map's Owner legend covers both views
-    bar_condition = alt.when(brush).then(
-        alt.Color("owner_clean:N", scale=owner_scale, legend=None)
+    bar_condition = alt.when(brush | brush_legend).then(
+      owner_color
     ).otherwise(alt.value("grey"))
 
     company_bars = datacenters.site_concentration(lines=False).encode(color=bar_condition)
 
     points = (
-        alt.Chart(ww.us_centers_geocoded().dropna(subset=["Latitude", "Longitude"]))
+        alt.Chart(us_centers_geocoded().dropna(subset=["Latitude", "Longitude"]))
         .mark_circle(opacity=0.7, strokeWidth=1)
         .encode(
             size=alt.Size(

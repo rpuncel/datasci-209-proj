@@ -128,7 +128,7 @@ def owner_summary() -> pd.DataFrame:
 
 @lru_cache(maxsize=None)
 def site_rank() -> pd.DataFrame:
-    centers = enriched_centers()
+    centers = us_centers_geocoded()
     rank = (
         centers[["Name", "owner_clean", POWER, H100, CAPEX, "Country"]]
         .dropna(subset=[POWER])
@@ -299,3 +299,20 @@ def stats() -> Stats:
             states.head(5)["power_mw"].sum() / states["power_mw"].sum()
         ),
     )
+
+@lru_cache(maxsize=None)
+def us_centers_geocoded() -> pd.DataFrame:
+    """U.S. data centers with lat/lon looked up from the address ZIP code."""
+    import pgeocode
+
+    us_centers = enriched_centers()
+    us_centers = us_centers[us_centers["Country"] == "United States"].copy()
+    us_centers["zip"] = us_centers["Address"].str.extract(r"(\d{5})(?:-\d{4})?\s*$")
+
+    nomi = pgeocode.Nominatim("us")
+    zip_lookup = nomi.query_postal_code(us_centers["zip"].dropna().unique().tolist())[
+        ["postal_code", "latitude", "longitude"]
+    ].rename(
+        columns={"postal_code": "zip", "latitude": "Latitude", "longitude": "Longitude"}
+    )
+    return us_centers.merge(zip_lookup, on="zip", how="left")

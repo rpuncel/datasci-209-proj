@@ -5,8 +5,7 @@ from altair.datasets import data
 import pandas as pd
 
 #from wrangle import electricity as we
-from wrangle.datacenters import POWER
-from wrangle import water as ww
+from wrangle.datacenters import POWER, us_centers_geocoded
 from constants.states import STATE_FIPS
 
 def us_electricity_capacity():
@@ -74,7 +73,7 @@ def electricity_capacity_with_datacenters() -> alt.LayerChart:
 
     points = (
         alt.Chart(
-            ww.us_centers_geocoded().dropna(subset=["Latitude", "Longitude"])
+            us_centers_geocoded().dropna(subset=["Latitude", "Longitude"])
         )
         .mark_circle(
             color="black",
