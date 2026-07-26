@@ -136,7 +136,7 @@ def baseline_stress_owner_linked(df: pd.DataFrame) -> alt.HConcatChart:
       owner_color
     ).otherwise(alt.value("grey"))
 
-    company_bars = datacenters.site_concentration(lines=False).encode(color=bar_condition)
+    company_bars = datacenters.site_concentration(df, lines=False).encode(color=bar_condition)
 
     points = (
         alt.Chart(df.dropna(subset=["Latitude", "Longitude"]))
