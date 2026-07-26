@@ -7,7 +7,9 @@ cached on disk (a prior `quarto render` or dataset access warms it).
 import altair as alt
 import pytest
 
+from charts import capital as capital_charts
 from charts import datacenters as dc_charts
+from charts import flagship_map
 from charts import water as water_charts
 
 CHART_FUNCS = [
@@ -29,7 +31,9 @@ CHART_FUNCS = [
     water_charts.future_stress_choropleth,
     water_charts.future_stress_with_datacenters,
     water_charts.stress_comparison,
-    water_charts.baseline_stress_owner_linked,
+    flagship_map.baseline_stress_owner_linked,
+    capital_charts.capital_choropleth,
+    capital_charts.capital_with_datacenters,
 ]
 
 

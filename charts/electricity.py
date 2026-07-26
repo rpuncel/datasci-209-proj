@@ -5,8 +5,10 @@ from altair.datasets import data
 import pandas as pd
 
 #from wrangle import electricity as we
+from charts import overlay
 from wrangle.datacenters import POWER
 from wrangle import water as ww
+from wrangle.jitter import jitter_overlaps
 from constants.states import STATE_FIPS
 
 def us_electricity_capacity():
@@ -68,34 +70,26 @@ def electricity_capacity_choropleth():
         )
     )
 
-def electricity_capacity_with_datacenters() -> alt.LayerChart:
-    """Installed generation capacity with AI data centers."""
-    eia_df = us_electricity_capacity().copy()
+def electricity_capacity_with_datacenters(controls: bool = False) -> alt.LayerChart:
+    """Installed generation capacity with AI data centers.
 
-    points = (
-        alt.Chart(
-            ww.us_centers_geocoded().dropna(subset=["Latitude", "Longitude"])
-        )
-        .mark_circle(
-            color="black",
-            opacity=0.7,
-            stroke="white",
-            strokeWidth=1,
-        )
-        .encode(
-            longitude="Longitude:Q",
-            latitude="Latitude:Q",
-            size=alt.Size(
-                POWER,
-                scale=alt.Scale(range=[20, 1000]),
-                legend=alt.Legend(title="Power Capacity (MW)"),
-            ),
-            tooltip=[
-                "Name:N",
-                "Address:N",
-                alt.Tooltip(f"{POWER}:Q", title="Data Center MW"),
-            ],
-        )
+    ``controls=True`` adds live jitter slider/checkbox (needs an interactive
+    renderer); see ``jitter-lab.qmd``.
+    """
+    df = jitter_overlaps(
+        ww.us_centers_geocoded().dropna(subset=["Latitude", "Longitude"]),
+        size=POWER,
+        spread=overlay.JITTER_SPREAD,
+        cluster_dist=overlay.CLUSTER_DIST,
+    )
+    points = overlay.datacenter_points(
+        df,
+        tooltip=[
+            "Name:N",
+            "Address:N",
+            alt.Tooltip(f"{POWER}:Q", title="Data Center MW"),
+        ],
+        jitter_controls=controls,
     )
 
     return (

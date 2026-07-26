@@ -10,12 +10,18 @@ Typical .qmd usage::
 from . import datacenters
 from . import water
 from . import electricity
+from . import overlay
+from . import flagship_map
+from . import capital
 from ._theme import interactive, setup
 
 __all__ = [
     "datacenters",
     "water",
     "electricity",
+    "overlay",
+    "flagship_map",
+    "capital",
     "interactive",
     "setup",
 ]

@@ -1,0 +1,126 @@
+"""Tests for the deterministic map-mark jitter helper."""
+
+import math
+
+import numpy as np
+import pandas as pd
+
+from wrangle.jitter import jitter_overlaps, jitter_unit_offsets
+
+
+def _colocated(n, lat=40.0, lon=-100.0, size_col=False):
+    data = {"Latitude": [lat] * n, "Longitude": [lon] * n, "Name": list("ABCDEFGH"[:n])}
+    if size_col:
+        data["power"] = list(range(n, 0, -1))  # descending distinct sizes
+    return pd.DataFrame(data)
+
+
+def test_adds_jitter_columns():
+    out = jitter_overlaps(_colocated(3))
+    assert {"lat_jit", "lon_jit"} <= set(out.columns)
+
+
+def test_singletons_untouched():
+    df = pd.DataFrame(
+        {"Latitude": [40.0, 30.0], "Longitude": [-100.0, -90.0], "Name": ["A", "B"]}
+    )
+    out = jitter_overlaps(df)
+    assert out["lat_jit"].tolist() == df["Latitude"].tolist()
+    assert out["lon_jit"].tolist() == df["Longitude"].tolist()
+
+
+def test_colocated_points_become_distinct():
+    out = jitter_overlaps(_colocated(4))
+    coords = list(zip(out["lat_jit"], out["lon_jit"]))
+    assert len(set(coords)) == len(coords)  # all pairwise distinct
+
+
+def test_deterministic():
+    df = _colocated(5)
+    pd.testing.assert_frame_equal(jitter_overlaps(df), jitter_overlaps(df))
+
+
+def test_largest_stays_at_centroid_when_sized():
+    df = _colocated(4, lat=40.0, lon=-100.0, size_col=True)
+    out = jitter_overlaps(df, size="power")
+    biggest = out.loc[out["power"].idxmax()]
+    assert biggest["lat_jit"] == 40.0
+    assert biggest["lon_jit"] == -100.0
+
+
+def test_offsets_within_spread():
+    spread = 0.3
+    lat, lon = 40.0, -100.0
+    out = jitter_overlaps(_colocated(6, lat=lat, lon=lon), spread=spread)
+    coslat = math.cos(math.radians(lat))
+    for _, row in out.iterrows():
+        dlat = row["lat_jit"] - lat
+        dlon = (row["lon_jit"] - lon) * coslat  # undo longitude scaling
+        assert math.hypot(dlat, dlon) <= spread + 1e-9
+
+
+def test_nan_coordinates_pass_through():
+    df = pd.DataFrame(
+        {"Latitude": [40.0, np.nan], "Longitude": [-100.0, -90.0], "Name": ["A", "B"]}
+    )
+    out = jitter_overlaps(df)
+    assert math.isnan(out.loc[1, "lat_jit"])
+    # the valid singleton is unchanged
+    assert out.loc[0, "lat_jit"] == 40.0
+
+
+def test_distinct_locations_not_grouped():
+    # two points ~50 km apart must not be treated as a stack
+    df = pd.DataFrame(
+        {"Latitude": [40.0, 40.5], "Longitude": [-100.0, -100.0], "Name": ["A", "B"]}
+    )
+    out = jitter_overlaps(df)
+    assert out["lat_jit"].tolist() == [40.0, 40.5]
+
+
+def test_unit_offsets_scale_linearly_with_spread():
+    df = _colocated(4)
+    unit = jitter_unit_offsets(df)
+    for spread in (0.1, 0.3):
+        baked = jitter_overlaps(df, spread=spread)
+        expected_lat = df["Latitude"] + spread * unit["dlat_unit"]
+        expected_lon = df["Longitude"] + spread * unit["dlon_unit"]
+        assert np.allclose(baked["lat_jit"], expected_lat)
+        assert np.allclose(baked["lon_jit"], expected_lon)
+
+
+def test_unit_offsets_zero_for_singletons_and_centroid():
+    out = jitter_unit_offsets(_colocated(3, size_col=True), size="power")
+    biggest = out.loc[out["power"].idxmax()]
+    assert biggest["dlat_unit"] == 0.0 and biggest["dlon_unit"] == 0.0
+
+
+def _two_near(dlat=0.1):
+    return pd.DataFrame(
+        {"Latitude": [40.0, 40.0 + dlat], "Longitude": [-100.0, -100.0], "Name": ["A", "B"]}
+    )
+
+
+def test_proximity_clusters_nearby_distinct_points():
+    # 0.1 deg apart: grouped (and jittered) when cluster_dist covers it...
+    out = jitter_overlaps(_two_near(0.1), spread=0.2, cluster_dist=0.2)
+    assert (out["lat_jit"].to_numpy() != [40.0, 40.1]).any()
+    # ...but left alone at the exact-only default
+    out0 = jitter_overlaps(_two_near(0.1), spread=0.2, cluster_dist=0.0)
+    assert out0["lat_jit"].tolist() == [40.0, 40.1]
+
+
+def test_single_linkage_chains_a_cluster():
+    # three points each 0.1 deg apart in a chain: all one cluster at dist 0.15
+    df = pd.DataFrame(
+        {
+            "Latitude": [40.0, 40.1, 40.2],
+            "Longitude": [-100.0, -100.0, -100.0],
+            "Name": ["A", "B", "C"],
+            "power": [3, 2, 1],
+        }
+    )
+    out = jitter_unit_offsets(df, size="power", cluster_dist=0.15)
+    # every member is part of one 3-cluster, so two of them get nonzero offsets
+    nonzero = (out[["dlat_unit", "dlon_unit"]].abs().sum(axis=1) > 0).sum()
+    assert nonzero == 2  # largest stays anchored, other two fan out

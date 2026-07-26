@@ -60,6 +60,14 @@ A surge of investment in AI has driven the US economy over the past year. Use th
 charts.interactive(charts.datacenters.power_vs_capital_cost() | charts.datacenters.capital_pipeline())
 ```
 
+##### Row
+
+```{python}
+#| title: Capital by State with Data Centers
+#| echo: false
+charts.interactive(charts.capital.capital_with_datacenters())
+```
+
 #### ⚡ Power
 
 ##### Row
@@ -96,7 +104,7 @@ Click a bar or a map point to highlight one owner's data centers in both views; 
 
 ```{python}
 #| echo: false
-charts.interactive(charts.water.baseline_stress_owner_linked())
+charts.interactive(charts.flagship_map.baseline_stress_owner_linked())
 ```
 
 ##### Row
