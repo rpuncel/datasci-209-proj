@@ -1,11 +1,12 @@
 """electricity choropleths (EIA 2024) with data center overlays."""
 
+from wrangle.datacenters import enriched_centers
 import altair as alt
 from altair.datasets import data
 import pandas as pd
 
 #from wrangle import electricity as we
-from wrangle.datacenters import POWER, us_centers_geocoded
+from wrangle.datacenters import POWER
 from constants.states import STATE_FIPS
 
 def us_electricity_capacity():
@@ -73,7 +74,7 @@ def electricity_capacity_with_datacenters() -> alt.LayerChart:
 
     points = (
         alt.Chart(
-            us_centers_geocoded().dropna(subset=["Latitude", "Longitude"])
+            enriched_centers().dropna(subset=["Latitude", "Longitude"])
         )
         .mark_circle(
             color="black",

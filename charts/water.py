@@ -2,10 +2,11 @@
 
 import altair as alt
 from altair.datasets import data
+import pandas as pd
 
 from wrangle import datacenters as wd
 from wrangle import water as ww
-from wrangle.datacenters import POWER, us_centers_geocoded
+from wrangle.datacenters import POWER
 
 
 def _states_map():
@@ -62,10 +63,11 @@ def future_stress_choropleth() -> alt.Chart:
     )
 
 
-def baseline_stress_with_datacenters() -> alt.LayerChart:
+def baseline_stress_with_datacenters(df: pd.DataFrame) -> alt.LayerChart:
     """Baseline stress choropleth with current AI data centers sized by power."""
+    selection = alt.selection_point(fields=['owner_clean'], bind='legend')
     points = (
-        alt.Chart(us_centers_geocoded().dropna(subset=["Latitude", "Longitude"]))
+        alt.Chart(df.dropna(subset=["Latitude", "Longitude"]))
         .mark_circle(opacity=0.7, stroke="blue", strokeWidth=1)
         .encode(
             size=alt.Size(
@@ -76,7 +78,7 @@ def baseline_stress_with_datacenters() -> alt.LayerChart:
             longitude="Longitude:Q",
             latitude="Latitude:Q",
             tooltip=["Name:N", "Address:N", f"{POWER}:Q", "owner_clean:N"],
-        )
+        )#.transform_filter(selection)
     )
     return (baseline_stress_choropleth() + points).properties(
         width=800,
@@ -108,7 +110,7 @@ def stress_comparison() -> alt.HConcatChart:
     return baseline_stress_with_datacenters() | future_stress_with_datacenters()
 
 
-def baseline_stress_owner_linked() -> alt.HConcatChart:
+def baseline_stress_owner_linked(df: pd.DataFrame) -> alt.HConcatChart:
     """Baseline stress map and site-concentration bars linked by owner selection.
 
     Clicking a bar or a data center point selects that owner and greys out
@@ -119,7 +121,7 @@ def baseline_stress_owner_linked() -> alt.HConcatChart:
 
     owners = sorted(
         set(wd.high_power_low_density()["owner_clean"].dropna())
-        | set(us_centers_geocoded()["owner_clean"].dropna())
+        | set(df["owner_clean"].dropna())
     )
     owner_scale = alt.Scale(domain=owners, scheme="tableau20")
 
@@ -137,7 +139,7 @@ def baseline_stress_owner_linked() -> alt.HConcatChart:
     company_bars = datacenters.site_concentration(lines=False).encode(color=bar_condition)
 
     points = (
-        alt.Chart(us_centers_geocoded().dropna(subset=["Latitude", "Longitude"]))
+        alt.Chart(df.dropna(subset=["Latitude", "Longitude"]))
         .mark_circle(opacity=0.7, strokeWidth=1)
         .encode(
             size=alt.Size(
@@ -145,7 +147,7 @@ def baseline_stress_owner_linked() -> alt.HConcatChart:
                 scale=alt.Scale(range=[20, 1000]),
                 legend=alt.Legend(title="Power Capacity (MW)"),
             ),
-            color=condition,
+            color=owner_color,
             longitude="Longitude:Q",
             latitude="Latitude:Q",
             tooltip=[
