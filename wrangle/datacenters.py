@@ -98,6 +98,21 @@ def augment_geocoding(df: pd.DataFrame):
     )
     return df.merge(zip_lookup, on="zip", how="left")
 
+def augment_site_power_rank(df: pd.DataFrame):
+    centers = df.assign(
+        rank=lambda x: x[POWER].rank(method='first', ascending=False, na_option='bottom')
+    )
+    #rank = (
+    #    #centers[["Name", "owner_clean", POWER, H100, CAPEX, "Country"]]
+    #    centers.dropna(subset=[POWER])
+    #    .reset_index(drop=True)
+    #)
+    centers["cumulative_power_share"] = (
+        centers.sort_values("rank")
+        .pipe(lambda x: x[POWER].cumsum() / x[POWER].sum())
+    )
+    return centers
+
 @lru_cache(maxsize=None)
 def enriched_centers() -> pd.DataFrame:
     """Epoch data centers with numeric coercion and derived analysis columns."""
@@ -119,6 +134,7 @@ def enriched_centers() -> pd.DataFrame:
     centers["h100_per_mw"] = centers[H100] / centers[POWER]
     centers["capex_per_mw"] = centers[CAPEX] / centers[POWER]
     centers = centers.replace([float("inf"), float("-inf")], pd.NA)
+    centers = augment_site_power_rank(centers)
     centers = augment_geocoding(centers)
     return centers
 
@@ -155,18 +171,11 @@ def owner_summary() -> pd.DataFrame:
     return summary
 
 
+
 @lru_cache(maxsize=None)
 def site_rank() -> pd.DataFrame:
     centers = enriched_centers()
-    rank = (
-        centers[["Name", "owner_clean", POWER, H100, CAPEX, "Country"]]
-        .dropna(subset=[POWER])
-        .sort_values(POWER, ascending=False)
-        .reset_index(drop=True)
-    )
-    rank["rank"] = rank.index + 1
-    rank["cumulative_power_share"] = rank[POWER].cumsum() / centers[POWER].sum()
-    return rank
+    return centers.sort_values("rank")
 
 
 @lru_cache(maxsize=None)
