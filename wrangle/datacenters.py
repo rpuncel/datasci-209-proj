@@ -205,8 +205,42 @@ def yearly() -> pd.DataFrame:
     frame["record_type"] = frame["year"].map(
         lambda y: "Observed / near-term" if y <= 2026 else "Planned"
     )
+    
     return frame
 
+def fill_data_center_timeline_forward(df: pd.DataFrame):
+    all_dcs = df['Data center'].unique()
+    all_years = sorted(df['date_year'].unique())
+
+
+    multi_index = pd.MultiIndex.from_product(
+        [all_dcs, all_years], names=['Data center', 'date_year']
+    )
+
+    unique_end_of_year = df.groupby(['Data center', 'date_year']).agg('last').reset_index()
+
+    return (unique_end_of_year.set_index(['Data center', 'date_year'])
+        .reindex(multi_index)
+        .groupby(level='Data center')
+        .ffill()
+        .reset_index()
+    )
+
+def enriched_timeline():
+    df = (
+        datasets.data_center_timelines()
+        .assign(
+            date=lambda x: pd.to_datetime(x['Date']),
+            date_year=lambda x: x['date'].dt.year,
+            total_capital_cost=lambda x: x['Total capital cost (2025 USD billions)'].fillna(0),
+        ).pipe(fill_data_center_timeline_forward)
+    )
+    return pd.merge(
+        df,
+        enriched_centers(),
+        left_on="Data center",
+        right_on="Name",
+    )
 
 @lru_cache(maxsize=None)
 def events() -> pd.DataFrame:
