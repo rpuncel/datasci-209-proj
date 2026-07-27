@@ -15,7 +15,7 @@ import wrangle.water as ww
 # pin the owner -> color assignment so both charts use the same scale
 owners = sorted(
     set(wd.high_power_low_density()["owner_clean"].dropna())
-    | set(ww.us_centers_geocoded()["owner_clean"].dropna())
+    | set(wd.enriched_centers()["owner_clean"].dropna())
 )
 owner_scale = alt.Scale(domain=owners, scheme="tableau20")
 
@@ -33,7 +33,7 @@ company_bars = charts.datacenters.site_concentration().encode(color=condition)
 #|
 
 points = (
-    alt.Chart(ww.us_centers_geocoded().dropna(subset=["Latitude", "Longitude"]))
+    alt.Chart(wd.enriched_centers().dropna(subset=["Latitude", "Longitude"]))
     .mark_circle(opacity=0.7, strokeWidth=1)
     .encode(
         size=alt.Size(

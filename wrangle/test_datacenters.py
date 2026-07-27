@@ -5,7 +5,7 @@ source data is already cached on disk (a prior `quarto render` or dataset
 access warms it).
 """
 
-from wrangle.datacenters import clean_party, enriched_centers
+from wrangle.datacenters import clean_party, enriched_centers, augment_geocoding
 
 
 def test_no_unknown_owners():
@@ -38,3 +38,10 @@ def test_missing_owner_filled_from_name():
         resolved = row["owner_clean"].iloc[0]
         assert resolved != "Unknown", f"{name} still Unknown"
         assert resolved == owner
+    
+
+def test_augment_geocoding():
+    centers = enriched_centers()
+    assert (centers[centers["Country"] == "United States"])['zip'].all()
+    assert "Latitude" in centers.columns
+

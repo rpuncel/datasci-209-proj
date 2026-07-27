@@ -45,22 +45,6 @@ def future_us_water_stress() -> pd.DataFrame:
     return _province_stress("province_future.csv")
 
 
-@lru_cache(maxsize=None)
-def us_centers_geocoded() -> pd.DataFrame:
-    """U.S. data centers with lat/lon looked up from the address ZIP code."""
-    import pgeocode
-
-    us_centers = enriched_centers()
-    us_centers = us_centers[us_centers["Country"] == "United States"].copy()
-    us_centers["zip"] = us_centers["Address"].str.extract(r"(\d{5})(?:-\d{4})?\s*$")
-
-    nomi = pgeocode.Nominatim("us")
-    zip_lookup = nomi.query_postal_code(us_centers["zip"].dropna().unique().tolist())[
-        ["postal_code", "latitude", "longitude"]
-    ].rename(
-        columns={"postal_code": "zip", "latitude": "Latitude", "longitude": "Longitude"}
-    )
-    return us_centers.merge(zip_lookup, on="zip", how="left")
 
 
 @lru_cache(maxsize=None)

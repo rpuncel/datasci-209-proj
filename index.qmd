@@ -33,12 +33,17 @@ import altair as alt
 import charts
 import datasets
 from wrangle import datacenters as dc
+import pandas as pd
 
 # Enables the vegafusion transformer and local SVG renderer, avoiding
 # browser-side Vega/RequireJS/CDN issues; see charts/_theme.py for details.
 charts.setup()
 
 stats = dc.stats()
+
+def filter_us_only(df: pd.DataFrame):
+  return df[df["Country"] == "United States"]
+df_dcs = filter_us_only(dc.enriched_centers())
 ```
 
 ## Breakdown 
@@ -76,7 +81,7 @@ charts.interactive(charts.datacenters.power_vs_capital_cost() | charts.datacente
 #| title: Owner Power
 #| echo: false
 #charts.datacenters.owner_power() | charts.datacenters.site_concentration()
-charts.interactive(charts.datacenters.owner_power() | charts.datacenters.site_concentration(), id="tour-power-owner")
+charts.interactive(charts.datacenters.owner_power() | charts.datacenters.site_concentration(df_dcs), id="tour-power-owner")
  
 ```
 
@@ -96,7 +101,8 @@ Click a bar or a map point to highlight one owner's data centers in both views; 
 
 ```{python}
 #| echo: false
-charts.interactive(charts.water.baseline_stress_owner_linked())
+
+charts.interactive(charts.water.baseline_stress_owner_linked(df_dcs))
 ```
 
 ##### Row
