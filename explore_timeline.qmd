@@ -13,6 +13,7 @@ import pandas as pd
 
 ```{python}
 df_dc = wrangle.datacenters.enriched_centers()
+timelines = wrangle.datacenters.enriched_timeline()
 
 ```
 
@@ -73,25 +74,27 @@ df_dc_timelines_aug = pd.merge(df_dc_timelines, df_dc, how='left', left_on="Data
 
 def plot_cumulative_cost_by_year_by_owner(df: pd.DataFrame):
     selection = alt.selection_point(fields=['owner_clean'], bind='legend')
+    sort_order = df.groupby(["owner_clean", "date_year"]).agg(dict(total_capital_cost='sum')).reset_index().groupby("owner_clean").last().sort_values("total_capital_cost").reset_index()["owner_clean"]
+    df = pd.merge(df,pd.Series(sort_order.index, index=sort_order.values, name="sort_order"), how='left', left_on="owner_clean", right_index=True)
     return (
         alt.Chart(
-            df
+            df.dropna(subset="total_capital_cost")
         )
         .mark_area(point='transparent',)
         .encode(
             x='date_year',
-            y='sum(total_capital_cost):Q',
-            color='owner_clean',
+            y=alt.Y('sum(total_capital_cost):Q'),
+            color=alt.Color('owner_clean', sort=alt.Sort('sort_order') ),
             opacity=alt.when(selection).then(alt.value(0.8)).otherwise(alt.value(0.2)),
-            tooltip=['owner_clean:N',],
+            tooltip=['owner_clean:N', 'sum(total_capital_cost):Q' ],
+            order=alt.Order('color_level_sort_index:Q'),
         )
     ).add_params(selection)
 
-chart = (
-    df_dc_timelines_aug
-    .pipe(fill_data_center_timeline_forward )
+chart = (timelines[timelines['date_year'] >= 2025]
     .pipe(plot_cumulative_cost_by_year_by_owner)
 )
+chart
 ```
 
 
@@ -121,6 +124,7 @@ def year_end_costs_by_owner(df: pd.DataFrame):
     .reset_index()
     )
 
+timelines = wrangle.datacenters.enriched_timeline()
 df_dc_timelines_aug.pipe(
     fill_data_center_timeline_forward
 ).describe().T
