@@ -127,16 +127,15 @@ def baseline_stress_owner_linked(df: pd.DataFrame) -> alt.HConcatChart:
 
     brush = alt.selection_point(fields=["owner_clean"])
     brush_legend = alt.selection_point(fields=["owner_clean"], bind='legend')
-    owner_color = alt.Color("owner_clean:N", scale=owner_scale, title="Owner")
-    condition = alt.when(brush | brush_legend).then(
-        owner_color
+    condition_legend = alt.when(brush_legend).then(
+        alt.Color("owner_clean:N", scale=owner_scale, title="Owner")
     ).otherwise(alt.value("grey"))
     # the map's Owner legend covers both views
-    bar_condition = alt.when(brush | brush_legend).then(
-      owner_color
+    bar_condition = alt.when(brush & brush_legend).then(
+        alt.Color("owner_clean:N", scale=owner_scale, legend=None)
     ).otherwise(alt.value("grey"))
 
-    company_bars = datacenters.site_concentration(df, lines=False).encode(color=bar_condition)
+    company_bars = datacenters.site_concentration(df, lines=False).encode(color=bar_condition).add_params(brush)
 
     points = (
         alt.Chart(df.dropna(subset=["Latitude", "Longitude"]))
@@ -147,7 +146,7 @@ def baseline_stress_owner_linked(df: pd.DataFrame) -> alt.HConcatChart:
                 scale=alt.Scale(range=[20, 1000]),
                 legend=alt.Legend(title="Power Capacity (MW)"),
             ),
-            color=owner_color,
+            color=condition_legend,
             longitude="Longitude:Q",
             latitude="Latitude:Q",
             tooltip=[
@@ -157,11 +156,11 @@ def baseline_stress_owner_linked(df: pd.DataFrame) -> alt.HConcatChart:
                 alt.Tooltip("owner_clean:N", title="Owner"),
             ],
         )
-    )
+    ).add_params(brush_legend)
     water_stress = (baseline_stress_choropleth() + points).properties(
         width=600,
         height=420,
         title="Baseline Water Stress by US State with Current AI Data Center Locations",
     )
 
-    return (water_stress | company_bars).add_params(brush)
+    return (water_stress | company_bars)
