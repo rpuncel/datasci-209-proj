@@ -64,7 +64,7 @@ def fill_unknown_owners_from_name(df: pd.DataFrame):
                 if value.startswith(n):
                     return _NAME_OWNER_FALLBACK[n]
         return s.map(f)
-    return df["owner_clean"].where(~df["owner_clean"].isna(), known_owner_from_name(df["Name"]))
+    return df["owner_clean"].where(~(df["owner_clean"].isna() | (df["owner_clean"] == 'Unknown')), known_owner_from_name(df["Name"]))
 
 def extract_state(row):
     """Best-effort U.S. state abbreviation from address, name, and notes."""
