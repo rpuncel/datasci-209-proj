@@ -28,7 +28,7 @@ def _stress_choropleth(stress, legend_title: str, chart_title: str, **mark_kwarg
             color=alt.Color(
                 "score:Q",
                 scale=alt.Scale(scheme="reds", domain=[0, 5]),
-                legend=alt.Legend(title=legend_title),
+                legend=alt.Legend(title=legend_title, orient='right'),
             ),
             tooltip=[
                 alt.Tooltip("name_1:N", title="State"),
@@ -73,7 +73,7 @@ def baseline_stress_with_datacenters(df: pd.DataFrame) -> alt.LayerChart:
             size=alt.Size(
                 POWER,
                 scale=alt.Scale(range=[20, 1000]),
-                legend=alt.Legend(title="Power Capacity (MW)"),
+                legend=alt.Legend(title="Power Capacity (MW)", orient='bottom'),
             ),
             longitude="Longitude:Q",
             latitude="Latitude:Q",
@@ -125,17 +125,17 @@ def baseline_stress_owner_linked(df: pd.DataFrame) -> alt.HConcatChart:
     )
     owner_scale = alt.Scale(domain=owners, scheme="tableau20")
     owner_color = alt.Color("owner_clean:N", scale=owner_scale, title="Owner")
-    brush = alt.selection_interval(fields=["Name"])
+    brush = alt.selection_interval(encodings=['latitude', 'longitude'], fields=["Name"])
     brush_legend = alt.selection_point(fields=["owner_clean"], bind='legend')
     condition_legend = alt.when(brush_legend & brush).then(
         owner_color
     ).otherwise(alt.value("grey"))
     # the map's Owner legend covers both views
     bar_condition = alt.when(brush & brush_legend).then(
-        owner_color
+        owner_color.legend(None)
     ).otherwise(alt.value("grey"))
 
-    company_bars = datacenters.site_concentration(df, lines=False).encode(color=bar_condition).add_params(brush)
+    company_bars = datacenters.site_concentration(df, lines=False).encode(color=bar_condition)
 
     points = (
         alt.Chart(df.dropna(subset=["Latitude", "Longitude"]))
@@ -144,7 +144,7 @@ def baseline_stress_owner_linked(df: pd.DataFrame) -> alt.HConcatChart:
             size=alt.Size(
                 POWER,
                 scale=alt.Scale(range=[20, 1000]),
-                legend=alt.Legend(title="Power Capacity (MW)"),
+                legend=alt.Legend(title="Power Capacity (MW)", orient='bottom'),
             ),
             color=condition_legend,
             longitude="Longitude:Q",
@@ -156,7 +156,7 @@ def baseline_stress_owner_linked(df: pd.DataFrame) -> alt.HConcatChart:
                 alt.Tooltip("owner_clean:N", title="Owner"),
             ],
         )
-    ).add_params(brush_legend)
+    ).add_params(brush_legend, brush)
     water_stress = (baseline_stress_choropleth() + points).properties(
         width=600,
         height=420,
