@@ -1,1 +1,133 @@
 /* css styles */
+
+/* Quarto's bslib fill-layout (html-fill-item/html-fill-container) auto-tags
+   any block element inside a fillable card, including these chart wrapper
+   divs. That makes the toolbar and chart-view divs flex-grow to fill the
+   card's available height instead of sizing to their actual content, which
+   opens a large blank gap between the controls and the chart itself. These
+   wrappers hold a form toolbar and a fixed-size SVG, neither of which
+   should stretch, so opt them back out of fill-grow. Scoped to the water
+   explorer only — other charts.interactive() calls are left untouched. */
+#water-stress-explorer.vega-embed-esm,
+#water-stress-explorer .vega-controls,
+#water-stress-explorer .vega-chart-view {
+  flex: none !important;
+  height: auto !important;
+}
+
+#water-stress-explorer .vega-bindings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  align-items: center;
+  margin: 0.35rem 0 1rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.9rem;
+  background: linear-gradient(135deg, #fffafa 0%, #f8fafc 100%);
+  box-shadow: 0 4px 14px rgb(15 23 42 / 0.06);
+}
+
+#water-stress-explorer .vega-bind {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+#water-stress-explorer .vega-bind-range {
+  display: grid;
+  grid-template-columns: auto minmax(650px, 920px);
+  align-items: center;
+  column-gap: 0.65rem;
+  width: min(100%, 1050px);
+}
+
+#water-stress-explorer input[type="range"] {
+  width: 100%;
+  accent-color: #b91c1c;
+}
+
+#water-stress-explorer input[type="range"]::-webkit-slider-runnable-track {
+  height: 0.35rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #fecaca, #b91c1c);
+}
+
+#water-stress-explorer input[type="range"]::-webkit-slider-thumb {
+  margin-top: -0.32rem;
+}
+
+#water-stress-explorer .water-story-timeline {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+#water-stress-explorer .water-control-label {
+  flex-shrink: 0;
+  color: #334155;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+#water-stress-explorer .water-story-steps {
+  display: flex;
+  flex: 1;
+  gap: 0.3rem;
+  padding: 0.22rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  background: #ffffff;
+}
+
+#water-stress-explorer .water-story-steps button {
+  flex: 1;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.5rem 0.75rem;
+  background: transparent;
+  color: #64748b;
+  font-size: 0.86rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    background 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+#water-stress-explorer .water-story-steps button:hover {
+  color: #991b1b;
+  background: #fff1f2;
+}
+
+#water-stress-explorer .water-story-steps button.active {
+  color: #ffffff;
+  background: #b91c1c;
+  box-shadow: 0 2px 7px rgb(185 28 28 / 0.22);
+}
+
+#water-stress-explorer .vega-bind-range output {
+  display: none;
+}
+
+#water-stress-explorer .vega-chart-view {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+#water-stress-explorer svg path,
+#water-stress-explorer svg symbol {
+  transition:
+    fill 500ms ease,
+    opacity 350ms ease,
+    stroke 250ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #water-stress-explorer svg path,
+  #water-stress-explorer svg symbol {
+    transition: none;
+  }
+}
