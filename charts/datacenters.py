@@ -205,7 +205,6 @@ def capital_pipeline() -> alt.Chart:
     return alt.Chart(dc.yearly()).mark_area(line=True, opacity=0.35).encode(
         x=alt.X("date:T", title="Year-end", axis=alt.Axis(format="%Y")),
         y=alt.Y("capex_b:Q", title="Estimated capital cost (2025 USD billions)"),
-        color="owner_clean",
         tooltip=[
             alt.Tooltip("date:T", title="Year-end", format="%Y-%m-%d"),
             alt.Tooltip("capex_b:Q", title="Capital cost ($B)", format=",.1f"),
