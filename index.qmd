@@ -5,6 +5,7 @@ format:
   dashboard:
     scrolling: true
     embed-resources: true
+    css: styles.css
     include-in-header:
       text: |
         <script src="https://cdn.jsdelivr.net/npm/driver.js@latest/dist/driver.js.iife.js"></script>
@@ -35,8 +36,8 @@ import datasets
 from wrangle import datacenters as dc
 import pandas as pd
 
-# Enables the vegafusion transformer and local SVG renderer, avoiding
-# browser-side Vega/RequireJS/CDN issues; see charts/_theme.py for details.
+# Enables the vegafusion transformer and project renderers; see
+# charts/_theme.py for the static/interactive split.
 charts.setup()
 
 stats = dc.stats()
@@ -95,21 +96,15 @@ charts.interactive(charts.electricity.electricity_capacity_with_datacenters())
 
 #### 💧 Water
 
-Click a bar or a map point to highlight one owner's data centers in both views; click empty space to reset.
+Compare WRI Aqueduct's baseline with projections for 2030, 2050, and 2080.
+Move through time to see how absolute stress changes, which owners are most
+exposed, and where forecasts depart most sharply from today's baseline.
 
 ##### Row
 
 ```{python}
 #| echo: false
-
-charts.interactive(charts.water.baseline_stress_owner_linked(df_dcs))
-```
-
-##### Row
-
-```{python}
-#| echo: false
-charts.water.future_stress_with_datacenters().properties(width=800)
+charts.interactive(charts.water.water_stress_explorer(), id="water-stress-explorer")
 ```
 
 # Acknowledgements

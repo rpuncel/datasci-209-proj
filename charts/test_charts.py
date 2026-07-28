@@ -30,6 +30,7 @@ CHART_FUNCS = [
     water_charts.future_stress_with_datacenters,
     water_charts.stress_comparison,
     water_charts.baseline_stress_owner_linked,
+    water_charts.water_stress_explorer,
 ]
 
 
