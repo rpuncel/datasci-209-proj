@@ -180,6 +180,14 @@ def water_stress_explorer() -> alt.VConcatChart:
         clear="dblclick",
         empty=True,
     )
+    # Geographic rubber-band brush (ported from baseline_stress_owner_linked).
+    # Dragging a box on the map restricts owner_bars to the sites inside it, so
+    # the "who controls the most capacity" ranking recomputes for that region.
+    map_brush = alt.selection_interval(
+        name="water_map_brush",
+        encodings=["longitude", "latitude"],
+        empty=True,
+    )
 
     period_label = (
         "water_step == 0 ? 'Baseline' : "
@@ -235,22 +243,30 @@ def water_stress_explorer() -> alt.VConcatChart:
     no_data = state_data.mark_geoshape(
         fill="#f1f5f9", stroke="#ffffff", strokeWidth=0.7
     )
-    stress = state_data.mark_geoshape().encode(
-        color=alt.Color(
-            "display_score:Q",
-            scale=alt.Scale(domain=[0, 5], scheme="reds"),
-            legend=alt.Legend(
-                title="Water stress score (0 = low, 5 = extremely high)",
-                titleLimit=380,
-                orient="none",
-                legendX=0,
-                legendY=555,
-                direction="horizontal",
-                gradientLength=250,
+    stress = (
+        state_data.mark_geoshape()
+        .encode(
+            color=alt.Color(
+                "display_score:Q",
+                scale=alt.Scale(domain=[0, 5], scheme="reds"),
+                legend=alt.Legend(
+                    title="Water stress score (0 = low, 5 = extremely high)",
+                    titleLimit=380,
+                    orient="none",
+                    legendX=0,
+                    legendY=555,
+                    direction="horizontal",
+                    gradientLength=250,
+                ),
             ),
-        ),
-        tooltip=state_tooltip,
-        **outline,
+            tooltip=state_tooltip,
+            **outline,
+        )
+        # Bind the state selections to the geoshape marks themselves. Added at
+        # the vconcat level they never fire (no marks to listen to); on this
+        # unit view, hover/click on a state drives the map outline AND the
+        # linked emphasis on the delta chart below.
+        .add_params(state_hover, state_pin)
     )
 
     sites = ww.comparison_sites()
@@ -311,9 +327,12 @@ def water_stress_explorer() -> alt.VConcatChart:
                     symbolSize=350,
                 ),
             ),
-            opacity=alt.condition(owner_select, alt.value(0.98), alt.value(0.32)),
+            opacity=alt.condition(
+                owner_select & map_brush, alt.value(0.98), alt.value(0.28)
+            ),
             tooltip=site_tooltip,
         )
+        .add_params(map_brush)
     )
     map_chart = (
         alt.layer(no_data, stress, site_points)
@@ -347,6 +366,8 @@ def water_stress_explorer() -> alt.VConcatChart:
         alt.Chart(sites)
         .transform_filter(site_filter)
         .transform_filter("datum.capacity_mw > 0")
+        # Recompute the owner ranking for whatever region is brushed on the map.
+        .transform_filter(map_brush)
         .transform_aggregate(
             total_capacity="sum(capacity_mw)",
             sites="count()",
@@ -383,7 +404,10 @@ def water_stress_explorer() -> alt.VConcatChart:
             height=330,
             title=alt.Title(
                 "Which owners control the most capacity?",
-                subtitle="Click an owner to highlight its locations on the map.",
+                subtitle=[
+                    "Click an owner to highlight its locations on the map.",
+                    "Drag a box on the map to rank owners within that region.",
+                ],
                 anchor="start",
             ),
         )
@@ -439,6 +463,14 @@ def water_stress_explorer() -> alt.VConcatChart:
                 gradientLength=260,
             ),
         ),
+        # Emphasize the bar for whichever state is hovered or pinned on the map,
+        # tying the per-state delta view into the map's state selection.
+        stroke=alt.condition(
+            state_pin | state_hover, alt.value("#111827"), alt.value(None)
+        ),
+        strokeWidth=alt.condition(
+            state_pin | state_hover, alt.value(1.6), alt.value(0)
+        ),
         tooltip=[
             alt.Tooltip("name_1:N", title="State"),
             alt.Tooltip("baseline_score:Q", title="Baseline", format=".2f"),
@@ -473,7 +505,7 @@ def water_stress_explorer() -> alt.VConcatChart:
             spacing=36,
             center=False,
         )
-        .add_params(period, state_hover, state_pin)
+        .add_params(period)
         .resolve_scale(color="independent")
         # Vega-Lite computes one shared canvas margin for the whole vconcat;
         # without this it's a hair too narrow for owner_bars' rotated axis
