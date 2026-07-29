@@ -298,14 +298,19 @@ def water_stress_explorer() -> alt.VConcatChart:
             latitude="latitude:Q",
             size=alt.Size(
                 "capacity_mw:Q",
-                scale=alt.Scale(domain=[0, 3000], range=[80, 500], clamp=True),
+                # capacity_mw is heavily right-skewed (73% of sites are under
+                # 500 MW, out of a 0-7000 MW range) so a linear scale crowds
+                # most points into the smallest sliver of the size range.
+                # sqrt spreads out that common low end at the cost of some
+                # separation among the rare, very large outliers.
+                scale=alt.Scale(type="sqrt", domain=[0, 3000], range=[30, 650], clamp=True),
                 legend=alt.Legend(
                     title="Site capacity (MW)",
                     orient="none",
-                    legendX=340,
+                    legendX=320,
                     legendY=555,
                     direction="horizontal",
-                    values=[0, 1000, 3000],
+                    values=[100, 600, 1800, 3000],
                 ),
             ),
             color=owner_focus_color,
@@ -318,7 +323,7 @@ def water_stress_explorer() -> alt.VConcatChart:
                 legend=alt.Legend(
                     title="Site layer",
                     orient="none",
-                    legendX=566,
+                    legendX=611,
                     legendY=555,
                     direction="horizontal",
                     # Default legend symbols render tiny (~10px) next to the
