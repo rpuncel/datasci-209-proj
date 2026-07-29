@@ -128,7 +128,12 @@ def power_vs_capital_cost() -> alt.Chart:
             "h100_eq:Q",
             title="H100 equivalents",
             scale=alt.Scale(range=[80, 1500]),
-            legend=alt.Legend(orient="none", legendX=0, legendY=468, direction="horizontal"),
+            # Explicit values instead of Vega-Lite's auto ticks, which some
+            # renderers expand to more entries than this legend has room for.
+            legend=alt.Legend(
+                orient="none", legendX=0, legendY=468, direction="horizontal",
+                values=[300000, 900000, 1500000],
+            ),
         ),
         color=alt.Color(
             "owner_clean:N",
