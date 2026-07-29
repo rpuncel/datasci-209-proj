@@ -44,12 +44,12 @@ def electricity_capacity_choropleth():
         .encode(
             color=alt.Color(
                 "capability:Q",
-                title="Installed Capacity (MW)",
-                scale=alt.Scale(scheme="oranges"),
+                title="Installed Grid Capacity (MW)",
+                scale=alt.Scale(range=['#FFD700', '#4A4A4A']),
             ),
             tooltip=[
                 alt.Tooltip("stateDescription:N", title="State"),
-                alt.Tooltip("capability:Q", title="Capacity (MW)", format=",.0f"),
+                alt.Tooltip("capability:Q", title="Grid Capacity (MW)", format=",.0f"),
             ],
         )
         .transform_lookup(
@@ -88,7 +88,7 @@ def electricity_capacity_with_datacenters() -> alt.LayerChart:
             size=alt.Size(
                 POWER,
                 scale=alt.Scale(range=[20, 1000]),
-                legend=alt.Legend(title="Power Capacity (MW)"),
+                legend=alt.Legend(title="Data Center Power Use (MW)"),
             ),
             tooltip=[
                 "Name:N",
@@ -101,5 +101,5 @@ def electricity_capacity_with_datacenters() -> alt.LayerChart:
     return (
         electricity_capacity_choropleth() + points
     ).properties(
-        title="2024 Installed Electricity Capacity and AI Data Centers"
+        title="2024 Installed Electrical Grid Capacity and AI Data Centers Power Use"
     )
