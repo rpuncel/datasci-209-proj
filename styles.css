@@ -132,24 +132,21 @@
   }
 }
 
-/* Full-width section headers */
 .section-divider {
-  width: 100%;
   background-color: #3f3f3f;
-  color: white;
+  padding: 0 !important;
+}
+.section-divider .card {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+.section-divider .card-body {
   padding: 1rem 1.5rem;
-  margin-top: 3rem;
-  margin-bottom: 1.5rem;
+  color: white;
   font-size: 2rem;
   font-weight: 700;
-  border-radius: 0;
-  display: block;
-  grid-column: 1 / -1;
 }
-
-/* These headings exist only to force a new dashboard row with
-   orientation=rows. The visible grey banner is the .section-divider
-   div that follows each one, not the heading itself. */
-.dashboard-row {
+.section-divider .bslib-full-screen-enter {
   display: none;
 }
