@@ -66,6 +66,8 @@ AI is often discussed in terms of technological breakthroughs and model performa
 
 ## Row {.dashboard-row orientation="rows"}
 
+::: {.card}
+
 <div class="section-divider" id="money-section">
 💰 Money
 </div>
@@ -82,7 +84,7 @@ charts.interactive(charts.datacenters.power_vs_capital_cost() | charts.datacente
 ```
 
 Financial investment alone does not create AI capability. Those dollars are converted into physical infrastructure—primarily GPUs housed in energy-intensive data centers.
-
+:::
 ## Row {.dashboard-row orientation="rows"}
 
 <div class="section-divider" id="power-section">
