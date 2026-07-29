@@ -131,3 +131,22 @@
     transition: none;
   }
 }
+
+.section-divider {
+  background-color: #3f3f3f;
+  padding: 0 !important;
+}
+.section-divider .card {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+.section-divider .card-body {
+  padding: 1rem 1.5rem;
+  color: white;
+  font-size: 2rem;
+  font-weight: 700;
+}
+.section-divider .bslib-full-screen-enter {
+  display: none;
+}
