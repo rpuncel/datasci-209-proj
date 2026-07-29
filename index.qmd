@@ -77,6 +77,7 @@ Data source: This data is sourced by Epoch AI, which is a research non-profit fo
 ##
 ```{python}
 #| echo: false
+#| classes: flow
 charts.interactive(charts.datacenters.power_vs_capital_cost() | charts.datacenters.capital_pipeline())
 ```
 
@@ -104,6 +105,7 @@ Data source: Electricity demand of datacenters is sourced from the Epoch AI data
 ```{python}
 #| title: Owner Power
 #| echo: false
+#| classes: flow
 #charts.datacenters.owner_power() | charts.datacenters.site_concentration()
 charts.interactive(charts.datacenters.owner_power() | charts.datacenters.site_concentration(df_dcs), id="tour-power-owner")
  
@@ -113,6 +115,7 @@ charts.interactive(charts.datacenters.owner_power() | charts.datacenters.site_co
 ```{python}
 #| title: Electricity Capacity with Data Centers
 #| echo: false
+#| classes: flow
 charts.interactive(charts.electricity.electricity_capacity_with_datacenters())
 ```
 
