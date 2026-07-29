@@ -131,3 +131,16 @@
     transition: none;
   }
 }
+
+/* Full-width section headers */
+.section-divider {
+  width: 100%;
+  background-color: #3f3f3f;
+  color: white;
+  padding: 1rem 1.5rem;
+  margin-top: 3rem;
+  margin-bottom: 1.5rem;
+  font-size: 2rem;
+  font-weight: 700;
+  border-radius: 0;
+}

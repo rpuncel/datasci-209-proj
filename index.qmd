@@ -64,8 +64,9 @@ AI is often discussed in terms of technological breakthroughs and model performa
 3. Finally explore 💧 **Water** to understand how cooling thos facilities intersects with regional water availability.
 
 
-## 💰 Money {#money}
-::: {.card}
+<div class="section-divider" id="money"> 
+💰 Money 
+</div>
 
 AI companies are investing billions of dollars in new infrastructure. These invesments determing who has access to the computing power needed support current use and train the next generation of AI models.
 
@@ -79,10 +80,11 @@ charts.interactive(charts.datacenters.power_vs_capital_cost() | charts.datacente
 ```
 
 Financial investment alone does not create AI capability. Those dollars are converted into physical infrastructure—primarily GPUs housed in energy-intensive data centers.
-:::
 
-## ⚡ Power
-::: {.card}
+
+<div class="section-divider" id="power"> 
+⚡ Power 
+</div>
 
 AI's rapid growth is creating unprecedented demand for electricity. Can the existing U.S. grid accommodate that demand?
 
@@ -113,10 +115,11 @@ charts.interactive(charts.electricity.electricity_capacity_with_datacenters())
 ```
 
 The power consumed by AI hardware is largely converted into heat, making cooling another critical resource. In many regions, that means increasing dependence on local water supplies.
-:::
 
-## 💧 Water
-::: {.card}
+
+<div class="section-divider" id="water">
+💧 Water 
+</div>
 
 What role does water play in the AI Economy?
 
@@ -133,7 +136,7 @@ Data source: The World Resources Institute publishes an Aqueduct dataset which m
 charts.interactive(charts.water.water_stress_explorer(), id="water-stress-explorer")
 ```
 
-:::
+
 
 # Acknowledgements
 
