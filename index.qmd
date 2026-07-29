@@ -78,9 +78,7 @@ Data source: This data is sourced by Epoch AI, which is a research non-profit fo
 charts.interactive(charts.datacenters.power_vs_capital_cost() | charts.datacenters.capital_pipeline())
 ```
 
-
 Financial investment alone does not create AI capability. Those dollars are converted into physical infrastructure—primarily GPUs housed in energy-intensive data centers.
-
 :::
 
 ## ⚡ Power
@@ -91,7 +89,6 @@ AI's rapid growth is creating unprecedented demand for electricity. Can the exis
 Electricity demand and availability has become one of the primary concerns and constraints for AI expansion. The map below shows the estimated electrical demand of each AI datacenter facility, as well as the grid capacity for each state. This grid capacity represents each state's peak installed generating capacity and not its unused capaccity. In practice, actual capacity is lower due to fluctuations in energy supply as well as generation already serving existing demand. 
 
 Data source: Electricity demand of datacenters is sourced from the Epoch AI dataset introduced above. The grid capacity by state comes from the U.S. Energy Information Administration’s (EIA) 2024 US Electricity Profile which tracked all energy providers and sources within the United States over the course of 2024. 
-
 
 ::: {.card-toolbar}
 
@@ -115,12 +112,7 @@ charts.interactive(charts.datacenters.owner_power() | charts.datacenters.site_co
 charts.interactive(charts.electricity.electricity_capacity_with_datacenters())
 ```
 
-:::
-
-::: {.card}
-
 The power consumed by AI hardware is largely converted into heat, making cooling another critical resource. In many regions, that means increasing dependence on local water supplies.
-
 :::
 
 ## 💧 Water
@@ -135,7 +127,6 @@ Move through time to see how absolute stress changes, which owners are most
 exposed, and where forecasts depart most sharply from today's baseline.
 
 Data source: The World Resources Institute publishes an Aqueduct dataset which measures the ratio of water demand to renewable water supplies as a water stress score. 
-
 
 ```{python}
 #| echo: false
