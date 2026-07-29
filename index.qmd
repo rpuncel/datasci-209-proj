@@ -3,7 +3,7 @@ title: "Visualizing the AI Economy"
 bibliography: references.bib
 format:
   dashboard:
-    scrollin: true
+    scrolling: true
     toc: true
     toc-depth: 2
     embed-resources: true
