@@ -4,6 +4,8 @@ bibliography: references.bib
 format:
   dashboard:
     scrolling: true
+    toc: true
+    toc-depth: 2
     embed-resources: true
     css: styles.css
     include-in-header:
@@ -55,18 +57,15 @@ A surge of investment in AI has driven the US economy over the past year. Use th
 2. Money buys processing power for AI models, use then ⚡ **Power** tab to explore how and where companies are investing in data centers.
 3. Data centers generate a lot of heat - use the 💧 **Water**  tab to see where data centers need are relative to the reality of water availability.
 
-## Tab container
 
-### Tabs {.tabset}
-
-#### 💰 Money {#money-tab}
+## 💰 Money {#money}
 
 ```{python}
 #| echo: false
 charts.interactive(charts.datacenters.power_vs_capital_cost() | charts.datacenters.capital_pipeline())
 ```
 
-#### ⚡ Power
+## ⚡ Power
 
 ##### Row
 
@@ -94,7 +93,7 @@ charts.interactive(charts.datacenters.owner_power() | charts.datacenters.site_co
 charts.interactive(charts.electricity.electricity_capacity_with_datacenters())
 ```
 
-#### 💧 Water
+## 💧 Water
 
 Compare WRI Aqueduct's baseline with projections for 2030, 2050, and 2080.
 Move through time to see how absolute stress changes, which owners are most
