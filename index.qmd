@@ -87,7 +87,6 @@ Electricity demand and availability has become one of the primary concerns and c
 
 Data source: Electricity demand of datacenters is sourced from the Epoch AI dataset introduced above. The grid capacity by state comes from the U.S. Energy Information Administration’s (EIA) 2024 US Electricity Profile which tracked all energy providers and sources within the United States over the course of 2024. 
 
-##### Row
 
 ::: {.card-toolbar}
 
@@ -104,7 +103,6 @@ charts.interactive(charts.datacenters.owner_power() | charts.datacenters.site_co
  
 ```
 
-##### Row
 
 ```{python}
 #| title: Electricity Capacity with Data Centers
@@ -125,7 +123,6 @@ exposed, and where forecasts depart most sharply from today's baseline.
 
 Data source: The World Resources Institute publishes an Aqueduct dataset which measures the ratio of water demand to renewable water supplies as a water stress score. 
 
-##### Row
 
 ```{python}
 #| echo: false
