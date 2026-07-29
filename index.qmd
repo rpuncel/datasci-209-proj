@@ -3,7 +3,7 @@ title: "Visualizing the AI Economy"
 bibliography: references.bib
 format:
   dashboard:
-    scrolling: true
+    scrollin: true
     toc: true
     toc-depth: 2
     embed-resources: true
@@ -64,9 +64,9 @@ AI is often discussed in terms of technological breakthroughs and model performa
 3. Finally explore 💧 **Water** to understand how cooling thos facilities intersects with regional water availability.
 
 
-
-
 ## 💰 Money {#money}
+::: {.card}
+
 AI companies are investing billions of dollars in new infrastructure. These invesments determing who has access to the computing power needed support current use and train the next generation of AI models.
 
 The plots below compare estimated capital investment with estimated power capacity of major AI data centers. Larger facilities require greater electrical capacity, making power demand a useful proxy for future computing capability. Greater power capacity means greater computing capacity. The companies investing in infrastructure today will continue to be the ones at the forefront of the AI movement. 
@@ -78,9 +78,14 @@ Data source: This data is sourced by Epoch AI, which is a research non-profit fo
 charts.interactive(charts.datacenters.power_vs_capital_cost() | charts.datacenters.capital_pipeline())
 ```
 
+
 Financial investment alone does not create AI capability. Those dollars are converted into physical infrastructure—primarily GPUs housed in energy-intensive data centers.
 
+:::
+
 ## ⚡ Power
+::: {.card}
+
 AI's rapid growth is creating unprecedented demand for electricity. Can the existing U.S. grid accommodate that demand?
 
 Electricity demand and availability has become one of the primary concerns and constraints for AI expansion. The map below shows the estimated electrical demand of each AI datacenter facility, as well as the grid capacity for each state. This grid capacity represents each state's peak installed generating capacity and not its unused capaccity. In practice, actual capacity is lower due to fluctuations in energy supply as well as generation already serving existing demand. 
@@ -110,9 +115,17 @@ charts.interactive(charts.datacenters.owner_power() | charts.datacenters.site_co
 charts.interactive(charts.electricity.electricity_capacity_with_datacenters())
 ```
 
+:::
+
+::: {.card}
+
 The power consumed by AI hardware is largely converted into heat, making cooling another critical resource. In many regions, that means increasing dependence on local water supplies.
 
+:::
+
 ## 💧 Water
+::: {.card}
+
 What role does water play in the AI Economy?
 
 More compute capacity requires more cooling. Although water consumption is closely tied to electricity use, companies rarely disclose facility-level water use. Published estimates also vary widely depending on cooling technology, with power to water use conversions ranging from 0.1 L/kWh to 2.5 L/kWh. Rather than presenting highly uncertain estimates, this dashboard compares estimated power demand with regional water stress, with the understanding that there exists a correlation between power demand and water use.
@@ -128,6 +141,8 @@ Data source: The World Resources Institute publishes an Aqueduct dataset which m
 #| echo: false
 charts.interactive(charts.water.water_stress_explorer(), id="water-stress-explorer")
 ```
+
+:::
 
 # Acknowledgements
 
