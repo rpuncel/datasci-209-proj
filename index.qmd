@@ -64,27 +64,25 @@ AI is often discussed in terms of technological breakthroughs and model performa
 2. Those investments become ⚡ **Power** as companies build data centers that consume enormous amounts of electricity from limited grid capacity. 
 3. Finally explore 💧 **Water** to understand how cooling thos facilities intersects with regional water availability.
 
-## Row {.dashboard-row orientation="rows"}
+## {.section-divider}
+<span id="money-section"></span>💰 Money
 
-::: {.card}
-
-<div class="section-divider" id="money-section">
-💰 Money
-</div>
-
+##
 AI companies are investing billions of dollars in new infrastructure. These invesments determing who has access to the computing power needed support current use and train the next generation of AI models.
 
 The plots below compare estimated capital investment with estimated power capacity of major AI data centers. Larger facilities require greater electrical capacity, making power demand a useful proxy for future computing capability. Greater power capacity means greater computing capacity. The companies investing in infrastructure today will continue to be the ones at the forefront of the AI movement. 
 
 Data source: This data is sourced by Epoch AI, which is a research non-profit focused on compiling data estimates related to current and future AI. This specific data center dataset estimates the power, compute capacity, and cost of AI datacenters using permit information and satellite imagery. 
 
+##
 ```{python}
 #| echo: false
 charts.interactive(charts.datacenters.power_vs_capital_cost() | charts.datacenters.capital_pipeline())
 ```
 
+##
 Financial investment alone does not create AI capability. Those dollars are converted into physical infrastructure—primarily GPUs housed in energy-intensive data centers.
-:::
+
 ## Row {.dashboard-row orientation="rows"}
 
 <div class="section-divider" id="power-section">
