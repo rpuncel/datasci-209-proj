@@ -146,3 +146,10 @@
   display: block;
   grid-column: 1 / -1;
 }
+
+/* These headings exist only to force a new dashboard row with
+   orientation=rows. The visible grey banner is the .section-divider
+   div that follows each one, not the heading itself. */
+.dashboard-row {
+  display: none;
+}
