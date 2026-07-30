@@ -21,16 +21,15 @@ def test_substring_operator_labels_map_to_canonical_owners():
     assert color_for("Related Digital/Google") == color_for("Google")
 
 
-def test_no_reds_in_pinned_palette():
-    # Rough guard: none of the pinned hex values should sit in the red family
-    # that would blend into the water-stress choropleth.
+def test_no_deep_reds_in_pinned_palette():
+    # Guard against colors that disappear into the water-stress choropleth.
     for name, hex_color in OWNER_COLORS.items():
         if name == "Unknown":
             continue
         r = int(hex_color[1:3], 16)
         g = int(hex_color[3:5], 16)
         b = int(hex_color[5:7], 16)
-        assert not (r > 160 and g < 100 and b < 100), f"{name} looks too red: {hex_color}"
+        assert not (r > 180 and g < 90 and b < 90), f"{name} looks too red: {hex_color}"
 
 
 def test_owner_scale_keeps_amazon_color_across_domains():

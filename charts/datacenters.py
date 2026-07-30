@@ -76,10 +76,9 @@ def owner_power() -> alt.Chart:
 
 def site_concentration(df: pd.DataFrame, lines=True) -> alt.LayerChart:
     site_rank = df.sort_values("rank")
-    site_bars = alt.Chart(site_rank.head(20), name="site_bars").mark_bar().encode(
+    site_bars = alt.Chart(site_rank.head(20), name="site_bars").mark_bar(color="#3b73b9").encode(
         x=alt.X("rank:O", title="Site rank by current power"),
         y=alt.Y(f"{POWER}:Q", title="Current power (MW)"),
-        color=owner_color(legend=None),
         tooltip=[
             alt.Tooltip("rank:O", title="Rank"),
             alt.Tooltip("Name:N", title="Data center"),

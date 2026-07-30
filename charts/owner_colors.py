@@ -1,7 +1,7 @@
 """Stable, choropleth-safe owner → color mapping for all project charts.
 
 Water-stress maps use Vega ``reds``, so company marks that overlay those maps
-need colors that stay distinct from the fill (no reds / pinks / orange-reds).
+need colors that stay distinct from the fill (avoid deep reds / pinks).
 Every chart that encodes owner/operator as color should use ``owner_scale`` /
 ``owner_color`` so the same company keeps the same hue across views.
 """
@@ -14,55 +14,55 @@ from typing import Iterable
 
 import altair as alt
 
-# Pinned colors for canonical AI-owner labels (owner_clean). Chosen to contrast
-# against light→dark red choropleths and against each other.
+# Tableau-inspired categorical colors with reds removed so overlays stay
+# readable on water-stress choropleths. High chroma so the top owners separate
+# clearly in legends and small marks.
 OWNER_COLORS: dict[str, str] = {
-    "Amazon": "#1D4E89",
-    "Microsoft": "#0F7B6C",
-    "Google": "#2E86AB",
-    "Meta": "#6C3483",
-    "Oracle": "#1A5276",
-    "xAI": "#8E44AD",
-    "CoreWeave": "#117A65",
-    "QTS": "#B7950B",
-    "Huawei": "#1B4F72",
-    "DayOne": "#148F77",
-    "Alibaba": "#5D6D7E",
-    "Vantage": "#2874A6",
-    "STACK": "#16A085",
-    "Stream": "#7D3C98",
-    "Softbank": "#1E8449",
-    "Fluidstack": "#2980B9",
-    "Nscale": "#884EA0",
-    "Firmus": "#0E6655",
-    "G42": "#2471A3",
-    "VNET": "#5B7083",
-    "Unknown": "#94A3B8",
+    "Amazon": "#4E79A7",      # blue
+    "Microsoft": "#F28E2B",   # orange
+    "Google": "#59A14F",      # green
+    "Meta": "#B07AA1",        # purple
+    "xAI": "#EDC948",         # yellow
+    "CoreWeave": "#76B7B2",   # teal
+    "Oracle": "#9C755F",      # brown
+    "QTS": "#FF9D57",         # light orange
+    "Huawei": "#8CD17D",      # light green
+    "DayOne": "#499894",      # dark teal
+    "Alibaba": "#D7B5A6",     # tan
+    "Vantage": "#A0CBE8",     # light blue
+    "STACK": "#8A6DCE",       # violet
+    "Stream": "#FFBE7D",      # peach
+    "Softbank": "#86BCB6",    # seafoam
+    "Fluidstack": "#6B9AC4",  # medium blue
+    "Nscale": "#D4A6C8",      # lilac
+    "Firmus": "#B6992D",      # olive
+    "G42": "#3A7D44",         # forest
+    "VNET": "#BAB0AC",        # warm gray
+    "Unknown": "#9CA3AF",
 }
 
 # Fallback cycle for proposed-project operators and any new owner labels.
-# Same constraint: no reds that disappear into the water-stress fill.
 _FALLBACK_PALETTE: tuple[str, ...] = (
-    "#0B3D91",
-    "#1A7A4C",
-    "#5B2C6F",
-    "#0E7C7B",
-    "#A67C00",
-    "#1F4E79",
-    "#2A9D8F",
-    "#6A4C93",
-    "#14746F",
-    "#3D348B",
-    "#05668D",
-    "#028090",
-    "#7B2D8E",
-    "#264653",
-    "#457B9D",
-    "#1D3557",
-    "#6D597A",
-    "#2C6E49",
-    "#3A506B",
-    "#5C4D7A",
+    "#4E79A7",
+    "#F28E2B",
+    "#59A14F",
+    "#B07AA1",
+    "#EDC948",
+    "#76B7B2",
+    "#9C755F",
+    "#FF9D57",
+    "#8CD17D",
+    "#499894",
+    "#A0CBE8",
+    "#8A6DCE",
+    "#FFBE7D",
+    "#86BCB6",
+    "#6B9AC4",
+    "#D4A6C8",
+    "#B6992D",
+    "#3A7D44",
+    "#D7B5A6",
+    "#5B6E8C",
 )
 
 _KNOWN_BY_LENGTH = sorted(
