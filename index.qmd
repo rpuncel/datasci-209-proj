@@ -172,6 +172,7 @@ Future data center locations: Proposed data center locations were obtained from 
 charts.interactive(charts.water.water_stress_explorer(), id="water-stress-explorer")
 ```
 
+##
 The expansion of AI is therefore not only a question of algorithms and models, but also a question of physical infrastructure. Understanding where investment, electricity, and water resources intersect provides insight into the opportunities, constraints, and risks shaping the future AI economy.
 
 # Acknowledgements
