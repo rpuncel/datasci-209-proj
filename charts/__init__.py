@@ -8,12 +8,16 @@ Typical .qmd usage::
 """
 
 from . import datacenters
+from . import overlay
+from . import money
 from . import water
 from . import electricity
 from ._theme import interactive, setup
 
 __all__ = [
     "datacenters",
+    "overlay",
+    "money",
     "water",
     "electricity",
     "interactive",

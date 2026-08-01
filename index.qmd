@@ -95,6 +95,14 @@ charts.interactive(
 ```
 
 ##
+
+```{python}
+charts.interactive(
+  charts.money.capital_with_datacenters()
+)
+```
+
+##
 Financial investment alone does not create AI capability. Those dollars are converted into physical infrastructure—primarily GPUs housed in energy-intensive data centers.
 
 ## {.section-divider}
