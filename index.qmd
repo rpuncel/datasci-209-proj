@@ -78,7 +78,7 @@ Data source: This data is sourced by Epoch AI, which is a research non-profit fo
 ```{python}
 #| echo: false
 #| classes: flow
-charts.interactive(charts.datacenters.power_vs_capital_cost() | charts.datacenters.capital_pipeline())
+charts.interactive(charts.datacenters.capital_pipeline() | charts.datacenters.power_vs_capital_cost())
 ```
 
 ##

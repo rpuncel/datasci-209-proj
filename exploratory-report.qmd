@@ -33,6 +33,7 @@ import itables
 itables.init_notebook_mode(all_interactive=True)
 
 import datasets
+from charts.owner_colors import owner_color
 ```
 
 
@@ -356,7 +357,7 @@ See some of our intermediate artifacts outside of our report at these links:
 chart = alt.Chart(owner_summary.head(10)).mark_bar().encode(
     y=alt.Y("owner_clean:N", sort="-x", title=None),
     x=alt.X("power_mw:Q", title="Estimated current power (MW)"),
-    color=alt.Color("owner_clean:N", legend=None, scale=alt.Scale(scheme="tableau20")),
+    color=owner_color(legend=None),
     tooltip=[
         alt.Tooltip("owner_clean:N", title="Owner"),
         alt.Tooltip("power_mw:Q", title="Power (MW)", format=",.0f"),
@@ -444,7 +445,7 @@ chart = alt.Chart(owner_summary.head(10)).mark_circle(opacity=0.78, stroke="whit
     x=alt.X("power_mw:Q", title="Estimated current power (MW)"),
     y=alt.Y("capex_b:Q", title="Estimated current capital cost (2025 USD billions)"),
     size=alt.Size("h100_eq:Q", title="H100 equivalents", scale=alt.Scale(range=[80, 1500])),
-    color=alt.Color("owner_clean:N", title="Owner", scale=alt.Scale(scheme="tableau20")),
+    color=owner_color(),
     tooltip=[
         alt.Tooltip("owner_clean:N", title="Owner"),
         alt.Tooltip("power_mw:Q", title="Power (MW)", format=",.0f"),
@@ -624,11 +625,7 @@ scatter = alt.Chart(valid_density).mark_circle(opacity=0.76, stroke="white", str
     x=alt.X(f"{POWER}:Q", title="Current power (MW)"),
     y=alt.Y("h100_per_mw:Q", title="H100 equivalents per MW"),
     size=alt.Size(f"{CAPEX}:Q", title="Capital cost ($B)", scale=alt.Scale(range=[45, 1100])),
-    color=alt.Color(
-        "owner_clean:N",
-        title="Owner",
-        scale=alt.Scale(scheme="tableau20"),
-    ),
+    color=owner_color(),
     opacity=alt.condition(owner_select, alt.value(0.82), alt.value(0.16)),
     tooltip=[
         alt.Tooltip("Name:N", title="Data center"),
@@ -672,7 +669,7 @@ chart
 chart = alt.Chart(high_power_low_density).mark_bar(color="#c45a4a").encode(
     y=alt.Y("Name:N", sort="x", title=None),
     x=alt.X("h100_per_mw:Q", title="H100 equivalents per MW"),
-    color=alt.Color("owner_clean:N", title="Owner", scale=alt.Scale(scheme="tableau20")),
+    color=owner_color(),
     tooltip=[
         alt.Tooltip("Name:N", title="Data center"),
         alt.Tooltip("owner_clean:N", title="Owner"),

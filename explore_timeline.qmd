@@ -9,6 +9,7 @@ from itertools import groupby
 
 import altair as alt
 import pandas as pd
+from charts.owner_colors import owner_color
 ```
 
 ```{python}
@@ -84,7 +85,7 @@ def plot_cumulative_cost_by_year_by_owner(df: pd.DataFrame):
         .encode(
             x=alt.X('date_year:Q').axis(formatType="number",format='d',  values=range(2025,2031)),
             y=alt.Y('sum(total_capital_cost):Q'),
-            color=alt.Color('owner_clean' ),
+            color=owner_color(),
             opacity=alt.when(selection).then(alt.value(0.8)).otherwise(alt.value(0.2)),
             tooltip=['owner_clean:N', 'sum(total_capital_cost):Q' ],
             order=alt.Order('sort_order:Q', sort='descending'),

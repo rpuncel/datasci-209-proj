@@ -8,20 +8,23 @@ different size (dashboards vs. slides) can chain ``.properties(...)``.
 import altair as alt
 import pandas as pd
 
+from charts.owner_colors import owner_color
 from wrangle import datacenters as dc
 from wrangle.datacenters import CAPEX, POWER
 
 
 def cost_vs_energy() -> alt.Chart:
     centers = dc.enriched_centers()
-    return alt.Chart(centers, title="Data Center Cost vs Energy Use").mark_circle().encode(
+    return alt.Chart(centers, title="Data Center Cost vs Energy Use").mark_circle(
+        opacity=0.78, stroke="white", strokeWidth=1
+    ).encode(
         x=alt.X(f"{CAPEX}:Q", title=CAPEX),
         y=alt.Y(f"{POWER}:Q", title=POWER),
-        color=alt.Color("Owner:N", legend=None),
+        color=owner_color(legend=None),
         tooltip=[
             alt.Tooltip(f"{CAPEX}:Q"),
             alt.Tooltip(f"{POWER}:Q"),
-            alt.Tooltip("Owner:N"),
+            alt.Tooltip("owner_clean:N", title="Owner"),
         ],
     ).properties(
         width=800,
@@ -53,7 +56,7 @@ def owner_power() -> alt.Chart:
     return alt.Chart(dc.owner_summary().head(10)).mark_bar().encode(
         y=alt.Y("owner_clean:N", sort="-x", title=None),
         x=alt.X("power_mw:Q", title="Estimated current power (MW)"),
-        color=alt.Color("owner_clean:N", legend=None, scale=alt.Scale(scheme="tableau20")),
+        color=owner_color(legend=None),
         tooltip=[
             alt.Tooltip("owner_clean:N", title="Owner"),
             alt.Tooltip("power_mw:Q", title="Power (MW)", format=",.0f"),
@@ -121,7 +124,7 @@ def power_vs_capital_cost() -> alt.Chart:
         x=alt.X("power_mw:Q", title="Estimated current power (MW)"),
         y=alt.Y("capex_b:Q", title="Estimated current capital cost (2025 USD billions)"),
         size=alt.Size("h100_eq:Q", title="H100 equivalents", scale=alt.Scale(range=[80, 1500])),
-        color=alt.Color("owner_clean:N", title="Owner", scale=alt.Scale(scheme="tableau20")),
+        color=owner_color(),
         tooltip=[
             alt.Tooltip("owner_clean:N", title="Owner"),
             alt.Tooltip("power_mw:Q", title="Power (MW)", format=",.0f"),
@@ -231,11 +234,7 @@ def power_vs_compute_density() -> alt.LayerChart:
         x=alt.X(f"{POWER}:Q", title="Current power (MW)"),
         y=alt.Y("h100_per_mw:Q", title="H100 equivalents per MW"),
         size=alt.Size(f"{CAPEX}:Q", title="Capital cost ($B)", scale=alt.Scale(range=[45, 1100])),
-        color=alt.Color(
-            "owner_clean:N",
-            title="Owner",
-            scale=alt.Scale(scheme="tableau20"),
-        ),
+        color=owner_color(),
         opacity=alt.condition(owner_select, alt.value(0.82), alt.value(0.16)),
         tooltip=[
             alt.Tooltip("Name:N", title="Data center"),
@@ -262,10 +261,10 @@ def power_vs_compute_density() -> alt.LayerChart:
 
 
 def higher_power_lower_density_sites() -> alt.Chart:
-    return alt.Chart(dc.high_power_low_density()).mark_bar(color="#c45a4a").encode(
+    return alt.Chart(dc.high_power_low_density()).mark_bar().encode(
         y=alt.Y("Name:N", sort="x", title=None),
         x=alt.X("h100_per_mw:Q", title="H100 equivalents per MW"),
-        color=alt.Color("owner_clean:N", title="Owner", scale=alt.Scale(scheme="tableau20")),
+        color=owner_color(),
         tooltip=[
             alt.Tooltip("Name:N", title="Data center"),
             alt.Tooltip("owner_clean:N", title="Owner"),
