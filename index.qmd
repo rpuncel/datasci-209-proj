@@ -75,9 +75,7 @@ AI is often discussed in terms of technological breakthroughs and model performa
 ##
 The AI economy begins with capital investment. Building and operating large-scale AI systems requires significant spending on data centers, computing hardware, and supporting infrastructure. AI companies are investing billions of dollars in new infrastructure. These invesments determine who has access to the computing power needed to support current use and train the next generation of AI models.
 
-The plots below compare estimated capital investment with estimated power capacity of major AI data centers. Larger facilities require greater electrical capacity, making power demand a useful proxy for future computing capability. Greater power capacity generally means greater computing capacity. Companies making the largest infrastructure investments are positioned to support larger-scale AI training and inference, giving them a potential advantage in developing future AI systems. 
-
-Data source: This data is sourced by Epoch AI, which is a research non-profit focused on compiling data estimates related to current and future AI. This specific data center dataset estimates the power, compute capacity, and cost of AI data centers using permit information and satellite imagery. 
+The plots below compare estimated capital investment with estimated power capacity of major AI data centers. Larger facilities require greater electrical capacity, making power demand a useful proxy for future computing capability. Greater power capacity generally means greater computing capacity. Companies making the largest infrastructure investments are positioned to support larger-scale AI training and inference, giving them a potential advantage in developing future AI systems.  
 
 ##
 ```{python}
@@ -108,7 +106,7 @@ charts.interactive(
 ##
 ::: {.data-source}
 
-**Data source:** Epoch AI is a research nonprofit that compiles estimates related to current and future AI development. This dataset estimates AI data center power capacity, compute capacity, and cost using sources including permit information and satellite imagery.
+**Data source:** This data is sourced by Epoch AI, which is a research non-profit focused on compiling data estimates related to current and future AI. This specific data center dataset estimates the power, compute capacity, and cost of AI data centers using permit information and satellite imagery.
 
 :::
 ##
@@ -121,8 +119,6 @@ Financial investment alone does not create AI capability. Those dollars are conv
 AI's rapid growth is creating unprecedented demand for electricity. Can the existing U.S. grid accommodate that demand?
 
 Electricity availability has become one of the primary constraints on AI expansion. The map below shows the estimated electrical demand of each AI data center facility, as well as the grid capacity for each state. The state values represent each state's peak total installed generating capacity rather than unused available capacity. Only a portion of installed capacity is available to support new demand as existing generation already serves current electricity consumption and output varies across energy sources. 
-
-Data source: Electricity demand of data centers is sourced from the Epoch AI dataset introduced above. The grid capacity by state comes from the U.S. Energy Information Administration’s (EIA) 2024 US Electricity Profile which tracked all energy providers and sources within the United States over the course of 2024.
 
 ##
 ::: {.card-toolbar}
@@ -152,7 +148,12 @@ charts.interactive(
 #| classes: flow
 charts.interactive(charts.electricity.electricity_capacity_with_datacenters(), id="electricity-map")
 ```
+##
+::: {.data-source}
 
+**Data source:** Electricity demand of data centers is sourced from the Epoch AI dataset introduced above. The grid capacity by state comes from the U.S. Energy Information Administration’s (EIA) 2024 US Electricity Profile which tracked all energy providers and sources within the United States over the course of 2024.
+
+:::
 ##
 The power consumed by AI hardware is largely converted into heat, making cooling another critical resource. In many regions, that means increasing dependence on local water supplies.
 
@@ -168,18 +169,21 @@ The map shows the estimated electrical demand of each AI data center facility as
 
 Move through time to see how absolute stress changes, which owners are most exposed, and where forecasts depart most sharply from today's baseline.
 
-Data sources:
- 
-Water stress: The World Resources Institute publishes an Aqueduct dataset which measures the ratio of water demand to renewable water supplies as a water stress score.
-
-Future data center locations: Proposed data center locations were obtained from the FracTracker Alliance Open U.S. Data Centers Tracker, an interactive dataset that compiles publicly available information on existing, permitted, and proposed data center projects across the United States. The dataset includes the geographic locations of facilities along with project-level metadata such as development status.
-
 ##
 ```{python}
 #| echo: false
 charts.interactive(charts.water.water_stress_explorer(), id="water-stress-explorer")
 ```
 
+::: {.data-source}
+
+**Data sources:** 
+
+Water stress: The World Resources Institute publishes an Aqueduct dataset which measures the ratio of water demand to renewable water supplies as a water stress score.
+
+Future data center locations: Proposed data center locations were obtained from the FracTracker Alliance Open U.S. Data Centers Tracker, an interactive dataset that compiles publicly available information on existing, permitted, and proposed data center projects across the United States. The dataset includes the geographic locations of facilities along with project-level metadata such as development status.
+
+:::
 ##
 The expansion of AI is therefore not only a question of algorithms and models, but also a question of physical infrastructure. Understanding where investment, electricity, and water resources intersect provides insight into the opportunities, constraints, and risks shaping the future AI economy.
 
