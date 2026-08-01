@@ -148,6 +148,7 @@ charts.interactive(
 #| classes: flow
 charts.interactive(charts.electricity.electricity_capacity_with_datacenters(), id="electricity-map")
 ```
+
 ##
 ::: {.data-source}
 
@@ -175,6 +176,7 @@ Move through time to see how absolute stress changes, which owners are most expo
 charts.interactive(charts.water.water_stress_explorer(), id="water-stress-explorer")
 ```
 
+##
 ::: {.data-source}
 
 **Data sources:** 
