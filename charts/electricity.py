@@ -2,12 +2,15 @@
 
 from wrangle.datacenters import enriched_centers
 import altair as alt
-from altair.datasets import data
 import pandas as pd
 
 #from wrangle import electricity as we
 from wrangle.datacenters import POWER
 from constants.states import STATE_FIPS
+# Reuse water.py's filtered map (drops Puerto Rico/US Virgin Islands, which
+# have no matching EIA rows and skew albersUsa's auto-fit) so this map
+# centers the same way the water map's width=1080/height=540 tuning does.
+from charts.water import _states_map
 
 def us_electricity_capacity():
     eia_df = pd.read_csv("datasets/eia_state_total_capability_2024.csv")
@@ -31,9 +34,6 @@ def us_electricity_capacity():
     return eia_df
 
 
-def _states_map():
-    return alt.topo_feature(data.us_10m.url, feature="states")
-
 def electricity_capacity_choropleth():
     eia_df = us_electricity_capacity().copy()
 
@@ -46,6 +46,10 @@ def electricity_capacity_choropleth():
                 "capability:Q",
                 title="Installed Grid Capacity (MW)",
                 scale=alt.Scale(range=['#FFD700', '#4A4A4A']),
+                # Positioned like water.py's map legends: orient="none" +
+                # explicit legendX/legendY puts this and the size legend below
+                # side by side on one row, instead of bottom's auto-stack.
+                legend=alt.Legend(orient="none", legendX=0, legendY=555, direction="horizontal", gradientLength=250),
             ),
             tooltip=[
                 alt.Tooltip("stateDescription:N", title="State"),
@@ -62,8 +66,8 @@ def electricity_capacity_choropleth():
         )
         .project(type="albersUsa")
         .properties(
-            width=800,
-            height=500,
+            width=1080,
+            height=540,
             title="Installed Electricity Capacity by State (2024)",
         )
     )
@@ -72,9 +76,14 @@ def electricity_capacity_with_datacenters() -> alt.LayerChart:
     """Installed generation capacity with AI data centers."""
     eia_df = us_electricity_capacity().copy()
 
+    # Non-US sites (China, Malaysia, Indonesia, Portugal, UAE in the current
+    # data) have longitudes far outside the continental range and don't
+    # belong on a US-only albersUsa map.
+    us_centers = enriched_centers()
+    us_centers = us_centers[us_centers["Country"] == "United States"]
     points = (
         alt.Chart(
-            enriched_centers().dropna(subset=["Latitude", "Longitude"])
+            us_centers.dropna(subset=["Latitude", "Longitude"])
         )
         .mark_circle(
             color="black",
@@ -88,7 +97,13 @@ def electricity_capacity_with_datacenters() -> alt.LayerChart:
             size=alt.Size(
                 POWER,
                 scale=alt.Scale(range=[20, 1000]),
-                legend=alt.Legend(title="Data Center Power Use (MW)"),
+                legend=alt.Legend(
+                    title="Data Center Power Use (MW)",
+                    orient="none",
+                    legendX=420,
+                    legendY=555,
+                    direction="horizontal",
+                ),
             ),
             tooltip=[
                 "Name:N",
@@ -101,5 +116,22 @@ def electricity_capacity_with_datacenters() -> alt.LayerChart:
     return (
         electricity_capacity_choropleth() + points
     ).properties(
-        title="2024 Installed Electrical Grid Capacity and AI Data Centers Power Use"
+        # Plain-string titles default to a centered anchor on a standalone
+        # view; anchor="start" keeps this flush left. (A negative dx here to
+        # counter the padding below looks like the fix, but Vega's autosize
+        # reacts to dx by growing the canvas ~2x the offset, pushing the
+        # title even further right — the CSS rule in styles.css cancels the
+        # padding for the title instead, without touching layout/autosize.)
+        title=alt.Title(
+            "2024 Installed Electrical Grid Capacity and AI Data Centers Power Use",
+            anchor="start",
+        ),
+        # The water map's map_chart sits inside a vconcat with a title dx
+        # hack and wider legends, both of which push its rendered content
+        # right by ~158px more than this chart gets on its own. Padding is
+        # the deterministic way to reproduce that offset here (verified by
+        # comparing rendered pixel positions of both maps' west coasts)
+        # instead of chasing the same fragile auto-fit/legend-overflow
+        # interaction that produced it for water.
+        padding={"left": 158, "top": 5, "right": 5, "bottom": 5},
     )

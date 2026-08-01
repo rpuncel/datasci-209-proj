@@ -123,7 +123,20 @@ def power_vs_capital_cost() -> alt.Chart:
     ).encode(
         x=alt.X("power_mw:Q", title="Estimated current power (MW)"),
         y=alt.Y("capex_b:Q", title="Estimated current capital cost (2025 USD billions)"),
-        size=alt.Size("h100_eq:Q", title="H100 equivalents", scale=alt.Scale(range=[80, 1500])),
+        # Manually stacked (rather than orient="bottom", which crowded the two
+        # legends together): Owner wraps to 2 rows, so H100's legendY needs
+        # enough clearance below it to read as a separate line, not orient
+        # auto-stacking's tighter default gap.
+        size=alt.Size(
+            "h100_eq:Q",
+            title="H100 equivalents",
+            scale=alt.Scale(range=[80, 1500]),
+            # Explicit values instead of Vega-Lite's auto ticks, which some
+            # renderers expand to more entries than this legend has room for.
+            legend=alt.Legend(
+                values=[300000, 900000, 1500000],
+            ),
+        ),
         color=owner_color(),
         tooltip=[
             alt.Tooltip("owner_clean:N", title="Owner"),

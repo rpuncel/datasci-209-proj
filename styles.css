@@ -15,6 +15,29 @@
   height: auto !important;
 }
 
+/* Same fill-grow issue as above, on the money, owner-power, and electricity
+   charts: their fixed-size SVGs (now taller thanks to the bottom legends)
+   were getting squeezed into whatever height the fillable card happened to
+   have. */
+#money-charts.vega-embed-esm,
+#money-charts .vega-chart-view,
+#tour-power-owner.vega-embed-esm,
+#tour-power-owner .vega-chart-view,
+#electricity-map.vega-embed-esm,
+#electricity-map .vega-chart-view {
+  flex: none !important;
+  height: auto !important;
+}
+
+/* electricity_capacity_with_datacenters() has padding.left=158 (see
+   charts/electricity.py) to align its map with the water map's rendered
+   position. That padding shifts the title along with it; shift the title's
+   own SVG group back left by the same amount so it stays flush with the
+   page margin like every other section title. */
+#electricity-map .role-title {
+  transform: translateX(-158px);
+}
+
 #water-stress-explorer .vega-bindings {
   display: flex;
   flex-wrap: wrap;
@@ -130,6 +153,42 @@
   #water-stress-explorer svg symbol {
     transition: none;
   }
+}
+
+.section-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0.5rem 0 1.25rem;
+}
+
+.section-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1.25rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #1e293b;
+  font-size: 1rem;
+  font-weight: 650;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    background 180ms ease,
+    box-shadow 180ms ease,
+    transform 120ms ease;
+}
+
+.section-nav-link:hover {
+  background: #eef2ff;
+  box-shadow: 0 2px 10px rgb(15 23 42 / 0.08);
+  transform: translateY(-1px);
+}
+
+.section-nav-link:active {
+  transform: translateY(0);
 }
 
 .section-divider {
