@@ -209,3 +209,9 @@
 .section-divider .bslib-full-screen-enter {
   display: none;
 }
+
+.data-source {
+  font-size: 0.85rem;
+  color: #666;
+  line-height: 1.4;
+}
