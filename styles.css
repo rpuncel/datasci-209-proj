@@ -38,6 +38,14 @@
   transform: translateX(-158px);
 }
 
+/* The unified explorer (charts/explorer.py) packs three maps + the owner and
+   delta bars into a single embed that can be wider than the page. Let its
+   chart view scroll horizontally instead of overflowing the layout. */
+#ai-economy-explorer .vega-chart-view {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
 #water-stress-explorer .vega-bindings {
   display: flex;
   flex-wrap: wrap;

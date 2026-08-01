@@ -12,6 +12,7 @@ from . import overlay
 from . import money
 from . import water
 from . import electricity
+from . import explorer
 from ._theme import interactive, setup
 
 __all__ = [
@@ -20,6 +21,7 @@ __all__ = [
     "money",
     "water",
     "electricity",
+    "explorer",
     "interactive",
     "setup",
 ]

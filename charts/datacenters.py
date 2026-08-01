@@ -56,7 +56,6 @@ def owner_power() -> alt.Chart:
     return alt.Chart(dc.owner_summary().head(10)).mark_bar().encode(
         y=alt.Y("owner_clean:N", sort="-x", title=None),
         x=alt.X("power_mw:Q", title="Estimated current power (MW)"),
-        color=owner_color(legend=None),
         tooltip=[
             alt.Tooltip("owner_clean:N", title="Owner"),
             alt.Tooltip("power_mw:Q", title="Power (MW)", format=",.0f"),

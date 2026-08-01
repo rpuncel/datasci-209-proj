@@ -65,35 +65,33 @@ def capital_choropleth() -> alt.Chart:
         )
         .project(type="albersUsa")
         .properties(
-            width=1080,
-            height=540,
             title="AI Data Center Capital by State (2025 USD Billions)",
         )
     )
 
 
-def capital_with_datacenters(controls: bool = False) -> alt.LayerChart:
+def capital_with_datacenters(df: pd.DataFrame,
+    controls: bool = False, *, color=None, size_legend: bool | alt.Legend = True
+) -> alt.LayerChart:
     """Per-state capital choropleth with current AI data centers sized by capex.
 
     ``controls=True`` adds live jitter slider/checkbox (needs an interactive
-    renderer); see ``jitter-lab.qmd``.
+    renderer); see ``jitter-lab.qmd``. ``color`` overrides the point color
+    encoding (e.g. a shared owner-selection condition in the unified explorer);
+    ``None`` keeps the standard owner palette. ``size_legend=False`` suppresses
+    the size legend so a concatenated layout can host a single shared one.
     """
-    df = (
-        wd.enriched_centers().dropna(subset=["Latitude", "Longitude"])
-        .query('Country == "United States"')
-    )
+    color_kwargs = {} if color is None else {"color": color}
     points = overlay.datacenter_points(
         df,
         size_field=CAPEX,
         size_title="Capital Cost (2025 USD B)",
         size_range=(30, 1200),
-        tooltip=[
-            "Name:N",
-            "Address:N",
-            alt.Tooltip(f"{CAPEX}:Q", title="Capital (USD B)", format=",.1f"),
-            alt.Tooltip("owner_clean:N", title="Owner"),
-        ],
+        size_legend=size_legend,
+        **color_kwargs,
     )
-    return (capital_choropleth() + points).properties(
+    return (capital_choropleth() + points).resolve_scale(
+        color="independent"
+    ).properties(
         title="AI Data Center Capital by State with Site Locations",
     )

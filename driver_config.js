@@ -6,21 +6,11 @@ window.addEventListener("load", () => {
             overlayOpacity: 0.5,
             hints: [
                 {
-                    element: "#tour-power-owner [class*='site_bars'] path",
+                    element: "#ai-economy-explorer [class*='site_bars'] path",
                     id: "hover-bars-power",
                     popover: {
-                        title: "Export your data",
-                        description: "Hover over a bar for to see more details.",
-                    },
-                },
-                {
-                    element: "#summary",
-                    id: "summary",
-                    beacon: { side: "left", align: "center" },
-                    popover: {
-                        title: "Auto-generated summary",
-                        description: "This paragraph is written for you from the quarter's numbers.",
-                        side: "bottom",
+                        title: "Explore the data",
+                        description: "Hover over a bar to see more details.",
                     },
                 },
             ],
@@ -114,12 +104,12 @@ button.addEventListener('click', () => {
         showProgress: true,
         onDestroyed: cleanup,
         steps: [{
-            element: 'a[data-value="⚡ Power"]',
+            element: "#ai-economy-explorer",
             popover: {
-                title: "Dimension tabs",
-                description: "These tabs switch between dimensions of the AI economy — money, power, and water.",
+                title: "One linked view of the AI economy",
+                description: "Every chart shares the same owner colors. Click an owner in the legend to highlight that company across all the maps and charts at once.",
                 align: "start",
-                side: "bottom",
+                side: "top",
             }
         },
         {

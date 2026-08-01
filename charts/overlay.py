@@ -41,6 +41,7 @@ def datacenter_points(
     *,
     size_title: str = "Power Capacity (MW)",
     size_range: tuple[float, float] = (20, 1000),
+    size_legend: bool | alt.Legend = True,
     tooltip: list | None = None,
     color=OWNER_COLOR,
     lat: str = "Latitude",
@@ -79,11 +80,21 @@ def datacenter_points(
             alt.Tooltip("owner_clean:N", title="Owner"),
         ]
 
+    # size_legend: True -> default bottom legend; False -> suppress (so a
+    # concatenated view can host one shared size legend); an alt.Legend -> use
+    # it verbatim.
+    if size_legend is True:
+        size_leg = alt.Legend(title=size_title, orient="bottom")
+    elif size_legend is False:
+        size_leg = None
+    else:
+        size_leg = size_legend
+
     encodings = dict(
         size=alt.Size(
             size_field,
             scale=alt.Scale(range=list(size_range)),
-            legend=alt.Legend(title=size_title, orient='bottom'),
+            legend=size_leg,
         ),
         tooltip=tooltip,
     )

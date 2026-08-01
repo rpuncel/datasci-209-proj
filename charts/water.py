@@ -11,6 +11,7 @@ from altair.datasets import data
 import pandas as pd
 
 from constants import STATE_FIPS
+from charts import overlay
 from charts.owner_colors import owner_scale
 from wrangle import datacenters as wd
 from wrangle import water as ww
@@ -85,22 +86,23 @@ def future_stress_choropleth() -> alt.Chart:
     )
 
 
-def baseline_stress_with_datacenters(df: pd.DataFrame) -> alt.LayerChart:
-    """Baseline stress choropleth with current AI data centers sized by power."""
-    selection = alt.selection_point(fields=['owner_clean'], bind='legend')
-    points = (
-        alt.Chart(df.dropna(subset=["Latitude", "Longitude"]))
-        .mark_circle(opacity=0.7, stroke="blue", strokeWidth=1)
-        .encode(
-            size=alt.Size(
-                POWER,
-                scale=alt.Scale(range=[20, 1000]),
-                legend=alt.Legend(title="Power Capacity (MW)", orient='bottom'),
-            ),
-            longitude="Longitude:Q",
-            latitude="Latitude:Q",
-            tooltip=["Name:N", "Address:N", f"{POWER}:Q", "owner_clean:N"],
-        )#.transform_filter(selection)
+def baseline_stress_with_datacenters(
+    df: pd.DataFrame, *, color=None, size_legend: bool | alt.Legend = True
+) -> alt.LayerChart:
+    """Baseline stress choropleth with current AI data centers sized by power.
+
+    ``color`` overrides the data center point color (e.g. a shared
+    owner-selection condition in the unified explorer); ``None`` keeps the
+    standard owner palette. ``size_legend=False`` suppresses the size legend so
+    a concatenated layout can host a single shared one.
+    """
+    color_kwargs = {} if color is None else {"color": color}
+    points = overlay.datacenter_points(
+        df,
+        size_field=POWER,
+        size_title="Power Capacity (MW)",
+        size_legend=size_legend,
+        **color_kwargs,
     )
     return (baseline_stress_choropleth() + points).properties(
         width=800,
