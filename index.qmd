@@ -8,7 +8,6 @@ format:
     toc: true
     toc-depth: 2
     embed-resources: true
-    link-citations: true
     css: styles.css
     include-in-header:
       text: |
@@ -78,7 +77,7 @@ The AI economy begins with capital investment. Building and operating large-scal
 
 The plots below compare estimated capital investment with estimated power capacity of major AI data centers. Larger facilities require greater electrical capacity, making power demand a useful proxy for future computing capability. Greater power capacity generally means greater computing capacity. Companies making the largest infrastructure investments are positioned to support larger-scale AI training and inference, giving them a potential advantage in developing future AI systems. 
 
-Data source: This data is sourced by Epoch AI, which is a research non-profit focused on compiling data estimates related to current and future AI. This specific data center dataset estimates the power, compute capacity, and cost of AI data centers using permit information and satellite imagery. [@EpochAIDataCenters2025] 
+Data source: This data is sourced by Epoch AI, which is a research non-profit focused on compiling data estimates related to current and future AI. This specific data center dataset estimates the power, compute capacity, and cost of AI data centers using permit information and satellite imagery. 
 
 ##
 ```{python}
@@ -114,7 +113,7 @@ AI's rapid growth is creating unprecedented demand for electricity. Can the exis
 
 Electricity availability has become one of the primary constraints on AI expansion. The map below shows the estimated electrical demand of each AI data center facility, as well as the grid capacity for each state. The state values represent each state's peak total installed generating capacity rather than unused available capacity. Only a portion of installed capacity is available to support new demand as existing generation already serves current electricity consumption and output varies across energy sources. 
 
-Data source: Electricity demand of data centers is sourced from the Epoch AI dataset introduced above. The grid capacity by state comes from the U.S. Energy Information Administration’s (EIA) 2024 US Electricity Profile which tracked all energy providers and sources within the United States over the course of 2024. [@EIAStateElectricity2024]
+Data source: Electricity demand of data centers is sourced from the Epoch AI dataset introduced above. The grid capacity by state comes from the U.S. Energy Information Administration’s (EIA) 2024 US Electricity Profile which tracked all energy providers and sources within the United States over the course of 2024.
 
 ##
 ::: {.card-toolbar}
@@ -162,9 +161,9 @@ Move through time to see how absolute stress changes, which owners are most expo
 
 Data sources:
  
-Water stress: The World Resources Institute publishes an Aqueduct dataset which measures the ratio of water demand to renewable water supplies as a water stress score. [@WRIAqueduct2026]
+Water stress: The World Resources Institute publishes an Aqueduct dataset which measures the ratio of water demand to renewable water supplies as a water stress score.
 
-Future data center locations: Proposed data center locations were obtained from the FracTracker Alliance Open U.S. Data Centers Tracker, an interactive dataset that compiles publicly available information on existing, permitted, and proposed data center projects across the United States. The dataset includes the geographic locations of facilities along with project-level metadata such as development status.[@FracTrackerDataCenters2026]
+Future data center locations: Proposed data center locations were obtained from the FracTracker Alliance Open U.S. Data Centers Tracker, an interactive dataset that compiles publicly available information on existing, permitted, and proposed data center projects across the United States. The dataset includes the geographic locations of facilities along with project-level metadata such as development status.
 
 ##
 ```{python}
@@ -176,13 +175,13 @@ charts.interactive(charts.water.water_stress_explorer(), id="water-stress-explor
 The expansion of AI is therefore not only a question of algorithms and models, but also a question of physical infrastructure. Understanding where investment, electricity, and water resources intersect provides insight into the opportunities, constraints, and risks shaping the future AI economy.
 
 # Acknowledgements
-**Epoch AI:** Estimates of frontier AI data center capital investment, power capacity, and compute capacity. [@EpochAIDataCenters2025]
+**Epoch AI:** Estimates of frontier AI data center capital investment, power capacity, and compute capacity. 
 
-**U.S. Energy Information Administration:** State-level electricity generating capacity from the 2024 State Electricity Profiles. [@EIAStateElectricity2024]
+**U.S. Energy Information Administration:** State-level electricity generating capacity from the 2024 State Electricity Profiles. 
 
-**World Resources Institute:** Aqueduct Water Risk Atlas providing baseline and projected water stress estimates. [@WRIAqueduct2026]
+**World Resources Institute:** Aqueduct Water Risk Atlas providing baseline and projected water stress estimates. 
 
-**FracTracker Alliance:** Open U.S. Data Centers Tracker of existing, permitted, and proposed facilities. [@FracTrackerDataCenters2026]
+**FracTracker Alliance:** Open U.S. Data Centers Tracker of existing, permitted, and proposed facilities.
 
 ::: {#refs}
 :::
