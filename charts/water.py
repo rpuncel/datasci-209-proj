@@ -158,7 +158,12 @@ def water_stress_explorer() -> alt.VConcatChart:
     period = alt.param(
         name="water_step",
         value=0,
-        bind=alt.binding_range(min=0, max=3, step=1, name="Explore time: "),
+        bind=alt.binding_range(min=0, max=3, step=1, name="Explore Water Stress over Time: "),
+    )
+    show_future = alt.param( # add parameter for future datasite toggle switch 
+        name="show_future_sites",
+        value=False, #default to off 
+        bind=alt.binding_checkbox(name="Show proposed data centers: "),
     )
     state_hover = alt.selection_point(
         name="water_state_hover",
@@ -278,16 +283,19 @@ def water_stress_explorer() -> alt.VConcatChart:
         alt.Color("operator:N", scale=shared_owner_scale, legend=None),
         alt.value("#cbd5e1"),
     )
+    # When the timeline is past Baseline: show Future sites only if the
+    # checkbox is on, otherwise fall back to showing the Baseline sites
+    # instead of leaving the map empty.
     site_filter = (
-        "(water_step == 0 && datum.site_period == 'Baseline') || "
-        "(water_step > 0 && datum.site_period == 'Future')"
+        "datum.site_period == 'Baseline' || "
+        "(datum.site_period == 'Future' && show_future_sites)"
     )
     site_tooltip = [
         alt.Tooltip("site_name:N", title="Site"),
         alt.Tooltip("site_type:N", title="Type"),
         alt.Tooltip("operator:N", title="Owner / operator"),
         alt.Tooltip("address:N", title="Address"),
-        alt.Tooltip("capacity_mw:Q", title="Capacity (MW)", format=",.0f"),
+        alt.Tooltip("capacity_mw:Q", title="Data Center Capacity (MW)", format=",.0f"),
     ]
     site_points = (
         alt.Chart(sites)
@@ -338,7 +346,7 @@ def water_stress_explorer() -> alt.VConcatChart:
             ),
             tooltip=site_tooltip,
         )
-        .add_params(map_brush)
+        .add_params(map_brush) # add show_future param for toggle
     )
     map_chart = (
         alt.layer(no_data, stress, site_points)
@@ -355,7 +363,8 @@ def water_stress_explorer() -> alt.VConcatChart:
                 "Where is water stress concentrated?",
                 subtitle=[
                     "Move the timeline to see how water stress may shift over time.",
-                    "Baseline shows today's AI sites; later years show proposed projects.",
+                    "Baseline shows today's AI sites; ",
+                    "Check the 'Show Proposed Data Centers' box to see where future data centers will be located.",
                 ],
                 anchor="start",
                 # The map's own row needs no axis margin, but owner_bars/delta_chart
@@ -413,11 +422,12 @@ def water_stress_explorer() -> alt.VConcatChart:
                 subtitle=[
                     "Click an owner to highlight its locations on the map.",
                     "Drag a box on the map to rank owners within that region.",
+                    "Note: Only sites on map are used in calculation. Make sure show proposed data centers is checked to include future sites"
                 ],
                 anchor="start",
             ),
         )
-        .add_params(owner_select)
+        .add_params(owner_select) # added show_future param for toggle switch
     )
 
     delta_data = (
@@ -511,7 +521,7 @@ def water_stress_explorer() -> alt.VConcatChart:
             spacing=36,
             center=False,
         )
-        .add_params(period)
+        .add_params(period, show_future)
         .resolve_scale(color="independent")
         # Vega-Lite computes one shared canvas margin for the whole vconcat;
         # without this it's a hair too narrow for owner_bars' rotated axis
