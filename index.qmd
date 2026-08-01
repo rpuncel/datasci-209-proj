@@ -103,6 +103,12 @@ charts.interactive(
 ```
 
 ##
+::: {.data-source}
+
+**Data source:** Epoch AI is a research nonprofit that compiles estimates related to current and future AI development. This dataset estimates AI data center power capacity, compute capacity, and cost using sources including permit information and satellite imagery. [@EpochAIDataCenters2025]
+
+:::
+##
 Financial investment alone does not create AI capability. Those dollars are converted into physical infrastructure—primarily GPUs housed in energy-intensive data centers.
 
 ## {.section-divider}
