@@ -153,7 +153,7 @@ exposed, and where forecasts depart most sharply from today's baseline.
 
 Data sources: 
 Water stress: The World Resources Institute publishes an Aqueduct dataset which measures the ratio of water demand to renewable water supplies as a water stress score. 
-Future data center locations: 
+Future data center locations: Proposed data center locations were obtained from the FracTracker Alliance Open U.S. Data Centers Tracker, an interactive dataset that compiles publicly available information on existing, permitted, and proposed data center projects across the United States. The dataset includes the geographic locations of facilities along with project-level metadata such as development status.
 
 ##
 ```{python}
