@@ -97,6 +97,9 @@ charts.interactive(
 ##
 
 ```{python}
+#| title: Electricity Capacity with Data Centers
+#| echo: false
+#| classes: flow
 charts.interactive(
   charts.money.capital_with_datacenters()
 )
@@ -105,7 +108,7 @@ charts.interactive(
 ##
 ::: {.data-source}
 
-**Data source:** Epoch AI is a research nonprofit that compiles estimates related to current and future AI development. This dataset estimates AI data center power capacity, compute capacity, and cost using sources including permit information and satellite imagery. [@EpochAIDataCenters2025]
+**Data source:** Epoch AI is a research nonprofit that compiles estimates related to current and future AI development. This dataset estimates AI data center power capacity, compute capacity, and cost using sources including permit information and satellite imagery.
 
 :::
 ##
