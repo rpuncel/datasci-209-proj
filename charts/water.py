@@ -11,6 +11,7 @@ from altair.datasets import data
 import pandas as pd
 
 from constants import STATE_FIPS
+from charts.owner_colors import owner_scale
 from wrangle import datacenters as wd
 from wrangle import water as ww
 from wrangle.datacenters import POWER
@@ -271,10 +272,10 @@ def water_stress_explorer() -> alt.VConcatChart:
 
     sites = ww.comparison_sites()
     owner_domain = sorted(sites["operator"].dropna().unique().tolist())
-    owner_scale = alt.Scale(domain=owner_domain, scheme="tableau20")
+    shared_owner_scale = owner_scale(owner_domain)
     owner_focus_color = alt.condition(
         owner_select,
-        alt.Color("operator:N", scale=owner_scale, legend=None),
+        alt.Color("operator:N", scale=shared_owner_scale, legend=None),
         alt.value("#cbd5e1"),
     )
     site_filter = (
@@ -534,23 +535,23 @@ def baseline_stress_owner_linked(df: pd.DataFrame) -> alt.HConcatChart:
         set(wd.high_power_low_density()["owner_clean"].dropna())
         | set(df["owner_clean"].dropna())
     )
-    owner_scale = alt.Scale(domain=owners, scheme="tableau20")
-    owner_color = alt.Color("owner_clean:N", scale=owner_scale, title="Owner")
+    shared_owner_scale = owner_scale(owners)
+    owner_color_enc = alt.Color("owner_clean:N", scale=shared_owner_scale, title="Owner")
     brush = alt.selection_interval(encodings=['latitude', 'longitude'], fields=["Name"])
     brush_legend = alt.selection_point(fields=["owner_clean"], bind='legend')
     condition_legend = alt.when(brush_legend & brush).then(
-        owner_color
+        owner_color_enc
     ).otherwise(alt.value("grey"))
     # the map's Owner legend covers both views
     bar_condition = alt.when(brush & brush_legend).then(
-        owner_color.legend(None)
+        owner_color_enc.legend(None)
     ).otherwise(alt.value("grey"))
 
     company_bars = datacenters.site_concentration(df, lines=False).encode(color=bar_condition)
 
     points = (
         alt.Chart(df.dropna(subset=["Latitude", "Longitude"]))
-        .mark_circle(opacity=0.7, strokeWidth=1)
+        .mark_circle(opacity=0.7, stroke="white", strokeWidth=1)
         .encode(
             size=alt.Size(
                 POWER,

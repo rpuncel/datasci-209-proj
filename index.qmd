@@ -88,8 +88,8 @@ Data source: This data is sourced by Epoch AI, which is a research non-profit fo
 # hconcat'd. Explicit widths here fill the row instead of leaving it mostly
 # blank.
 charts.interactive(
-    charts.datacenters.power_vs_capital_cost().properties(width=540)
-    | charts.datacenters.capital_pipeline().properties(width=540),
+    charts.datacenters.capital_pipeline().properties(width=540)
+    | charts.datacenters.power_vs_capital_cost().properties(width=540),
     id="money-charts",
 )
 ```
