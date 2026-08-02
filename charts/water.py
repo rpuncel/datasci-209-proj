@@ -396,6 +396,7 @@ def stress_delta_chart(
         .encode(text="message:N")
     )
     return (zero_rule + delta_bars + delta_notice).properties(
+        name="water_delta_chart",
         width=width,
         height=height,
         title=alt.Title(

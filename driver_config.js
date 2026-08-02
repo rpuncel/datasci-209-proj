@@ -8,8 +8,12 @@ window.addEventListener("load", () => {
                 {
                     // Vega emits each unit view's `name` as an SVG group class, so the
             // owner ranking in charts/explorer.py is reachable by its OWNER_BARS
-            // name. (The old `site_bars` chart is no longer on the page.)
-            element: "#ai-economy-explorer [class*='owner_power_bars'] path",
+            // name. (The old `site_bars` chart is no longer on the page.) The
+            // marks themselves live in a nested `_marks`-suffixed group: `cursor`
+            // on the mark makes Vega-Lite emit a `path.background` hit-area first,
+            // so a bare `path` selector spotlights that invisible rect instead of
+            // an actual bar.
+            element: "#ai-economy-explorer [class*='owner_power_bars_marks'] path",
                     id: "hover-bars-power",
                     popover: {
                         title: "Explore the data",
@@ -108,6 +112,58 @@ button.addEventListener('click', () => {
         });
     }
 
+    // Generic "wait for a drag" gate: a map's geo-brush is a mousedown then a
+    // mouseup, possibly far from where it started, so the mouseup listener is
+    // attached to the document rather than the spotlighted element itself.
+    let dragMouseDownHandler = null;
+    let dragMouseUpHandler = null;
+
+    function stopWatchingDrag(element) {
+        if (dragMouseDownHandler) {
+            element.removeEventListener("mousedown", dragMouseDownHandler);
+            dragMouseDownHandler = null;
+        }
+        if (dragMouseUpHandler) {
+            document.removeEventListener("mouseup", dragMouseUpHandler);
+            dragMouseUpHandler = null;
+        }
+    }
+
+    function watchForDrag(element) {
+        stopWatchingDrag(element);
+        dragMouseDownHandler = () => {
+            dragMouseUpHandler = () => {
+                stopWatchingDrag(element);
+                driverObj.moveNext();
+            };
+            document.addEventListener("mouseup", dragMouseUpHandler);
+        };
+        element.addEventListener("mousedown", dragMouseDownHandler);
+    }
+
+    // Generic "wait for a click on any mark in this group" gate. The
+    // spotlighted element is the whole bar-chart group (many `path` marks),
+    // so the listener is delegated rather than attached to one mark.
+    let barClickHandler = null;
+
+    function stopWatchingBarClick(element) {
+        if (barClickHandler) {
+            element.removeEventListener("click", barClickHandler);
+            barClickHandler = null;
+        }
+    }
+
+    function watchForBarClick(element) {
+        stopWatchingBarClick(element);
+        barClickHandler = (event) => {
+            if (event.target && event.target.tagName === "path") {
+                stopWatchingBarClick(element);
+                driverObj.moveNext();
+            }
+        };
+        element.addEventListener("click", barClickHandler);
+    }
+
     function cleanup() {
         stopWatchingTooltip();
         removeFrozen();
@@ -116,7 +172,8 @@ button.addEventListener('click', () => {
     driverObj.setConfig({
         showProgress: true,
         onDestroyed: cleanup,
-        steps: [{
+        steps: [
+        {
             element: "#ai-economy-explorer",
             popover: {
                 title: "One linked view of the AI economy",
@@ -126,8 +183,55 @@ button.addEventListener('click', () => {
             }
         },
         {
-            // Keep the tight, single-bar spotlight for the hover step.
-            element: "#ai-economy-explorer [class*='owner_power_bars'] path",
+            element: "#ai-economy-explorer-view [class*='money_summary']",
+            popover: {
+                title: "Total capital",
+                description: "Sums capital across every filtered site.",
+            }
+        },
+        {
+            element: "#ai-economy-explorer-view [class*='power_summary']",
+            popover: {
+                title: "Total power",
+                description: "Sums power capacity across every filtered site.",
+            }
+        },
+        {
+            element: "#ai-economy-explorer-controls input[name='show_future_sites']",
+            popover: {
+                title: "Toggle proposed sites",
+                description: "Show or hide proposed data centers on every map.",
+                side: "bottom",
+            }
+        },
+        {
+            element: "#ai-economy-explorer-view [class*='capital_sites']",
+            onHighlightStarted: (element) => watchForDrag(element),
+            onDeselected: (element) => element && stopWatchingDrag(element),
+            popover: {
+                title: "Drag to filter by region",
+                description: "Drag a box here to re-rank owners for that area. Only this map supports drag-select. Give it a try!",
+            }
+        },
+        {
+            element: "#ai-economy-explorer-view [class*='electricity_sites']",
+            popover: {
+                title: "Grid capacity",
+                description: "Compares available power capacity by site.",
+            }
+        },
+        {
+            element: "#ai-economy-explorer-view [class*='water_stress_states']",
+            popover: {
+                title: "Water stress",
+                description: "Compares water stress by state.",
+            }
+        },
+        {
+            // Keep the tight, single-bar spotlight for the hover step. The
+            // marks live in a nested `_marks`-suffixed group (see the hint
+            // above for why a bare `path` selector is wrong here).
+            element: "#ai-economy-explorer [class*='owner_power_bars_marks'] path",
             onHighlightStarted: watchForTooltip,
             onDeselected: stopWatchingTooltip,
             popover: {
@@ -146,11 +250,54 @@ button.addEventListener('click', () => {
                 align: "start",
             }
         },
+        {
+            element: "#ai-economy-explorer-view [class*='owner_power_bars']",
+            onHighlightStarted: (element) => watchForBarClick(element),
+            onDeselected: (element) => element && stopWatchingBarClick(element),
+            popover: {
+                title: "Click to filter",
+                description: "Click a bar to filter every view to that owner. Give it a try!",
+            }
+        },
+        {
+            element: "#ai-economy-explorer-view [class*='owner_power_bars']",
+            onHighlightStarted: (element) => watchForBarClick(element),
+            onDeselected: (element) => element && stopWatchingBarClick(element),
+            popover: {
+                title: "Click another to add",
+                description: "Click another owner to add its sites back.",
+            }
+        },
+        {
+            element: "#ai-economy-explorer-view [class*='site_bars']",
+            onHighlightStarted: (element) => watchForBarClick(element),
+            onDeselected: (element) => element && stopWatchingBarClick(element),
+            popover: {
+                title: "Click to filter",
+                description: "Click a site to filter every view to it. Give it a try!",
+            }
+        },
+        {
+            element: "#ai-economy-explorer-controls .water-story-timeline",
+            popover: {
+                title: "Step through time",
+                description: "Jump to 2030, 2050, or 2080 projections.",
+                side: "top",
+            }
+        },
+        {
+            // No `path` suffix: the delta bars sit in an unnamed nested layer
+            // scope inside this group (only the outer layer chart is named),
+            // and this group's own first path is a `.background` hit-area, so
+            // spotlight the whole panel instead of one mark.
+            element: "#ai-economy-explorer-view [class*='water_delta_chart']",
+            popover: {
+                title: "What's changing",
+                description: "The 12 states with the largest forecast change.",
+            }
+        },
         ]
     });
     driverObj.drive();
 
 });
-
-
-

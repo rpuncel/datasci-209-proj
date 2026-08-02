@@ -567,7 +567,7 @@ def ai_economy_explorer(
     )
     summary_height = 60
     summary_capital = (
-        alt.Chart(sites)
+        alt.Chart(sites, name="money_summary")
         .mark_text(fontSize=48, align="center", baseline="middle")
         .encode(
             text='label:N',
@@ -584,7 +584,7 @@ def ai_economy_explorer(
         .properties(width=map_width, height=summary_height)
     )
     summary_power = (
-        alt.Chart(sites)
+        alt.Chart(sites, name="power_summary")
         .mark_text(fontSize=48, align="center", baseline="middle")
         .encode(
             text='label:N',
