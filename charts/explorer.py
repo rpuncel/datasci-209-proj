@@ -247,37 +247,61 @@ def _owner_bars(
     *,
     owner_focus_color,
     owner_select,
+    site_select,
     geo_brush,
     width: int,
     height: int,
 ) -> alt.Chart:
     """The owner ranking, which doubles as the explorer's owner legend.
 
-    Both the site filter and the brush filter run *before* the aggregate, so
-    brushing a region genuinely recomputes the top-N for that region instead of
-    hiding bars from a fixed nationwide ranking. ``charts/test_explorer.py``
-    pins that ordering.
+    Each bar is a stack of one segment per data center, so that selecting a
+    site in ``_site_concentration`` (via ``site_select``) can fade every
+    segment but that site's, showing what share of the owner's bar it is.
+
+    Both the site filter and the brush filter run *before* the owner-level
+    rollup, so brushing a region genuinely recomputes the top-N for that
+    region instead of hiding bars from a fixed nationwide ranking.
+    ``transform_joinaggregate`` (not ``transform_aggregate``) is used for that
+    rollup specifically because it annotates rows instead of collapsing them —
+    an aggregate would discard the per-site ``capacity_mw`` values the stack
+    below needs. Ranking uses ``dense_rank()``, not ``rank()``: every row of
+    one owner carries the same broadcast ``total_capacity``, so both tie a
+    whole owner to one rank, but plain ``rank()`` is SQL-style and skips the
+    next rank by the tied group's size — with dozens of site rows per owner
+    that starves the top-N filter down to the first owner or two.
+    ``dense_rank()`` increments by one distinct value at a time regardless of
+    how many rows share it, so the filter keeps or drops whole owners as
+    intended. ``charts/test_explorer.py`` pins the filter-before-rollup
+    ordering.
     """
     return (
         alt.Chart(sites, name=OWNER_BARS)
         .transform_filter(SITE_FILTER)
         .transform_filter("datum.capacity_mw > 0")
         .transform_filter(geo_brush)
-        .transform_aggregate(
+        .transform_joinaggregate(
             total_capacity="sum(capacity_mw)",
             sites="count()",
-            groupby=["owner_clean", "site_type"],
+            groupby=["owner_clean"],
         )
         .transform_window(
-            owner_rank="rank()",
+            owner_rank="dense_rank()",
             sort=[alt.SortField("total_capacity", order="descending")],
         )
         .transform_filter(f"datum.owner_rank <= {OWNER_RANK_LIMIT}")
-        .mark_bar(cornerRadiusEnd=3, cursor="pointer")
+        .transform_stack(
+            groupby=["owner_clean"],
+            stack="capacity_mw",
+            as_=['capacity_1', 'capacity_2'],
+            sort=[alt.SortField("capacity_mw", order="descending")],
+        )
+        .mark_bar(cursor="pointer")
         .encode(
             y=alt.Y(
                 "owner_clean:N",
-                sort="-x",
+                sort=alt.EncodingSortField(
+                    field="total_capacity", op="max", order="descending"
+                ),
                 title="Owner / operator",
                 # minExtent locks the reserved label width so the chart's left
                 # margin (and title position) don't shift as the timeline or
@@ -289,12 +313,19 @@ def _owner_bars(
                 # still carry the full name.
                 axis=alt.Axis(labelLimit=90, minExtent=90),
             ),
-            x=alt.X("total_capacity:Q", title="Total capacity (MW)"),
+            x=alt.X("capacity_1:Q", title="Total capacity (MW)"),
+            x2='capacity_2:Q',
             color=owner_focus_color,
-            opacity=alt.condition(owner_select, alt.value(1), alt.value(0.38)),
+            opacity=alt.condition(
+                owner_select & site_select, alt.value(1), alt.value(0.38)
+            ),
             tooltip=[
+                alt.Tooltip("site_name:N", title="Site"),
                 alt.Tooltip("owner_clean:N", title="Owner / operator"),
                 alt.Tooltip("site_type:N", title="Site type"),
+                alt.Tooltip(
+                    "capacity_mw:Q", title="Site capacity (MW)", format=",.0f"
+                ),
                 alt.Tooltip(
                     "total_capacity:Q", title="Total capacity (MW)", format=",.0f"
                 ),
@@ -313,10 +344,10 @@ def _owner_bars(
                 anchor="start",
             ),
         )
-        .add_params(owner_select)
+        .add_params(owner_select, site_select)
     )
 
-def _site_concentration(owner_select, geo_brush, sites: pd.DataFrame, color: alt.Color | None) -> alt.LayerChart:
+def _site_concentration(owner_select, geo_brush, site_select, sites: pd.DataFrame, color: alt.Color | None) -> alt.LayerChart:
     site_bars = (
         alt.Chart(sites,name="site_bars").mark_bar().encode(
             y=alt.Y("rank:O", title="Site rank by current power"),
@@ -329,7 +360,7 @@ def _site_concentration(owner_select, geo_brush, sites: pd.DataFrame, color: alt
                 alt.Tooltip("capacity_mw:Q", title="Power (MW)", format=",.0f"),
             ],
         )
-        .add_params(owner_select)
+        .add_params(owner_select, site_select)
         .transform_filter(SITE_FILTER)
         .transform_filter("datum.capacity_mw > 0")
         .transform_filter(geo_brush)
@@ -382,6 +413,12 @@ def ai_economy_explorer(
         clear="dblclick",
         empty=True,
     )
+
+    site_select = alt.selection_point(
+        name="site_select",
+        fields=["site_name"],
+        empty=True,
+    )
     # One interval selection object, added to all three maps' point units below.
     # Altair merges it into a single top-level param (emitting a benign
     # "Automatically deduplicated selection parameter" warning), which is what
@@ -396,7 +433,7 @@ def ai_economy_explorer(
     # data carries ~200 distinct operators, which would make an unusable one,
     # and the ranking already shows who is who.
     owner_focus_color = alt.condition(
-        owner_select,
+        owner_select & site_select,
         alt.Color(
             "owner_clean:N", scale=owner_scale(sites["owner_clean"]), legend=None
         ),
@@ -508,11 +545,12 @@ def ai_economy_explorer(
             sites,
             owner_focus_color=owner_focus_color,
             owner_select=owner_select,
+            site_select=site_select,
             geo_brush=geo_brush,
             width=bar_width,
             height=bar_height,
         ),
-        _site_concentration(owner_select, geo_brush, sites=sites, color=owner_focus_color),
+        _site_concentration(owner_select, geo_brush, site_select, sites=sites, color=owner_focus_color),
         water.stress_delta_chart(
             state_hover, state_pin, width=bar_width, height=bar_height
         ),

@@ -253,14 +253,17 @@ def _find_view(node, name):
 
 def test_brush_filters_owner_bars_upstream_of_the_aggregate(spec):
     """The top-12 ranking must genuinely recompute for the brushed region, so
-    both the site filter and the brush filter have to run before the aggregate
-    — filtering after it would only hide bars from a nationwide ranking."""
+    both the site filter and the brush filter have to run before the
+    owner-level rollup — filtering after it would only hide bars from a
+    nationwide ranking. The rollup is a ``joinaggregate`` (not an
+    ``aggregate``) because it annotates each site row rather than collapsing
+    them, which is what lets the bars stack one segment per data center."""
     bars = _find_view(spec, "owner_power_bars")
     assert bars is not None
 
     transforms = bars["transform"]
     aggregate_at = next(
-        i for i, step in enumerate(transforms) if "aggregate" in step
+        i for i, step in enumerate(transforms) if "joinaggregate" in step
     )
     brush_at = next(
         i
