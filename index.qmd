@@ -2,8 +2,7 @@
 title: "Visualizing the AI Economy"
 bibliography: references.bib
 format:
-  dashboard:
-    orientation: rows
+  html:
     scrolling: true
     toc: true
     toc-depth: 2
@@ -27,7 +26,9 @@ nocite: |
   @*
 ---
 
-# Dashboard
+# Let's make sense of all the money pouring into building data centers for AI.
+
+Have you heard about this AI thing lately?
 
 ```{python}
 #| include: false
@@ -46,41 +47,27 @@ charts.setup()
 stats = dc.stats()
 ```
 
-## {.flow}
 
-###
 
-:::: {.card .flow title="There's a lot money going into building out AI infrastructure."}
+## There's a lot money going into building out AI infrastructure
 
-::: {.card .flow }
+
 AI infrastructure shows up as data centers - large facilities
 with a ton of compute power. There's a race on to build AI infrastructure.
 
 The AI economy begins with capital investment. Building and operating large-scale AI systems requires significant spending on data centers, computing hardware, and supporting infrastructure. AI companies are investing billions of dollars in new infrastructure. These invesments determine who has access to the computing power needed to support current use and train the next generation of AI models.
-
-:::
-
-::: {.card}
-
 ```{python}
 #| fill: false
 #| title: AI Data Center Investment
+#| echo: false
 charts.interactive(
     charts.datacenters.capital_pipeline().properties(height=180)
 )
 
 ```
 
-:::
 
-::::
-
-
-###
-
-:::: {.card .flow title="Power capacity is used to express the capability of data centers."}
-
-::: {.card .flow }
+### Power capacity is used to express the capability of data centers.
 
 There are three key measures we are especially interested in when talking about data centers:
 
@@ -91,37 +78,36 @@ There are three key measures we are especially interested in when talking about 
 To make things easier, industry often talks about data centers in terms of just the energy at full capacity. This is convenient
 because that roughly correlates with both actual compute capacity and money spent.
 
+::: {.column-margin}
+
+epoch.ai uses the Nvidia H100 as a standard unit of how AI capacity a data center has.
 
 :::
 
-::: {.card .flow}
-
+::: {}
 ```{python}
 #| fill: false
 #| title: AI Data Center Investment
+#| echo: false
 charts.interactive(
-    charts.datacenters.cost_vs_energy().properties(width=540,title="Capital expenditure correlates with power capacity of a data center")
-    | charts.datacenters.compute_vs_power().properties(
+    charts.datacenters.cost_vs_energy().properties(height=180,width=180, title="Capital expenditure correlates with power capacity")
+    |
+    charts.datacenters.compute_vs_power().properties(
       height=180,
+      width=180,
       title=alt.Title(
-        "AI output capability correlates with power capacity of a data center",
-        subtitle="epoch.ai uses the Nvidia H100 as a standard unit of how AI capacity a data center has."
+        "AI capability correlates with power capacity",
       ),
-    ),
-    id="money-charts",
-)
+    )
 
+)
 ```
 
 :::
 
+## So are these **good** investments?
 
-::::
-
-##
-
-
-But are these **good** investments? Two key necessities for data centers is the availability of power and the availbility of water.
+Two key necessities for data centers is the availability of power and the availbility of water.
 
 If there's not enough power, the data center can't run to its full capacity, and electricity rates might go up for both
 the data center operator and the people who share an electrical grid.
@@ -133,6 +119,28 @@ As we evaluate investments and data center activity, it's of interest to both in
 putting money on the line.
 
 Use the explorer below to answer these questions.
+
+
+## Interactive Explorer
+
+<button id="power-help">Need help? Click for a guided tour.</button>
+
+
+```{python}
+#| echo: false
+#| classes: .column-screen
+#| warning: false
+# One unified spec, deliberately: Vega selections cannot cross vega-embed
+# instances, so rendering these maps as separate charts.interactive() cells
+# would leave the owner click, the proposed-sites checkbox and the geographic
+# brush isolated to whichever view they were attached to. See charts/explorer.py.
+charts.interactive(
+    charts.explorer.ai_economy_explorer(),
+    id="ai-economy-explorer",
+)
+```
+
+
 
 ##
 The AI economy begins with capital investment. Building and operating large-scale AI systems requires significant spending on data centers, computing hardware, and supporting infrastructure. AI companies are investing billions of dollars in new infrastructure. These invesments determine who has access to the computing power needed to support current use and train the next generation of AI models.
@@ -159,25 +167,6 @@ Water use is harder to pin down. Companies rarely disclose facility-level water 
 
 **How to use it:** every site appears on all three maps, sized by capacity. **Click an owner** in the ranking to highlight its sites everywhere at once. **Drag a box on any map** to re-rank owners within that region. **Check "show proposed data centers"** to add planned projects, and move the **timeline** to compare today's water stress with projections for 2030, 2050, and 2080 — hovering or clicking a state links it to the change chart.
 
-##
-::: {.card-toolbar}
-
-<button id="power-help">
-<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M12.838 17.638q.362-.363.362-.888t-.362-.888t-.888-.362t-.887.363t-.363.887t.363.888t.887.362t.888-.363M11.05 14.15h1.85q0-.825.188-1.3t1.062-1.3q.65-.65 1.025-1.238T15.55 8.9q0-1.4-1.025-2.15T12.1 6q-1.425 0-2.312.75T8.55 8.55l1.65.65q.125-.45.563-.975T12.1 7.7q.8 0 1.2.438t.4.962q0 .5-.3.938t-.75.812q-1.1.975-1.35 1.475t-.25 1.825M12 22q-2.075 0-3.9-.787t-3.175-2.138T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137T21.213 8.1T22 12t-.788 3.9t-2.137 3.175t-3.175 2.138T12 22"/></svg>
-</button>
-
-:::
-```{python}
-#| echo: false
-# One unified spec, deliberately: Vega selections cannot cross vega-embed
-# instances, so rendering these maps as separate charts.interactive() cells
-# would leave the owner click, the proposed-sites checkbox and the geographic
-# brush isolated to whichever view they were attached to. See charts/explorer.py.
-charts.interactive(
-    charts.explorer.ai_economy_explorer(),
-    id="ai-economy-explorer",
-)
-```
 
 ##
 ::: {.data-source}

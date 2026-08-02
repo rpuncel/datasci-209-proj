@@ -492,7 +492,7 @@ def ai_economy_explorer(
         ),
         width=map_width,
         height=map_height,
-        title="💰 Capital invested",
+        title="💰 Where is capital being invested?",
     )
 
     electricity_map = _map(
@@ -540,7 +540,7 @@ def ai_economy_explorer(
         ),
         width=map_width,
         height=map_height,
-        title="💧 Water stress",
+        title="💧 How stressed are water supplies?",
     )
 
     combine = alt.hconcat if orientation == "row" else alt.vconcat

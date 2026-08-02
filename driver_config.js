@@ -16,6 +16,16 @@ window.addEventListener("load", () => {
                         description: "Hover over a bar to see more details.",
                     },
                 },
+                {
+                    element: "#tour-trigger",
+                    popover: {
+                        title: "test"
+                    },
+                    onButtonClick: (element, hint, { hints: instance }) => {
+                    instance.close();
+                    tour.drive();
+                    },
+                }
             ],
         });
 
