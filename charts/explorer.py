@@ -477,7 +477,7 @@ def ai_economy_explorer(
             width=bar_width,
             height=bar_height,
         ),
-        datacenters.site_concentration(lines=False),
+        datacenters.site_concentration(owner_select, color=owner_focus_color, lines=False),
         water.stress_delta_chart(
             state_hover, state_pin, width=bar_width, height=bar_height
         ),

@@ -74,12 +74,14 @@ def owner_power() -> alt.Chart:
     )
 
 
-def site_concentration(df: pd.DataFrame | None = None, lines=True) -> alt.LayerChart:
+def site_concentration(*params, df: pd.DataFrame | None = None, lines=True, color: alt.Color | None) -> alt.LayerChart:
+    if color is None:
+        color = owner_color()
     site_rank = (dc.us_centers() if df is None else df).sort_values("rank")
     site_bars = alt.Chart(site_rank.head(20), name="site_bars").mark_bar().encode(
         x=alt.X("rank:O", title="Site rank by current power"),
         y=alt.Y(f"{POWER}:Q", title="Current power (MW)"),
-        color=owner_color(),
+        color=color,
         tooltip=[
             alt.Tooltip("rank:O", title="Rank"),
             alt.Tooltip("Name:N", title="Data center"),
@@ -87,7 +89,7 @@ def site_concentration(df: pd.DataFrame | None = None, lines=True) -> alt.LayerC
             alt.Tooltip(f"{POWER}:Q", title="Power (MW)", format=",.0f"),
             alt.Tooltip("Country:N", title="Country"),
         ],
-    )
+    ).add_params(*params)
     if lines:
         site_line = alt.Chart(site_rank.head(20)).mark_line(
             point=True, strokeWidth=3
