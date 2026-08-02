@@ -100,6 +100,13 @@ ELECTRICITY_SITES = "electricity_sites"
 WATER_SITES = "water_sites"
 WATER_STATES = "water_stress_states"
 OWNER_BARS = "owner_power_bars"
+# The capital map's own outer layer, named so the geo-brush drag tour step can
+# spotlight (and listen on) the whole plot area rather than just the site
+# markers: the choropleth fill has no marks of its own to hit-test against, so
+# a drag started outside CAPITAL_SITES' bounding box would silently do nothing
+# under the tour's element-scoped overlay cutout, even though the brush itself
+# works anywhere on the map once the tour isn't constraining interaction.
+CAPITAL_MAP_VIEW = "capital_map_view"
 
 # Which views each param that crosses a layer boundary is supposed to drive.
 # Only these need declaring: `owner_select` lives on the bars, a direct concat
@@ -493,6 +500,7 @@ def ai_economy_explorer(
         width=map_width,
         height=map_height,
         title="💰 Where is capital being invested?",
+        name=CAPITAL_MAP_VIEW,
     )
 
     electricity_map = _map(

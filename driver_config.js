@@ -164,6 +164,28 @@ button.addEventListener('click', () => {
         element.addEventListener("click", barClickHandler);
     }
 
+    // Generic "wait for a click on any button in this group" gate, for the
+    // restyled timeline step buttons.
+    let stepClickHandler = null;
+
+    function stopWatchingStepClick(element) {
+        if (stepClickHandler) {
+            element.removeEventListener("click", stepClickHandler);
+            stepClickHandler = null;
+        }
+    }
+
+    function watchForStepClick(element) {
+        stopWatchingStepClick(element);
+        stepClickHandler = (event) => {
+            if (event.target && event.target.tagName === "BUTTON") {
+                stopWatchingStepClick(element);
+                driverObj.moveNext();
+            }
+        };
+        element.addEventListener("click", stepClickHandler);
+    }
+
     function cleanup() {
         stopWatchingTooltip();
         removeFrozen();
@@ -205,19 +227,24 @@ button.addEventListener('click', () => {
             }
         },
         {
-            element: "#ai-economy-explorer-view [class*='capital_sites']",
+            // Spotlight the whole map (CAPITAL_MAP_VIEW), not just the site
+            // markers: the geo-brush drag works anywhere on the map, including
+            // the choropleth fill, but the tour's overlay only allows
+            // interaction inside the spotlighted element's bounding box.
+            // Starting the drag outside the markers' box would silently fail.
+            element: "#ai-economy-explorer-view [class*='capital_map_view']",
             onHighlightStarted: (element) => watchForDrag(element),
             onDeselected: (element) => element && stopWatchingDrag(element),
             popover: {
                 title: "Drag to filter by region",
-                description: "Drag a box here to re-rank owners for that area. Only this map supports drag-select. Give it a try!",
+                description: "Drag a box here to filter all views for only area. Only this map supports drag-select, but the others will update too. Give it a try!",
             }
         },
         {
             element: "#ai-economy-explorer-view [class*='electricity_sites']",
             popover: {
                 title: "Grid capacity",
-                description: "Compares available power capacity by site.",
+                description: "Compares available power capacity by site. Note that the site selection on the left-most map applies here too.",
             }
         },
         {
@@ -245,7 +272,7 @@ button.addEventListener('click', () => {
             onDeselected: removeFrozen,
             popover: {
                 title: "That's the tooltip",
-                description: "It shows the exact numbers for the bar you hovered. These details appear on every bar and map point across the dashboard.",
+                description: "It shows the exact numbers for the bar you hovered. You can do this on appear on every bar and map point across the dashboard.",
                 side: "right",
                 align: "start",
             }
@@ -255,7 +282,7 @@ button.addEventListener('click', () => {
             onHighlightStarted: (element) => watchForBarClick(element),
             onDeselected: (element) => element && stopWatchingBarClick(element),
             popover: {
-                title: "Click to filter",
+                title: "This view shows the company that owns the most data center capacity out of what you've filtered.",
                 description: "Click a bar to filter every view to that owner. Give it a try!",
             }
         },
@@ -265,7 +292,7 @@ button.addEventListener('click', () => {
             onDeselected: (element) => element && stopWatchingBarClick(element),
             popover: {
                 title: "Click another to add",
-                description: "Click another owner to add its sites back.",
+                description: "Shift-click another owner to add it to the filter.",
             }
         },
         {
@@ -273,15 +300,17 @@ button.addEventListener('click', () => {
             onHighlightStarted: (element) => watchForBarClick(element),
             onDeselected: (element) => element && stopWatchingBarClick(element),
             popover: {
-                title: "Click to filter",
-                description: "Click a site to filter every view to it. Give it a try!",
+                title: "Top 10 data center sites",
+                description: "See the top 10 individual data center sites out of what has been selected here. Click a site to make that site stand out on the other charts.",
             }
         },
         {
             element: "#ai-economy-explorer-controls .water-story-timeline",
+            onHighlightStarted: (element) => watchForStepClick(element),
+            onDeselected: (element) => element && stopWatchingStepClick(element),
             popover: {
                 title: "Step through time",
-                description: "Jump to 2030, 2050, or 2080 projections.",
+                description: "Click 2030, 2050, or 2080 to see a projection.",
                 side: "top",
             }
         },
@@ -296,6 +325,24 @@ button.addEventListener('click', () => {
                 description: "The 12 states with the largest forecast change.",
             }
         },
+        {
+            element: "#ai-economy-explorer-view [class*='owner_power_bars']",
+            onHighlightStarted: (element) => watchForBarClick(element),
+            onDeselected: (element) => element && stopWatchingBarClick(element),
+            popover: {
+                title: "Double click anywhere to clear all your filters",
+                description: "Since we've added a few filters, try double clicking anywhere to clear them.",
+            }
+        },
+        {
+            element: "#ai-economy-explorer-view [class*='owner_power_bars']",
+            onHighlightStarted: (element) => watchForBarClick(element),
+            onDeselected: (element) => element && stopWatchingBarClick(element),
+            popover: {
+                title: "That ends the tour!",
+                description: 'Click the "Need help" button again anytime to re-take the tour.'
+            }
+        }
         ]
     });
     driverObj.drive();
