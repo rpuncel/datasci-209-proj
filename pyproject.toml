@@ -13,3 +13,11 @@ dependencies = {file = ["requirements.txt"]}
 
 [tool.setuptools.packages.find]
 include = ["wrangle", "datasets", "constants", "charts"]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    # charts/explorer.py deliberately adds one selection_interval to all three
+    # maps' point units — that is exactly how Altair merges them into a single
+    # shared brush, so the dedup warning is the mechanism working, not a bug.
+    "ignore:Automatically deduplicated selection parameter:UserWarning",
+]

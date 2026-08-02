@@ -138,39 +138,62 @@ def stress_comparison() -> alt.HConcatChart:
     return baseline_stress_with_datacenters() | future_stress_with_datacenters()
 
 
-def water_stress_explorer() -> alt.VConcatChart:
-    """A timeline-led water-stress story with linked owners and state change."""
-    comparison = ww.water_stress_wide()
+# The timeline parameter's name is a contract in two directions: charts/_theme.py
+# rewrites the `water_step` range input into the Baseline/2030/2050/2080 button
+# strip by querying for it by name, and every expression below reads it.
+def _selected_projection(column: str) -> str:
+    """Expression picking one of the three BAU projections by ``water_step``."""
+    return (
+        f"water_step == 1 ? datum.{column}_2030_bau : "
+        f"water_step == 2 ? datum.{column}_2050_bau : "
+        f"datum.{column}_2080_bau"
+    )
 
-    def selected_projection(column: str) -> str:
-        return (
-            f"water_step == 1 ? datum.{column}_2030_bau : "
-            f"water_step == 2 ? datum.{column}_2050_bau : "
-            f"datum.{column}_2080_bau"
-        )
 
-    projection_fields = ["name_1", "baseline_score", "baseline_label"]
+_PERIOD_LABEL = (
+    "water_step == 0 ? 'Baseline' : "
+    "(water_step == 1 ? '2030' : water_step == 2 ? '2050' : '2080')"
+)
+
+
+def _projection_fields() -> list[str]:
+    """Every wide-frame column the state lookup needs to serve any timeline step."""
+    fields = ["name_1", "baseline_score", "baseline_label"]
     for year in ww.FUTURE_YEARS:
         for scenario_code in ww.SCENARIOS:
             suffix = f"{year}_{scenario_code}"
-            projection_fields.extend(
+            fields.extend(
                 [
                     f"future_score_{suffix}",
                     f"future_label_{suffix}",
                     f"delta_{suffix}",
                 ]
             )
+    return fields
 
-    period = alt.param(
+
+def water_step_param() -> alt.Parameter:
+    """The 0-3 timeline slider. ``charts/_theme.py`` restyles it into buttons."""
+    return alt.param(
         name="water_step",
         value=0,
-        bind=alt.binding_range(min=0, max=3, step=1, name="Explore Water Stress over Time: "),
+        bind=alt.binding_range(
+            min=0, max=3, step=1, name="Explore Water Stress over Time: "
+        ),
     )
-    show_future = alt.param( # add parameter for future datasite toggle switch 
+
+
+def show_future_sites_param() -> alt.Parameter:
+    """Checkbox toggling the proposed-project site layer, off by default."""
+    return alt.param(
         name="show_future_sites",
-        value=False, #default to off 
+        value=False,
         bind=alt.binding_checkbox(name="Show proposed data centers: "),
     )
+
+
+def state_selections() -> tuple[alt.Parameter, alt.Parameter]:
+    """Hover and click selections over state ``id``, used to link map -> delta."""
     state_hover = alt.selection_point(
         name="water_state_hover",
         fields=["id"],
@@ -185,55 +208,66 @@ def water_stress_explorer() -> alt.VConcatChart:
         clear="dblclick",
         empty=False,
     )
-    owner_select = alt.selection_point(
-        name="water_owner_select",
-        fields=["operator"],
-        on="click",
-        clear="dblclick",
-        empty=True,
-    )
-    # Geographic rubber-band brush (ported from baseline_stress_owner_linked).
-    # Dragging a box on the map restricts owner_bars to the sites inside it, so
-    # the "who controls the most capacity" ranking recomputes for that region.
-    map_brush = alt.selection_interval(
-        name="water_map_brush",
-        encodings=["longitude", "latitude"],
-        empty=True,
-    )
+    return state_hover, state_pin
 
-    period_label = (
-        "water_step == 0 ? 'Baseline' : "
-        "(water_step == 1 ? '2030' : water_step == 2 ? '2050' : '2080')"
-    )
+
+def stress_timeline_layers(
+    state_hover, state_pin, *, legend: alt.Legend | None = None, name: str | None = None
+) -> tuple[alt.Chart, alt.Chart]:
+    """The two geoshape layers of the timeline-driven water-stress choropleth.
+
+    Returns ``(no_data, stress)``: a flat grey base so states without Aqueduct
+    coverage still read as land, and the score-colored layer on top. The
+    ``water_step`` parameter selects which projection each state displays.
+
+    ``state_hover``/``state_pin`` are added to the *stress unit* rather than to
+    an enclosing view: attached higher up they never fire, because a concat has
+    no marks of its own to listen to.
+
+    Shared by ``water_stress_explorer`` and ``charts.explorer``, which pass
+    different ``legend`` placements for their different map widths. ``name``
+    gives the stress unit a stable view name (Vega emits it as an SVG group
+    class, and the state selections list it in their ``views``); left unset,
+    Altair assigns a content-hash name.
+    """
+    if legend is None:
+        legend = alt.Legend(
+            title="Water stress score (0 = low, 5 = extremely high)",
+            titleLimit=380,
+            orient="bottom",
+            direction="horizontal",
+            gradientLength=200,
+        )
+
     state_data = (
         alt.Chart(_states_map())
         .transform_lookup(
             lookup="id",
-            from_=alt.LookupData(comparison, "id", projection_fields),
+            from_=alt.LookupData(ww.water_stress_wide(), "id", _projection_fields()),
         )
         .transform_calculate(
             display_score=(
                 "water_step == 0 ? datum.baseline_score : "
-                f"{selected_projection('future_score')}"
+                f"{_selected_projection('future_score')}"
             ),
             display_label=(
                 "water_step == 0 ? datum.baseline_label : "
-                f"{selected_projection('future_label')}"
+                f"{_selected_projection('future_label')}"
             ),
-            selected_period=f"{period_label}",
+            selected_period=_PERIOD_LABEL,
             selected_scenario=(
                 "water_step == 0 ? 'Observed baseline' : 'Business as usual'"
             ),
             selected_forecast=(
                 "water_step == 0 ? null : "
-                f"{selected_projection('future_score')}"
+                f"{_selected_projection('future_score')}"
             ),
             selected_delta=(
-                "water_step == 0 ? null : "
-                f"{selected_projection('delta')}"
+                "water_step == 0 ? null : " f"{_selected_projection('delta')}"
             ),
         )
     )
+
     state_tooltip = [
         alt.Tooltip("name_1:N", title="State"),
         alt.Tooltip("selected_period:N", title="Period"),
@@ -252,6 +286,7 @@ def water_stress_explorer() -> alt.VConcatChart:
             state_pin | state_hover, alt.value(1.7), alt.value(0.65)
         ),
     }
+
     no_data = state_data.mark_geoshape(
         fill="#f1f5f9", stroke="#ffffff", strokeWidth=0.7
     )
@@ -261,24 +296,159 @@ def water_stress_explorer() -> alt.VConcatChart:
             color=alt.Color(
                 "display_score:Q",
                 scale=alt.Scale(domain=[0, 5], scheme="reds"),
-                legend=alt.Legend(
-                    title="Water stress score (0 = low, 5 = extremely high)",
-                    titleLimit=380,
-                    orient="none",
-                    legendX=0,
-                    legendY=555,
-                    direction="horizontal",
-                    gradientLength=250,
-                ),
+                legend=legend,
             ),
             tooltip=state_tooltip,
             **outline,
         )
-        # Bind the state selections to the geoshape marks themselves. Added at
-        # the vconcat level they never fire (no marks to listen to); on this
-        # unit view, hover/click on a state drives the map outline AND the
-        # linked emphasis on the delta chart below.
         .add_params(state_hover, state_pin)
+    )
+    if name is not None:
+        stress = stress.properties(name=name)
+    return no_data, stress
+
+
+def stress_delta_chart(
+    state_hover, state_pin, *, width: int = 460, height: int = 330
+) -> alt.LayerChart:
+    """Per-state change from baseline for the selected timeline step.
+
+    Empty at Baseline by design (there is no change to show yet), which is what
+    the notice layer explains. Bars outline in response to the map's state
+    hover/pin so the two views read as one.
+    """
+    comparison = ww.water_stress_wide()
+
+    delta_data = (
+        alt.Chart(comparison)
+        .transform_calculate(
+            selected_delta=_selected_projection("delta"),
+            selected_forecast=_selected_projection("future_score"),
+            selected_period=_PERIOD_LABEL,
+            selected_scenario="'Business as usual'",
+            absolute_change=f"abs({_selected_projection('delta')})",
+        )
+        .transform_filter("water_step > 0 && isValid(datum.selected_delta)")
+        .transform_window(
+            change_rank="rank()",
+            sort=[alt.SortField("absolute_change", order="descending")],
+        )
+        .transform_filter("datum.change_rank <= 12")
+    )
+    zero_rule = (
+        alt.Chart(pd.DataFrame({"zero": [0]}))
+        .mark_rule(color="#64748b", strokeWidth=1)
+        .encode(x="zero:Q")
+    )
+    delta_bars = delta_data.mark_bar(cornerRadiusEnd=3).encode(
+        y=alt.Y(
+            "name_1:N",
+            sort="-x",
+            title="State",
+            # Baseline renders zero rows here (no bars until water_step > 0),
+            # so without a locked minExtent the axis would collapse to ~0px at
+            # Baseline and jump wider at 2030/2050/2080, shifting this chart's
+            # title each time.
+            axis=alt.Axis(labelLimit=110, labelPadding=5, minExtent=110),
+        ),
+        x=alt.X(
+            "selected_delta:Q",
+            title="Forecast change from baseline",
+            scale=alt.Scale(domain=[-1, 1], clamp=True),
+        ),
+        color=alt.Color(
+            "selected_delta:Q",
+            scale=alt.Scale(
+                domain=[-1, 0, 1],
+                range=["#2166ac", "#f7f7f7", "#b2182b"],
+                clamp=True,
+            ),
+            legend=alt.Legend(
+                title="Change in stress",
+                orient="bottom",
+                direction="horizontal",
+                gradientLength=260,
+            ),
+        ),
+        # Emphasize the bar for whichever state is hovered or pinned on the map,
+        # tying the per-state delta view into the map's state selection.
+        stroke=alt.condition(
+            state_pin | state_hover, alt.value("#111827"), alt.value(None)
+        ),
+        strokeWidth=alt.condition(
+            state_pin | state_hover, alt.value(1.6), alt.value(0)
+        ),
+        tooltip=[
+            alt.Tooltip("name_1:N", title="State"),
+            alt.Tooltip("baseline_score:Q", title="Baseline", format=".2f"),
+            alt.Tooltip("selected_forecast:Q", title="Forecast", format=".2f"),
+            alt.Tooltip("selected_delta:Q", title="Change", format="+.2f"),
+            alt.Tooltip("selected_period:N", title="Period"),
+            alt.Tooltip("selected_scenario:N", title="Scenario"),
+        ],
+    )
+    delta_notice = (
+        alt.Chart(
+            pd.DataFrame({"message": ["Select 2030, 2050, or 2080 to view changes"]})
+        )
+        .transform_filter("water_step == 0")
+        .mark_text(fontSize=13, color="#64748b", align="center")
+        .encode(text="message:N")
+    )
+    return (zero_rule + delta_bars + delta_notice).properties(
+        width=width,
+        height=height,
+        title=alt.Title(
+            "What changes most from today?",
+            subtitle=(
+                "The 12 largest absolute changes; red increases stress and "
+                "blue decreases it."
+            ),
+            anchor="start",
+        ),
+    )
+
+
+def water_stress_explorer() -> alt.VConcatChart:
+    """A timeline-led water-stress story with linked owners and state change.
+
+    Superseded on the dashboard by ``charts.explorer.ai_economy_explorer``,
+    which reuses this module's layer builders across three maps. Kept as the
+    single-map reference rendering.
+    """
+    period = water_step_param()
+    show_future = show_future_sites_param()
+    state_hover, state_pin = state_selections()
+    owner_select = alt.selection_point(
+        name="water_owner_select",
+        fields=["operator"],
+        on="click",
+        clear="dblclick",
+        empty=True,
+    )
+    # Geographic rubber-band brush. Dragging a box on the map restricts
+    # owner_bars to the sites inside it, so the "who controls the most
+    # capacity" ranking recomputes for that region.
+    map_brush = alt.selection_interval(
+        name="water_map_brush",
+        encodings=["longitude", "latitude"],
+        empty=True,
+    )
+
+    no_data, stress = stress_timeline_layers(
+        state_hover,
+        state_pin,
+        # This map is 1080px wide, so its legends are placed absolutely on a
+        # single row beneath it rather than left to Vega-Lite's auto-stack.
+        legend=alt.Legend(
+            title="Water stress score (0 = low, 5 = extremely high)",
+            titleLimit=380,
+            orient="none",
+            legendX=0,
+            legendY=555,
+            direction="horizontal",
+            gradientLength=250,
+        ),
     )
 
     sites = ww.comparison_sites()
@@ -436,89 +606,7 @@ def water_stress_explorer() -> alt.VConcatChart:
         .add_params(owner_select) # added show_future param for toggle switch
     )
 
-    delta_data = (
-        alt.Chart(comparison)
-        .transform_calculate(
-            selected_delta=f"{selected_projection('delta')}",
-            selected_forecast=f"{selected_projection('future_score')}",
-            selected_period=f"{period_label}",
-            selected_scenario="'Business as usual'",
-            absolute_change=f"abs({selected_projection('delta')})",
-        )
-        .transform_filter("water_step > 0 && isValid(datum.selected_delta)")
-        .transform_window(
-            change_rank="rank()",
-            sort=[alt.SortField("absolute_change", order="descending")],
-        )
-        .transform_filter("datum.change_rank <= 12")
-    )
-    zero_rule = alt.Chart(pd.DataFrame({"zero": [0]})).mark_rule(
-        color="#64748b", strokeWidth=1
-    ).encode(x="zero:Q")
-    delta_bars = delta_data.mark_bar(cornerRadiusEnd=3).encode(
-        y=alt.Y(
-            "name_1:N",
-            sort="-x",
-            title="State",
-            # Same fixed-width trick: baseline renders zero rows here (no
-            # bars until water_step > 0), so without a locked minExtent the
-            # axis would collapse to ~0px at Baseline and jump wider at
-            # 2030/2050/2080, shifting this chart's title each time.
-            axis=alt.Axis(labelLimit=110, labelPadding=5, minExtent=110),
-        ),
-        x=alt.X(
-            "selected_delta:Q",
-            title="Forecast change from baseline",
-            scale=alt.Scale(domain=[-1, 1], clamp=True),
-        ),
-        color=alt.Color(
-            "selected_delta:Q",
-            scale=alt.Scale(
-                domain=[-1, 0, 1],
-                range=["#2166ac", "#f7f7f7", "#b2182b"],
-                clamp=True,
-            ),
-            legend=alt.Legend(
-                title="Change in stress",
-                orient="bottom",
-                direction="horizontal",
-                gradientLength=260,
-            ),
-        ),
-        # Emphasize the bar for whichever state is hovered or pinned on the map,
-        # tying the per-state delta view into the map's state selection.
-        stroke=alt.condition(
-            state_pin | state_hover, alt.value("#111827"), alt.value(None)
-        ),
-        strokeWidth=alt.condition(
-            state_pin | state_hover, alt.value(1.6), alt.value(0)
-        ),
-        tooltip=[
-            alt.Tooltip("name_1:N", title="State"),
-            alt.Tooltip("baseline_score:Q", title="Baseline", format=".2f"),
-            alt.Tooltip("selected_forecast:Q", title="Forecast", format=".2f"),
-            alt.Tooltip("selected_delta:Q", title="Change", format="+.2f"),
-            alt.Tooltip("selected_period:N", title="Period"),
-            alt.Tooltip("selected_scenario:N", title="Scenario"),
-        ],
-    )
-    delta_notice = (
-        alt.Chart(
-            pd.DataFrame({"message": ["Select 2030, 2050, or 2080 to view changes"]})
-        )
-        .transform_filter("water_step == 0")
-        .mark_text(fontSize=13, color="#64748b", align="center")
-        .encode(text="message:N")
-    )
-    delta_chart = (zero_rule + delta_bars + delta_notice).properties(
-        width=460,
-        height=330,
-        title=alt.Title(
-            "What changes most from today?",
-            subtitle="The 12 largest absolute changes; red increases stress and blue decreases it.",
-            anchor="start",
-        ),
-    )
+    delta_chart = stress_delta_chart(state_hover, state_pin, width=460, height=330)
 
     return (
         alt.vconcat(
