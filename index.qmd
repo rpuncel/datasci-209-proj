@@ -30,6 +30,16 @@ nocite: |
 
 Have you heard about this AI thing lately?
 
+::: {.callout-tip}
+## How to use this page
+
+If this is your first time reading this page, read from top-to-bottom to get extra introductory context
+before using the interactive exploration tool at the bottom.
+
+If you're not new, or impatient, feel free to [skip to the tool](#interactive-explorer).
+
+:::
+
 ```{python}
 #| include: false
 #| label: setup
