@@ -59,7 +59,7 @@ from wrangle import water as ww
 # or below (3*MAP_WIDTH - 260)/2 so the bottom row never becomes the widest one,
 # and run charts/test_explorer.py::test_rendered_width_fits_the_dashboard_card.
 # Red prints the rendered width; every 3px over costs 1px of MAP_WIDTH.
-MAP_WIDTH = 410
+MAP_WIDTH = 600
 # albersUsa auto-fits to the view with no explicit scale, so the projection's
 # native ~1.72:1 aspect is what decides how tall a map needs to be. Deriving the
 # height keeps the two in step, and the +2 leaves width the binding constraint
