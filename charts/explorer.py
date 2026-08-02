@@ -31,9 +31,14 @@ from charts import electricity, money, water
 from charts.owner_colors import owner_scale
 from wrangle import water as ww
 
-# Layout knobs, in one place. Three albersUsa maps (~1.5:1) sit side by side at
-# these dimensions; retune against a real render.
-MAP_WIDTH = 380
+# Layout knobs, in one place. Three albersUsa maps sit side by side at these
+# dimensions. MAP_WIDTH is bounded by more than 3x itself: the enclosing
+# vconcat gives every row one shared left margin, sized by the owner bars'
+# 130px y-axis minExtent, and each map's legend can overhang its right edge.
+# 320 is where the rendered SVG lands just inside a ~1320px dashboard card;
+# past that the card scrolls horizontally (styles.css allows it, but the third
+# map gets clipped until you scroll).
+MAP_WIDTH = 320
 MAP_HEIGHT = 260
 BAR_WIDTH = 460
 BAR_HEIGHT = 330
@@ -295,7 +300,11 @@ def ai_economy_explorer(
             extra_tooltip=[
                 alt.Tooltip("capex_b:Q", title="Capital (USD B)", format=",.1f")
             ],
-            # The one shared capacity legend for all three maps.
+            # The single capacity legend. Its siblings pass legend=None, which
+            # only works because the maps concat resolves size independently:
+            # under Vega-Lite's default shared resolution the three size scales
+            # merge, the sibling nulls suppress the merged legend, and it lands
+            # on the root group at the very bottom of the page instead of here.
             size_legend=alt.Legend(
                 title="Site capacity (MW)",
                 orient="bottom",
@@ -322,7 +331,17 @@ def ai_economy_explorer(
     )
 
     no_data, stress = water.stress_timeline_layers(
-        state_hover, state_pin, name=WATER_STATES
+        state_hover,
+        state_pin,
+        name=WATER_STATES,
+        # The standalone explorer's full-sentence legend title is wider than a
+        # map is here, and it is the single widest element in the row.
+        legend=alt.Legend(
+            title="Water stress (0-5)",
+            orient="bottom",
+            direction="horizontal",
+            gradientLength=140,
+        ),
     )
     water_map = _map(
         no_data,
@@ -346,7 +365,9 @@ def ai_economy_explorer(
     )
 
     combine = alt.hconcat if orientation == "row" else alt.vconcat
-    maps = combine(capital_map, electricity_map, water_map, spacing=MAP_SPACING)
+    maps = combine(
+        capital_map, electricity_map, water_map, spacing=MAP_SPACING
+    ).resolve_scale(size="independent", shape="independent")
 
     bottom = alt.hconcat(
         _owner_bars(

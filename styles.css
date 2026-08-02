@@ -6,47 +6,25 @@
    card's available height instead of sizing to their actual content, which
    opens a large blank gap between the controls and the chart itself. These
    wrappers hold a form toolbar and a fixed-size SVG, neither of which
-   should stretch, so opt them back out of fill-grow. Scoped to the water
+   should stretch, so opt them back out of fill-grow. Scoped to the unified
    explorer only — other charts.interactive() calls are left untouched. */
-#water-stress-explorer.vega-embed-esm,
-#water-stress-explorer .vega-controls,
-#water-stress-explorer .vega-chart-view {
-  flex: none !important;
-  height: auto !important;
-}
-
-/* Same fill-grow issue as above, on the money, owner-power, and electricity
-   charts: their fixed-size SVGs (now taller thanks to the bottom legends)
-   were getting squeezed into whatever height the fillable card happened to
-   have. */
-#money-charts.vega-embed-esm,
-#money-charts .vega-chart-view,
-#tour-power-owner.vega-embed-esm,
-#tour-power-owner .vega-chart-view,
-#electricity-map.vega-embed-esm,
-#electricity-map .vega-chart-view {
-  flex: none !important;
-  height: auto !important;
-}
-
-/* electricity_capacity_with_datacenters() has padding.left=158 (see
-   charts/electricity.py) to align its map with the water map's rendered
-   position. That padding shifts the title along with it; shift the title's
-   own SVG group back left by the same amount so it stays flush with the
-   page margin like every other section title. */
-#electricity-map .role-title {
-  transform: translateX(-158px);
-}
-
-/* The unified explorer (charts/explorer.py) packs three maps + the owner and
-   delta bars into a single embed that can be wider than the page. Let its
-   chart view scroll horizontally instead of overflowing the layout. */
+#ai-economy-explorer.vega-embed-esm,
+#ai-economy-explorer .vega-controls,
 #ai-economy-explorer .vega-chart-view {
-  max-width: 100%;
-  overflow-x: auto;
+  flex: none !important;
+  height: auto !important;
 }
 
-#water-stress-explorer .vega-bindings {
+/* Same fill-grow issue as above, on the money charts: their fixed-size SVGs
+   (taller thanks to the bottom legends) were getting squeezed into whatever
+   height the fillable card happened to have. */
+#money-charts.vega-embed-esm,
+#money-charts .vega-chart-view {
+  flex: none !important;
+  height: auto !important;
+}
+
+#ai-economy-explorer .vega-bindings {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem 1.5rem;
@@ -59,13 +37,13 @@
   box-shadow: 0 4px 14px rgb(15 23 42 / 0.06);
 }
 
-#water-stress-explorer .vega-bind {
+#ai-economy-explorer .vega-bind {
   margin: 0;
   font-size: 0.9rem;
   font-weight: 600;
 }
 
-#water-stress-explorer .vega-bind-range {
+#ai-economy-explorer .vega-bind-range {
   display: grid;
   grid-template-columns: auto minmax(650px, 920px);
   align-items: center;
@@ -73,36 +51,36 @@
   width: min(100%, 1050px);
 }
 
-#water-stress-explorer input[type="range"] {
+#ai-economy-explorer input[type="range"] {
   width: 100%;
   accent-color: #b91c1c;
 }
 
-#water-stress-explorer input[type="range"]::-webkit-slider-runnable-track {
+#ai-economy-explorer input[type="range"]::-webkit-slider-runnable-track {
   height: 0.35rem;
   border-radius: 999px;
   background: linear-gradient(90deg, #fecaca, #b91c1c);
 }
 
-#water-stress-explorer input[type="range"]::-webkit-slider-thumb {
+#ai-economy-explorer input[type="range"]::-webkit-slider-thumb {
   margin-top: -0.32rem;
 }
 
-#water-stress-explorer .water-story-timeline {
+#ai-economy-explorer .water-story-timeline {
   display: flex;
   align-items: center;
   gap: 1rem;
   width: 100%;
 }
 
-#water-stress-explorer .water-control-label {
+#ai-economy-explorer .water-control-label {
   flex-shrink: 0;
   color: #334155;
   font-size: 0.9rem;
   font-weight: 700;
 }
 
-#water-stress-explorer .water-story-steps {
+#ai-economy-explorer .water-story-steps {
   display: flex;
   flex: 1;
   gap: 0.3rem;
@@ -112,7 +90,7 @@
   background: #ffffff;
 }
 
-#water-stress-explorer .water-story-steps button {
+#ai-economy-explorer .water-story-steps button {
   flex: 1;
   border: 0;
   border-radius: 999px;
@@ -128,28 +106,28 @@
     box-shadow 180ms ease;
 }
 
-#water-stress-explorer .water-story-steps button:hover {
+#ai-economy-explorer .water-story-steps button:hover {
   color: #991b1b;
   background: #fff1f2;
 }
 
-#water-stress-explorer .water-story-steps button.active {
+#ai-economy-explorer .water-story-steps button.active {
   color: #ffffff;
   background: #b91c1c;
   box-shadow: 0 2px 7px rgb(185 28 28 / 0.22);
 }
 
-#water-stress-explorer .vega-bind-range output {
+#ai-economy-explorer .vega-bind-range output {
   display: none;
 }
 
-#water-stress-explorer .vega-chart-view {
+#ai-economy-explorer .vega-chart-view {
   max-width: 100%;
   overflow-x: auto;
 }
 
-#water-stress-explorer svg path,
-#water-stress-explorer svg symbol {
+#ai-economy-explorer svg path,
+#ai-economy-explorer svg symbol {
   transition:
     fill 500ms ease,
     opacity 350ms ease,
@@ -157,8 +135,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  #water-stress-explorer svg path,
-  #water-stress-explorer svg symbol {
+  #ai-economy-explorer svg path,
+  #ai-economy-explorer svg symbol {
     transition: none;
   }
 }

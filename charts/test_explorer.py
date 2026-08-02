@@ -209,6 +209,17 @@ def test_single_shared_size_and_shape_legends(spec):
     assert shape_legends[0]["field"] == "site_type"
 
 
+def test_maps_resolve_size_and_shape_independently(spec):
+    """Without this, Vega-Lite merges the three maps' size/shape scales, the
+    sibling ``legend: null``s suppress the merged shape legend outright, and
+    the capacity legend is hoisted to the root group — rendering at the very
+    bottom of the page rather than beneath the maps it describes."""
+    maps = spec["vconcat"][0]
+    resolve = maps["resolve"]["scale"]
+    assert resolve["size"] == "independent"
+    assert resolve["shape"] == "independent"
+
+
 def test_orientation_and_size_knobs_shape_the_layout():
     row = explorer.ai_economy_explorer(orientation="row", map_width=311).to_dict()
     column = explorer.ai_economy_explorer(orientation="column", map_width=311).to_dict()

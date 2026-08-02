@@ -6,7 +6,10 @@ window.addEventListener("load", () => {
             overlayOpacity: 0.5,
             hints: [
                 {
-                    element: "#ai-economy-explorer [class*='site_bars'] path",
+                    // Vega emits each unit view's `name` as an SVG group class, so the
+            // owner ranking in charts/explorer.py is reachable by its OWNER_BARS
+            // name. (The old `site_bars` chart is no longer on the page.)
+            element: "#ai-economy-explorer [class*='owner_power_bars'] path",
                     id: "hover-bars-power",
                     popover: {
                         title: "Explore the data",
@@ -107,14 +110,14 @@ button.addEventListener('click', () => {
             element: "#ai-economy-explorer",
             popover: {
                 title: "One linked view of the AI economy",
-                description: "Every chart shares the same owner colors. Click an owner in the legend to highlight that company across all the maps and charts at once.",
+                description: "Capital, grid capacity, and water stress share a single linked view. Click an owner in the ranking to highlight its sites on all three maps, or drag a box on any map to re-rank owners for that region.",
                 align: "start",
                 side: "top",
             }
         },
         {
             // Keep the tight, single-bar spotlight for the hover step.
-            element: "#tour-power-owner [class*='site_bars'] path",
+            element: "#ai-economy-explorer [class*='owner_power_bars'] path",
             onHighlightStarted: watchForTooltip,
             onDeselected: stopWatchingTooltip,
             popover: {
