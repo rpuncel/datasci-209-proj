@@ -9,6 +9,7 @@ import datasets
 from constants import STATE_FIPS
 
 from .datacenters import CAPEX, H100, POWER, clean_party, enriched_centers, us_centers
+from .operator_name import fill_missing_operator_names
 
 _DATASETS_DIR = Path(datasets.__file__).parent
 
@@ -154,8 +155,16 @@ def water_stress_wide() -> pd.DataFrame:
 
 @lru_cache(maxsize=None)
 def future_data_centers() -> pd.DataFrame:
-    """Proposed U.S. data centers (FracTracker tracker; not AI-specific)."""
-    return pd.read_csv(_DATASETS_DIR / "Data_Centers_Database.csv")
+    """Proposed U.S. data centers (FracTracker tracker; not AI-specific).
+
+    ``operator_name`` arrives blank on ~45% of rows; ``fill_missing_operator_names``
+    backfills what it can (see ``wrangle.operator_name`` for the inference
+    tiers) and tags every row's ``operator_name_source`` as "original",
+    "inferred", or "missing" so downstream consumers can tell real FracTracker
+    data apart from an inferred guess if that distinction ever matters.
+    """
+    raw = pd.read_csv(_DATASETS_DIR / "Data_Centers_Database.csv")
+    return fill_missing_operator_names(raw)
 
 
 @lru_cache(maxsize=None)
