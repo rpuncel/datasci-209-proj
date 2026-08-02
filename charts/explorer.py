@@ -565,9 +565,47 @@ def ai_economy_explorer(
         spacing=BOTTOM_SPACING,
         center=False,
     )
+    summary_height = 60
+    summary_capital = (
+        alt.Chart(sites)
+        .mark_text(fontSize=48, align="center", baseline="middle")
+        .encode(
+            text='label:N',
+            x=alt.value(map_width / 2),
+            y=alt.value(summary_height / 2),
+        )
+        .transform_filter((geo_brush & owner_select & site_select))
+        .transform_aggregate(total_capital="sum(capex_b)")
+        .transform_calculate(
+            # capex_b is already in USD billions, so ",.0f" both rounds to
+            # the nearest billion and adds thousands separators.
+            label='format(datum.total_capital, ",.0f") + " Billion Dollars"',
+        )
+        .properties(width=map_width, height=summary_height)
+    )
+    summary_power = (
+        alt.Chart(sites)
+        .mark_text(fontSize=48, align="center", baseline="middle")
+        .encode(
+            text='label:N',
+            x=alt.value(map_width / 2),
+            y=alt.value(summary_height / 2),
+        )
+        .transform_filter((geo_brush & owner_select & site_select))
+        .transform_aggregate(total_power="sum(capacity_mw)")
+        .transform_calculate(
+            label='datum.total_power + " Megawatts"',  # Concatenates data + suffix
+        )
+        .properties(width=map_width, height=summary_height)
+    )
 
+    # Mirrors the widths/spacing of the first two `maps` children so, given
+    # the outer concat's shared bounds:"full" left shift (see MAP_WIDTH note
+    # above), summary_capital lands over capital_map and summary_power lands
+    # over electricity_map.
+    summaries = alt.hconcat(summary_capital, summary_power, spacing=MAP_SPACING)
     chart = (
-        alt.vconcat(maps, bottom, spacing=ROW_SPACING, center=False)
+        alt.vconcat(summaries, maps, bottom, spacing=ROW_SPACING, center=False)
         .add_params(period, show_future)
         .resolve_scale(color="independent")
         .properties(padding={"left": 8, "top": 5, "right": 5, "bottom": 5})
