@@ -1,6 +1,6 @@
 """electricity choropleths (EIA 2024) with data center overlays."""
 
-from wrangle.datacenters import enriched_centers
+from wrangle.datacenters import us_centers
 import altair as alt
 import pandas as pd
 
@@ -71,21 +71,21 @@ def electricity_capacity_choropleth():
         )
     )
 
-def electricity_capacity_with_datacenters(df: pd.DataFrame,
+def electricity_capacity_with_datacenters(
+    df: pd.DataFrame | None = None,
     *, color=None, size_legend: bool | alt.Legend = True
 ) -> alt.LayerChart:
     """Installed generation capacity with AI data centers.
 
-    ``color`` overrides the data center point color encoding (e.g. a shared
-    owner-selection condition when composited into the unified explorer); when
-    ``None`` the points use the standard owner palette so the map still reads
-    on its own. ``size_legend=False`` suppresses the size legend so a
-    concatenated layout can host a single shared one.
+    ``df`` defaults to the US-only enriched centers frame. ``color`` overrides
+    the data center point color encoding (e.g. a shared owner-selection
+    condition when composited into the unified explorer); when ``None`` the
+    points use the standard owner palette so the map still reads on its own.
+    ``size_legend=False`` suppresses the size legend so a concatenated layout
+    can host a single shared one.
     """
-    # Non-US sites (China, Malaysia, Indonesia, Portugal, UAE in the current
-    # data) have longitudes far outside the continental range and don't
-    # belong on a US-only albersUsa map.
-    
+    if df is None:
+        df = us_centers()
     color_kwargs = {} if color is None else {"color": color}
     points = overlay.datacenter_points(
         df,

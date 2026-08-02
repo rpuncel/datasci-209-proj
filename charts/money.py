@@ -6,19 +6,19 @@ sized by per-site capital cost instead of power.
 """
 
 import altair as alt
-from altair.datasets import data
 import pandas as pd
 
 from charts import overlay
+# Reuse water.py's cached, PR/USVI-filtered state features instead of the
+# us_10m CDN topojson: it keeps albersUsa's auto-fit consistent with the other
+# two maps, needs no runtime network fetch, and lets Altair's dataset
+# consolidation embed the geometry once for all three maps in the explorer.
+from charts.water import _states_map
 from constants.states import STATE_FIPS, STATE_NAMES
 from wrangle import datacenters as wd
 from wrangle.datacenters import CAPEX
 
 _ABBR_TO_NAME = {abbr: name for name, abbr in STATE_NAMES.items()}
-
-
-def _states_map():
-    return alt.topo_feature(data.us_10m.url, feature="states")
 
 
 def _capex_by_state():
@@ -70,17 +70,21 @@ def capital_choropleth() -> alt.Chart:
     )
 
 
-def capital_with_datacenters(df: pd.DataFrame,
+def capital_with_datacenters(
+    df: pd.DataFrame | None = None,
     controls: bool = False, *, color=None, size_legend: bool | alt.Legend = True
 ) -> alt.LayerChart:
     """Per-state capital choropleth with current AI data centers sized by capex.
 
-    ``controls=True`` adds live jitter slider/checkbox (needs an interactive
-    renderer); see ``jitter-lab.qmd``. ``color`` overrides the point color
-    encoding (e.g. a shared owner-selection condition in the unified explorer);
-    ``None`` keeps the standard owner palette. ``size_legend=False`` suppresses
-    the size legend so a concatenated layout can host a single shared one.
+    ``df`` defaults to the US-only enriched centers frame. ``controls=True``
+    adds live jitter slider/checkbox (needs an interactive renderer); see
+    ``jitter-lab.qmd``. ``color`` overrides the point color encoding (e.g. a
+    shared owner-selection condition in the unified explorer); ``None`` keeps
+    the standard owner palette. ``size_legend=False`` suppresses the size
+    legend so a concatenated layout can host a single shared one.
     """
+    if df is None:
+        df = wd.us_centers()
     color_kwargs = {} if color is None else {"color": color}
     points = overlay.datacenter_points(
         df,

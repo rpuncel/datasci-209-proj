@@ -87,15 +87,19 @@ def future_stress_choropleth() -> alt.Chart:
 
 
 def baseline_stress_with_datacenters(
-    df: pd.DataFrame, *, color=None, size_legend: bool | alt.Legend = True
+    df: pd.DataFrame | None = None, *, color=None, size_legend: bool | alt.Legend = True
 ) -> alt.LayerChart:
     """Baseline stress choropleth with current AI data centers sized by power.
 
-    ``color`` overrides the data center point color (e.g. a shared
-    owner-selection condition in the unified explorer); ``None`` keeps the
-    standard owner palette. ``size_legend=False`` suppresses the size legend so
-    a concatenated layout can host a single shared one.
+    ``df`` defaults to the US-only enriched centers frame, so this stays a
+    zero-arg chart function like its siblings. ``color`` overrides the data
+    center point color (e.g. a shared owner-selection condition in the unified
+    explorer); ``None`` keeps the standard owner palette. ``size_legend=False``
+    suppresses the size legend so a concatenated layout can host a single
+    shared one.
     """
+    if df is None:
+        df = wd.us_centers()
     color_kwargs = {} if color is None else {"color": color}
     points = overlay.datacenter_points(
         df,
@@ -534,15 +538,18 @@ def water_stress_explorer() -> alt.VConcatChart:
     )
 
 
-def baseline_stress_owner_linked(df: pd.DataFrame) -> alt.HConcatChart:
+def baseline_stress_owner_linked(df: pd.DataFrame | None = None) -> alt.HConcatChart:
     """Baseline stress map and site-concentration bars linked by owner selection.
 
     Clicking a bar or a data center point selects that owner and greys out
     everything else in both views. Needs an interactive renderer
-    (charts.interactive), not the static SVG default.
+    (charts.interactive), not the static SVG default. ``df`` defaults to the
+    US-only enriched centers frame.
     """
     from charts import datacenters  # deferred: charts/__init__ imports this module
 
+    if df is None:
+        df = wd.us_centers()
     owners = sorted(
         set(wd.high_power_low_density()["owner_clean"].dropna())
         | set(df["owner_clean"].dropna())

@@ -56,6 +56,7 @@ def owner_power() -> alt.Chart:
     return alt.Chart(dc.owner_summary().head(10)).mark_bar().encode(
         y=alt.Y("owner_clean:N", sort="-x", title=None),
         x=alt.X("power_mw:Q", title="Estimated current power (MW)"),
+        color=owner_color(legend=None),
         tooltip=[
             alt.Tooltip("owner_clean:N", title="Owner"),
             alt.Tooltip("power_mw:Q", title="Power (MW)", format=",.0f"),
@@ -73,8 +74,8 @@ def owner_power() -> alt.Chart:
     )
 
 
-def site_concentration(df: pd.DataFrame, lines=True) -> alt.LayerChart:
-    site_rank = df.sort_values("rank")
+def site_concentration(df: pd.DataFrame | None = None, lines=True) -> alt.LayerChart:
+    site_rank = (dc.us_centers() if df is None else df).sort_values("rank")
     site_bars = alt.Chart(site_rank.head(20), name="site_bars").mark_bar(color="#3b73b9").encode(
         x=alt.X("rank:O", title="Site rank by current power"),
         y=alt.Y(f"{POWER}:Q", title="Current power (MW)"),
