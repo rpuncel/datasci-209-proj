@@ -46,48 +46,99 @@ charts.setup()
 stats = dc.stats()
 ```
 
-## Breakdown 
+## {.flow}
 
-AI is often discussed in terms of technological breakthroughs and model performance. Less visible are the physical resources behind the growth of AI. Behind every new generation of AI models are billions of dollars of investment, massive data centers, growing electricity demand, and the water needed to keep that infrastructure cool. Scroll down to explore the present and future AI economy through the dimensions of 💰 **money**, ⚡ **Power**, and 💧 **Water**.
+###
 
-## Explore the Dashboard
+:::: {.card .flow title="There's a lot money going into building out AI infrastructure."}
 
-<!-- Buttons, not <a href="#...">: quarto-dashboard.js hijacks in-content anchor
-     clicks to drive its page-tab switcher, and since this is a single-page
-     dashboard it deactivates the only tab-pane instead of scrolling. -->
-::: {.section-nav}
-<button type="button" class="section-nav-link" onclick="document.getElementById('money-section').scrollIntoView({behavior: 'smooth'})">💰 Money</button>
-<button type="button" class="section-nav-link" onclick="document.getElementById('explorer-section').scrollIntoView({behavior: 'smooth'})">⚡ Power & 💧 Water</button>
+::: {.card .flow }
+AI infrastructure shows up as data centers - large facilities
+with a ton of compute power. There's a race on to build AI infrastructure.
+
+The AI economy begins with capital investment. Building and operating large-scale AI systems requires significant spending on data centers, computing hardware, and supporting infrastructure. AI companies are investing billions of dollars in new infrastructure. These invesments determine who has access to the computing power needed to support current use and train the next generation of AI models.
+
 :::
 
-1. Start with 💰 **money** to see how much companies are investing in AI infrastructure.
-2. Those investments become ⚡ **power** as companies build data centers that draw enormous amounts of electricity from limited grid capacity, and 💧 **water** to cool them.
-3. Explore all three together — capital, grid capacity, and water stress share one linked view, so a single owner or region can be traced across every dimension at once.
+::: {.card}
 
-## {.section-divider}
-<span id="money-section"></span>💰 Money
+```{python}
+#| fill: false
+#| title: AI Data Center Investment
+charts.interactive(
+    charts.datacenters.capital_pipeline().properties(height=180)
+)
+
+```
+
+:::
+
+::::
+
+
+###
+
+:::: {.card .flow title="Power capacity is used to express the capability of data centers."}
+
+::: {.card .flow }
+
+There are three key measures we are especially interested in when talking about data centers:
+
+1. How much money does it cost?
+2. How much energy does it need at full capacity?
+3. How much AI "capacity" does it have?
+
+To make things easier, industry often talks about data centers in terms of just the energy at full capacity. This is convenient
+because that roughly correlates with both actual compute capacity and money spent.
+
+
+:::
+
+::: {.card .flow}
+
+```{python}
+#| fill: false
+#| title: AI Data Center Investment
+charts.interactive(
+    charts.datacenters.cost_vs_energy().properties(width=540,title="Capital expenditure correlates with power capacity of a data center")
+    | charts.datacenters.compute_vs_power().properties(
+      height=180,
+      title=alt.Title(
+        "AI output capability correlates with power capacity of a data center",
+        subtitle="epoch.ai uses the Nvidia H100 as a standard unit of how AI capacity a data center has."
+      ),
+    ),
+    id="money-charts",
+)
+
+```
+
+:::
+
+
+::::
+
+##
+
+
+But are these **good** investments? Two key necessities for data centers is the availability of power and the availbility of water.
+
+If there's not enough power, the data center can't run to its full capacity, and electricity rates might go up for both
+the data center operator and the people who share an electrical grid.
+
+If there's not enough water, a data center may not be able cool its hardware fast enough. There's a lot of chatter about
+data cetners being water wasters - water being a scarce resource in some places, hopefully it is in abundance where data centers are.
+
+As we evaluate investments and data center activity, it's of interest to both investors and concerned citizens to know who is
+putting money on the line.
+
+Use the explorer below to answer these questions.
 
 ##
 The AI economy begins with capital investment. Building and operating large-scale AI systems requires significant spending on data centers, computing hardware, and supporting infrastructure. AI companies are investing billions of dollars in new infrastructure. These invesments determine who has access to the computing power needed to support current use and train the next generation of AI models.
 
 The plots below compare estimated capital investment with estimated power capacity of major AI data centers. Larger facilities require greater electrical capacity, making power demand a useful proxy for future computing capability. Greater power capacity generally means greater computing capacity. Companies making the largest infrastructure investments are positioned to support larger-scale AI training and inference, giving them a potential advantage in developing future AI systems.  
 
-##
-```{python}
-#| echo: false
-#| classes: flow
-# Quarto's altair theme defaults chart width to "container", which Vega-Lite
-# collapses back to its ~300px per-view default once two charts are
-# hconcat'd. Explicit widths here fill the row instead of leaving it mostly
-# blank.
-charts.interactive(
-    charts.datacenters.capital_pipeline().properties(width=540)
-    | charts.datacenters.power_vs_capital_cost().properties(width=540),
-    id="money-charts",
-)
-```
-
-##
 ::: {.data-source}
 
 **Data source:** This data is sourced by Epoch AI, which is a research non-profit focused on compiling data estimates related to current and future AI. This specific data center dataset estimates the power, compute capacity, and cost of AI data centers using permit information and satellite imagery.
