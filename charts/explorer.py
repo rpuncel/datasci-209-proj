@@ -114,7 +114,7 @@ _SHARED_PARAM_VIEWS = {
 # max), so a linear scale would crowd nearly every point into the smallest
 # sliver of the size range. sqrt spreads out that common low end at the cost of
 # some separation among the rare, very large outliers.
-_SIZE_SCALE = alt.Scale(type="sqrt", domain=[0, 3000], range=[16, 300], clamp=True)
+_SIZE_SCALE = alt.Scale(range=[16, 3000], clamp=True)
 _SHAPE_SCALE = alt.Scale(
     domain=["Current AI site", "Proposed project"],
     range=["circle", "triangle-up"],
