@@ -6,6 +6,8 @@ maps, one owner selection driving every view — is produced by Altair's
 subchart parameter merge at ``to_dict()`` time, not by the builder calls.
 """
 
+import re
+
 import altair as alt
 import pandas as pd
 import pytest
@@ -234,6 +236,33 @@ def test_orientation_and_size_knobs_shape_the_layout():
 def test_orientation_rejects_unknown_values():
     with pytest.raises(ValueError):
         explorer.ai_economy_explorer(orientation="diagonal")
+
+
+# Measured from the rendered dashboard: the explorer card's content box is
+# about (viewport - 120) px, so a 1440px-wide window leaves 1321px. Beyond that
+# styles.css turns the card into a horizontal scroller and the third map is
+# clipped until you scroll.
+CARD_WIDTH_AT_1440 = 1321
+
+
+def test_rendered_width_fits_the_dashboard_card():
+    """The explorer's total width is only loosely related to MAP_WIDTH.
+
+    Each map's bottom legend row can be *wider* than the map and overhangs to
+    the right, and Vega reserves the owner bars' y-axis extent as a left gutter
+    on every row of the concat. Both are easy to inflate by accident — a longer
+    legend title or a bigger ``gradientLength`` costs real map width — and the
+    symptom (a horizontal scrollbar on a 1440px laptop) is invisible from the
+    spec alone. So render it and measure.
+    """
+    vlc = pytest.importorskip("vl_convert")
+    svg = vlc.vegalite_to_svg(explorer.ai_economy_explorer().to_json())
+    width = int(re.search(r'width="(\d+)"', svg).group(1))
+
+    assert width <= CARD_WIDTH_AT_1440, (
+        f"explorer renders {width}px wide, over the {CARD_WIDTH_AT_1440}px card. "
+        "Shrink a legend (title or gradientLength) or MAP_WIDTH."
+    )
 
 
 def _enclosing_width(node, view_name):

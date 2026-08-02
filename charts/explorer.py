@@ -32,15 +32,35 @@ from charts.owner_colors import owner_scale
 from wrangle import water as ww
 
 # Layout knobs, in one place. Three albersUsa maps sit side by side at these
-# dimensions. MAP_WIDTH is bounded by more than 3x itself: the enclosing
-# vconcat gives every row one shared left margin, sized by the owner bars'
-# 130px y-axis minExtent, and each map's legend can overhang its right edge.
-# 320 is where the rendered SVG lands just inside a ~1320px dashboard card;
-# past that the card scrolls horizontally (styles.css allows it, but the third
-# map gets clipped until you scroll).
-MAP_WIDTH = 320
-MAP_HEIGHT = 260
-BAR_WIDTH = 460
+# dimensions, inside a dashboard card that offers roughly (viewport - 120) px.
+#
+# MAP_WIDTH is bounded by two things that have nothing to do with the maps:
+#
+#   * a ~154px left gutter on *every* row. Vega lays the outer concat out with
+#     bounds "full", so it reserves the largest left overhang of any row — here
+#     the owner bars' y-axis (minExtent=130 below) — and shifts the whole spec
+#     right by it. `align: "none"` does not opt out of this.
+#   * each map's bottom legend row, which can be wider than the map itself and
+#     then overhangs to the right. Only a map wider than its own legend row adds
+#     to the total, so the row costs max(W, legend_1) + 18 + max(W, legend_2)
+#     + 18 + max(W, legend_3).
+#
+# The card is about (viewport - 120) px, i.e. ~1321px on a 1440px-wide window,
+# past which styles.css turns the card into a horizontal scroller and the third
+# map is clipped until you scroll. 154 + 3W + 36 <= 1321 puts the hard ceiling
+# at W=377 — so the legends are trimmed (short titles, short gradients) to get
+# under W, and 370 is the largest round width that fits. Measured, not derived:
+# re-render and check the SVG width if you touch any legend here.
+#
+# MAP_HEIGHT only has to stay out of the projection's way: albersUsa auto-fits
+# to the view with no explicit scale, and its native aspect is ~1.72:1, so a
+# 370px-wide map needs ~215px. Going much taller just pads dead space below the
+# geometry, which is what the old 320x260 was doing.
+MAP_WIDTH = 480
+#MAP_HEIGHT = 224
+# Sized so the bottom row (bars + their ~148px axis gutter, then the delta
+# chart) comes out about as wide as the maps row above it.
+BAR_WIDTH = 480
 BAR_HEIGHT = 330
 MAP_SPACING = 18
 ROW_SPACING = 30
@@ -152,7 +172,7 @@ def _repair_shared_brush_views(chart: alt.VConcatChart, view_names) -> alt.VConc
     return chart
 
 
-def _map(*layers, width: int, height: int, title: str) -> alt.LayerChart:
+def _map(*layers, **kwargs) -> alt.LayerChart:
     """Choropleth base + site overlay as one projected, independently-scaled map."""
     return (
         alt.layer(*layers)
@@ -160,7 +180,7 @@ def _map(*layers, width: int, height: int, title: str) -> alt.LayerChart:
         # The choropleth's sequential fill and the points' categorical owner
         # palette are different color scales sharing one view.
         .resolve_scale(color="independent")
-        .properties(width=width, height=height, title=title)
+        .properties(**kwargs)
     )
 
 
@@ -239,7 +259,7 @@ def ai_economy_explorer(
     *,
     orientation: str = "row",
     map_width: int = MAP_WIDTH,
-    map_height: int = MAP_HEIGHT,
+    #map_height: int = MAP_HEIGHT,
     bar_width: int = BAR_WIDTH,
     bar_height: int = BAR_HEIGHT,
 ) -> alt.VConcatChart:
@@ -294,7 +314,19 @@ def ai_economy_explorer(
         )
 
     capital_map = _map(
-        money.capital_choropleth(),
+        money.capital_choropleth(
+            # This legend and the capacity legend below sit side by side under
+            # the first map, and that pair is the widest element in the whole
+            # explorer — it, not the maps, sets the total SVG width. Both the
+            # short title and the short gradient are there to keep the pair
+            # inside MAP_WIDTH. See the layout note at the top of this module.
+            legend=alt.Legend(
+                title="Capital (USD B)",
+                orient="bottom",
+                direction="horizontal",
+                gradientLength=110,
+            )
+        ),
         points(
             CAPITAL_SITES,
             extra_tooltip=[
@@ -313,7 +345,7 @@ def ai_economy_explorer(
             ),
         ),
         width=map_width,
-        height=map_height,
+        #height=map_height,
         title="💰 Capital invested",
     )
 
@@ -326,7 +358,7 @@ def ai_economy_explorer(
             ],
         ),
         width=map_width,
-        height=map_height,
+        #height=map_height,
         title="⚡ Grid capacity",
     )
 
@@ -335,7 +367,8 @@ def ai_economy_explorer(
         state_pin,
         name=WATER_STATES,
         # The standalone explorer's full-sentence legend title is wider than a
-        # map is here, and it is the single widest element in the row.
+        # map is here. This legend also shares its row with the site-shape
+        # legend below, so the pair has to stay inside MAP_WIDTH.
         legend=alt.Legend(
             title="Water stress (0-5)",
             orient="bottom",
@@ -360,7 +393,7 @@ def ai_economy_explorer(
             ),
         ),
         width=map_width,
-        height=map_height,
+        #height=map_height,
         title="💧 Water stress",
     )
 

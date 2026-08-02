@@ -41,8 +41,17 @@ def _capex_by_state():
     return out
 
 
-def capital_choropleth() -> alt.Chart:
+def capital_choropleth(*, legend: alt.Legend | None = None) -> alt.Chart:
+    """State-level capital choropleth.
+
+    ``legend`` lets a caller trade legend width for map width: at the default
+    size the long title and full-length gradient are fine, but in
+    ``charts.explorer`` this legend shares a narrow map's footprint with the
+    site-capacity legend, and the pair together set the whole explorer's width.
+    """
     capex = _capex_by_state()
+    if legend is None:
+        legend = alt.Legend(orient="bottom")
     return (
         alt.Chart(_states_map())
         .mark_geoshape(stroke="white", strokeWidth=0.5)
@@ -51,7 +60,7 @@ def capital_choropleth() -> alt.Chart:
                 "capex_b:Q",
                 title="Data Center Capital (2025 USD B)",
                 scale=alt.Scale(scheme="greens"),
-                legend=alt.Legend(orient='bottom'),
+                legend=legend,
             ),
             tooltip=[
                 alt.Tooltip("stateName:N", title="State"),
