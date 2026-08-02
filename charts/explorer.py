@@ -344,7 +344,15 @@ def _owner_bars(
                 anchor="start",
             ),
         )
-        .add_params(owner_select, site_select)
+        # site_select is deliberately NOT added here: this chart only reads it
+        # (in the opacity condition, to fade to one segment when a site is
+        # selected elsewhere), and does not declare it — Altair already lifts
+        # it to a top-level param via _site_concentration's add_params below,
+        # since it's the same object. Adding it here too would make clicking
+        # *any* segment also set site_select to that segment's site, which
+        # narrows owner_select & site_select down to the single clicked site
+        # instead of highlighting every segment of the clicked owner.
+        .add_params(owner_select)
     )
 
 def _site_concentration(owner_select, geo_brush, site_select, sites: pd.DataFrame, color: alt.Color | None) -> alt.LayerChart:
