@@ -27,8 +27,9 @@ the module constants below.
 import altair as alt
 import pandas as pd
 
-from charts import electricity, money, water
+from charts import electricity, money, water, datacenters
 from charts.owner_colors import owner_scale
+
 from wrangle import water as ww
 
 # Layout knobs, in one place. Three albersUsa maps sit side by side at these
@@ -476,6 +477,7 @@ def ai_economy_explorer(
             width=bar_width,
             height=bar_height,
         ),
+        datacenters.site_concentration(lines=False),
         water.stress_delta_chart(
             state_hover, state_pin, width=bar_width, height=bar_height
         ),
