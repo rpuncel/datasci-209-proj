@@ -316,6 +316,42 @@ def _owner_bars(
         .add_params(owner_select)
     )
 
+def _site_concentration(owner_select, geo_brush, sites: pd.DataFrame, color: alt.Color | None) -> alt.LayerChart:
+    site_bars = (
+        alt.Chart(sites,name="site_bars").mark_bar().encode(
+            y=alt.Y("rank:O", title="Site rank by current power"),
+            x=alt.X("capacity_mw:Q", title="Capacity (MW)"),
+            color=color,
+            tooltip=[
+                alt.Tooltip("rank:O", title="Rank"),
+                alt.Tooltip("Name:N", title="Data center"),
+                alt.Tooltip("owner_clean:N", title="Owner"),
+                alt.Tooltip("capacity_mw:Q", title="Power (MW)", format=",.0f"),
+                alt.Tooltip("Country:N", title="Country"),
+            ],
+        )
+        .add_params(owner_select)
+        .transform_filter(SITE_FILTER)
+        .transform_filter("datum.capacity_mw > 0")
+        .transform_filter(geo_brush)
+        .transform_window(
+            rank='row_number()',
+            sort=[alt.SortField("capacity_mw", order="descending")],
+        )
+        .transform_filter(
+            alt.datum.rank < 10
+        )
+    )
+    return  site_bars.properties(
+        title=alt.Title(
+            "A few large sites account for much of the current footprint",
+            #subtitle=f"The top 10 sites represent {dc.stats().top10_power_share:.1%} of estimated current power.",
+            anchor="start",
+        ),
+        height=390,
+    )
+
+
 
 def ai_economy_explorer(
     sites: pd.DataFrame | None = None,
@@ -477,7 +513,7 @@ def ai_economy_explorer(
             width=bar_width,
             height=bar_height,
         ),
-        datacenters.site_concentration(owner_select, color=owner_focus_color, lines=False),
+        _site_concentration(owner_select, geo_brush, sites=sites, color=owner_focus_color),
         water.stress_delta_chart(
             state_hover, state_pin, width=bar_width, height=bar_height
         ),
