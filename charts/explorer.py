@@ -78,15 +78,29 @@ SITE_FILTER = (
     "(datum.site_period == 'Future' && show_future_sites)"
 )
 
-# Unit-view names. These are load-bearing three times over: Altair merges the
-# shared brush into one top-level param listing them in `views`, Vega emits each
-# as an SVG group class, and both styles.css and driver_config.js hook those
-# classes. charts/test_explorer.py pins them.
+# Authored unit-view names. These are load-bearing twice over: Altair merges the
+# shared params into top-level params listing them in `views`, and Vega emits
+# each as an SVG group class that driver_config.js hooks (`owner_power_bars`).
+# charts/test_explorer.py pins them.
+#
+# Note these are the names we *write*, not always the ones Vega emits: Altair
+# 6.2 appends a position suffix to named units inside a layered concat subchart.
+# Use _emitted_view_names() to resolve one to the other.
 CAPITAL_SITES = "capital_sites"
 ELECTRICITY_SITES = "electricity_sites"
 WATER_SITES = "water_sites"
 WATER_STATES = "water_stress_states"
 OWNER_BARS = "owner_power_bars"
+
+# Which views each param that crosses a layer boundary is supposed to drive.
+# Only these need declaring: `owner_select` lives on the bars, a direct concat
+# child, which Altair names correctly on its own. See
+# _repair_shared_param_views() for what it gets wrong about the rest.
+_SHARED_PARAM_VIEWS = {
+    "geo_brush": (CAPITAL_SITES, ELECTRICITY_SITES, WATER_SITES),
+    "water_state_hover": (WATER_STATES,),
+    "water_state_pin": (WATER_STATES,),
+}
 
 # capacity_mw is heavily right-skewed (most sites sit far below the 7000 MW
 # max), so a linear scale would crowd nearly every point into the smallest
@@ -117,6 +131,8 @@ def _site_points(
     subchart parameter merge (vega/altair#3891). Adding the same param object
     to each map's unit chart is what makes Altair lift it to a single top-level
     param whose ``views`` names all three maps — i.e. one brush, three maps.
+    Altair infers those view names badly, so ``_repair_shared_param_views``
+    fixes them up once the whole chart is assembled.
 
     All three maps size by ``capacity_mw`` rather than by their own quantity:
     capex and H100 equivalents are NaN on proposed rows, so a capex-sized mark
@@ -150,25 +166,58 @@ def _site_points(
     )
 
 
-def _repair_shared_brush_views(chart: alt.VConcatChart, view_names) -> alt.VConcatChart:
-    """Re-attach every map's view name to the shared brush parameter.
+def _emitted_view_names(chart, found=None) -> dict[str, str]:
+    """Map each authored unit-view name to the name Vega will actually emit.
 
-    Works around an Altair 6.1 bug in ``_combine_subchart_params``. When the
-    same param arrives from several concatenated subcharts, the *first*
-    subchart takes the ``found=False`` branch, which seeds the merged entry
-    with an empty view list and then asks the subchart for its own view name —
-    and ``_view_name_for_param`` returns ``""`` for a ``LayerChart``. The
-    second and third maps merge their unit names into that empty list, and the
-    closing ``p.views = v`` assignment overwrites the views the first map's
-    param already carried.
+    Altair 6.2 disambiguates named units inside a layered concat subchart by
+    appending the subchart's index, so ``capital_sites`` reaches Vega as
+    ``capital_sites_0`` and the water map's two named layers become
+    ``water_stress_states_2`` and ``water_sites_2``. ``to_dict()`` re-applies
+    the rename every time and it is idempotent, so it cannot be undone by
+    mutating the chart — the names already on the built object are the emitted
+    ones, and reading them back is what keeps the suffix out of this module.
 
-    The visible symptom is precise and easy to miss: brushing works on the
-    second and third maps but silently does nothing on the first. Since the
-    unit names are fixed constants here, just assert them.
+    Names that Altair leaves alone (``owner_power_bars``, a direct concat
+    child) simply map to themselves, as they would if a future Altair dropped
+    the rename entirely.
     """
+    found = {} if found is None else found
+    if isinstance(chart, alt.Chart) and isinstance(chart.name, str):
+        base, _, suffix = chart.name.rpartition("_")
+        found[base if base and suffix.isdigit() else chart.name] = chart.name
+    for attr in ("layer", "hconcat", "vconcat", "concat"):
+        for subchart in getattr(chart, attr, None) or ():
+            _emitted_view_names(subchart, found)
+    return found
+
+
+def _repair_shared_param_views(chart: alt.VConcatChart) -> alt.VConcatChart:
+    """Pin each shared param to exactly the views it is supposed to drive.
+
+    Altair 6.2's ``_combine_subchart_params`` infers the wrong ``views`` for
+    every param the explorer shares across subcharts, in two ways:
+
+    * ``_view_names_for_param`` returns *every* named layer of a ``LayerChart``
+      subchart, not just the layer the param was added to. So ``geo_brush``,
+      added only to the site points, also lands on the water choropleth — and a
+      param naming two units of one layer group has its signals emitted twice
+      into that one scope, which Vega rejects outright: ``Duplicate signal
+      name: "geo_brush_tuple"``, and the dashboard renders nothing. The water
+      state hover/pin are hit the same way (they pick up the site points), so
+      the spec carries two instances of the fault; only the first is visible,
+      because parsing stops there.
+    * the merge branch keeps the pre-rename views alongside the renamed ones,
+      leaving stale entries like ``water_sites`` next to ``water_sites_2``.
+      Vega-Lite ignores those, but they make the spec a poor thing to debug.
+
+    The correct bindings are fixed and few, so declare them in
+    ``_SHARED_PARAM_VIEWS`` and overwrite whatever Altair inferred.
+    """
+    emitted = _emitted_view_names(chart)
     for param in chart.params:
-        if getattr(param, "name", None) == "geo_brush":
-            param.views = list(view_names)
+        bases = _SHARED_PARAM_VIEWS.get(getattr(param, "name", None))
+        if bases is not None:
+            param.views = [emitted[base] for base in bases]
     return chart
 
 
@@ -424,6 +473,4 @@ def ai_economy_explorer(
         .resolve_scale(color="independent")
         .properties(padding={"left": 8, "top": 5, "right": 5, "bottom": 5})
     )
-    return _repair_shared_brush_views(
-        chart, (CAPITAL_SITES, ELECTRICITY_SITES, WATER_SITES)
-    )
+    return _repair_shared_param_views(chart)

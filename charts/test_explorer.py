@@ -57,30 +57,121 @@ def test_one_interval_param_merges_across_named_unit_views():
 
 # --- The real explorer spec ------------------------------------------------
 
-MAP_VIEWS = {"capital_sites", "electricity_sites", "water_sites"}
+
+@pytest.fixture(scope="module")
+def chart():
+    return explorer.ai_economy_explorer()
 
 
 @pytest.fixture(scope="module")
-def spec():
-    return explorer.ai_economy_explorer().to_dict()
+def spec(chart):
+    return chart.to_dict()
+
+
+@pytest.fixture(scope="module")
+def emitted(chart):
+    """Authored view name -> the name Vega actually emits.
+
+    Altair 6.2 renames named units inside a layered concat subchart by
+    appending the subchart's index, so these tests resolve names through the
+    same mapping the explorer uses rather than hard-coding ``_0``/``_1``/``_2``.
+    """
+    return explorer._emitted_view_names(chart)
+
+
+def test_emitted_names_cover_every_authored_view(emitted):
+    """The repair looks every shared param's views up in this mapping, so a
+    missing or misspelled entry would raise KeyError at build time — but a
+    *stale* one would silently bind a param to nothing."""
+    for name in (
+        explorer.CAPITAL_SITES,
+        explorer.ELECTRICITY_SITES,
+        explorer.WATER_SITES,
+        explorer.WATER_STATES,
+        explorer.OWNER_BARS,
+    ):
+        assert name in emitted
 
 
 def test_explorer_builds_valid_spec(spec):
     assert "$schema" in spec
 
 
-def test_one_geo_brush_shared_by_all_three_maps(spec):
+def test_one_geo_brush_shared_by_all_three_maps(spec, emitted):
     params = _params_by_name(spec)
     assert "geo_brush" in params
-    assert set(params["geo_brush"]["views"]) == MAP_VIEWS
+    assert set(params["geo_brush"]["views"]) == {
+        emitted[explorer.CAPITAL_SITES],
+        emitted[explorer.ELECTRICITY_SITES],
+        emitted[explorer.WATER_SITES],
+    }
 
 
-def test_state_selections_bind_to_the_water_choropleth(spec):
+def test_state_selections_bind_to_the_water_choropleth(spec, emitted):
     """Attached to an enclosing concat these never fire — a concat has no marks
-    to listen to — so they must land on the stress geoshape unit itself."""
+    to listen to — so they must land on the stress geoshape unit itself.
+
+    They must also *not* spread to the site points sharing that layer: two
+    units of one layer group duplicates the selection's signals and Vega
+    rejects the spec, exactly as it does for the brush below."""
     params = _params_by_name(spec)
     for name in ("water_state_hover", "water_state_pin"):
-        assert params[name]["views"] == ["water_stress_states"]
+        assert params[name]["views"] == [emitted[explorer.WATER_STATES]]
+
+
+def _named_views(node, found=None):
+    """Every view name in the spec, and the layer group each one belongs to.
+
+    Returns ``{view_name: layer_group_id}``, where the id is ``None`` for views
+    that are not inside a ``layer`` array.
+    """
+    found = {} if found is None else found
+
+    def walk(node, group):
+        if isinstance(node, dict):
+            name = node.get("name")
+            if isinstance(name, str) and not name.startswith("data-"):
+                found[name] = group
+            for key, value in node.items():
+                walk(value, id(node["layer"]) if key == "layer" else group)
+        elif isinstance(node, list):
+            for item in node:
+                walk(item, group)
+
+    walk(node, None)
+    return found
+
+
+def test_every_param_view_names_a_real_view(spec):
+    """A param pointing at a view that does not exist binds to nothing, and the
+    interaction silently dies. Altair 6.2 leaves *stale* pre-rename names in
+    ``views`` next to the renamed ones, so this is a live failure mode."""
+    views = _named_views(spec["vconcat"])
+    for param in spec["params"]:
+        for view in param.get("views") or ():
+            assert view in views, f"{param['name']} names missing view {view!r}"
+
+
+def test_no_param_names_two_views_of_one_layer(spec):
+    """The regression that broke the dashboard on Altair 6.2.
+
+    A selection's signals are scoped to the enclosing layer group, so naming
+    two units of the *same* layer emits them twice into one scope and Vega
+    rejects the spec outright — ``Duplicate signal name: "geo_brush_tuple"``,
+    and nothing renders. Altair's merge does exactly that: it binds a layer
+    subchart's param to every named layer, sweeping the water choropleth in
+    alongside its site points.
+
+    Both ``geo_brush`` and the two water state selections hit this, so assert
+    it for every param rather than just the brush that happens to fail first.
+    """
+    views = _named_views(spec["vconcat"])
+    for param in spec["params"]:
+        groups = [views[v] for v in param.get("views") or () if views.get(v)]
+        assert len(groups) == len(set(groups)), (
+            f"{param['name']} names two views of one layer group — "
+            "Vega will fail with a duplicate signal name"
+        )
 
 
 def test_owner_select_is_owned_by_the_bar_chart(spec):
@@ -222,7 +313,7 @@ def test_maps_resolve_size_and_shape_independently(spec):
     assert resolve["shape"] == "independent"
 
 
-def test_orientation_and_size_knobs_shape_the_layout():
+def test_orientation_and_size_knobs_shape_the_layout(emitted):
     row = explorer.ai_economy_explorer(orientation="row", map_width=311).to_dict()
     column = explorer.ai_economy_explorer(orientation="column", map_width=311).to_dict()
 
@@ -230,7 +321,7 @@ def test_orientation_and_size_knobs_shape_the_layout():
     assert "vconcat" in column["vconcat"][0]
 
     # The unit inherits its width from the enclosing layer's properties.
-    assert _enclosing_width(row, "capital_sites") == 311
+    assert _enclosing_width(row, emitted[explorer.CAPITAL_SITES]) == 311
 
 
 def test_orientation_rejects_unknown_values():
