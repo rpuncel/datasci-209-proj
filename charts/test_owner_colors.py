@@ -1,6 +1,7 @@
 """Tests for the shared owner color palette."""
 
 from charts.owner_colors import (
+    OTHER_COLOR,
     OWNER_COLORS,
     color_for,
     owner_scale,
@@ -38,3 +39,22 @@ def test_owner_scale_keeps_amazon_color_across_domains():
     amazon_top = scale_top["range"][scale_top["domain"].index("Amazon")]
     amazon_wide = scale_wide["range"][scale_wide["domain"].index("Amazon")]
     assert amazon_top == amazon_wide == OWNER_COLORS["Amazon"]
+
+
+def test_unknown_owner_is_grey():
+    assert color_for("Unknown") == OWNER_COLORS["Unknown"]
+
+
+def test_unpinned_owners_share_one_distinct_color():
+    assert color_for("Tract") == OTHER_COLOR
+    assert color_for("New Era Energy") == OTHER_COLOR
+    assert OTHER_COLOR != OWNER_COLORS["Unknown"]
+    assert OTHER_COLOR not in OWNER_COLORS.values()
+
+
+def test_owner_scale_covers_extras_outside_canonical_owners():
+    scale = owner_scale(["Unknown", "Tract", "Amazon"]).to_dict()
+    domain = scale["domain"]
+    assert "Unknown" in domain and "Tract" in domain
+    assert scale["range"][domain.index("Unknown")] == OWNER_COLORS["Unknown"]
+    assert scale["range"][domain.index("Tract")] == OTHER_COLOR

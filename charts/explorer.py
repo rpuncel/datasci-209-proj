@@ -361,7 +361,9 @@ def ai_economy_explorer(
     # and the ranking already shows who is who.
     owner_focus_color = alt.condition(
         owner_select,
-        alt.Color("owner_clean:N", scale=owner_scale(), legend=None),
+        alt.Color(
+            "owner_clean:N", scale=owner_scale(sites["owner_clean"]), legend=None
+        ),
         alt.value(DIM_COLOR),
     )
 

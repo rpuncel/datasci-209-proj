@@ -56,6 +56,45 @@ def test_one_interval_param_merges_across_named_unit_views():
     assert set(params["geo_brush"]["views"]) == {"map_a", "map_b"}
 
 
+def test_altair_still_misbinds_params_in_two_named_layer_subcharts():
+    """Canary for the upstream bug ``_repair_shared_param_views`` exists to fix.
+
+    Altair 6.2 loses which unit a param was added to when lifting it out of a
+    layered concat subchart, so it binds the param to *every* named layer of
+    that subchart (``_view_names_for_param``). With two named layers — our
+    water map: choropleth for the state selections, points for the brush —
+    that puts two units of one layer group in ``views``, and Vega rejects the
+    spec with a duplicate signal name.
+
+    When this test FAILS after an Altair upgrade, the inference has been fixed
+    upstream: delete ``_repair_shared_param_views`` and ``_SHARED_PARAM_VIEWS``
+    in charts/explorer.py and let Altair bind the views itself.
+    """
+    frame = pd.DataFrame({"longitude": [-100.0], "latitude": [40.0]})
+    states = pd.DataFrame({"id": [6], "score": [3.0]})
+    brush = alt.selection_interval(name="brush", encodings=["longitude", "latitude"])
+
+    choropleth = alt.Chart(states, name="states").mark_geoshape().encode(color="score:Q")
+    sites = (
+        alt.Chart(frame, name="sites")
+        .mark_point()
+        .encode(longitude="longitude:Q", latitude="latitude:Q")
+        .add_params(brush)
+    )
+    water_like = alt.layer(choropleth, sites).project(type="albersUsa")
+    other = alt.Chart(frame, name="other").mark_point().encode(
+        longitude="longitude:Q", latitude="latitude:Q"
+    )
+
+    spec = alt.hconcat(other, water_like).to_dict()
+
+    views = set(_params_by_name(spec)["brush"]["views"])
+    assert views == {"states_1", "sites_1"}, (
+        "Altair no longer sweeps every named layer into the param's views — "
+        "the workaround in explorer._repair_shared_param_views may be deletable"
+    )
+
+
 # --- The real explorer spec ------------------------------------------------
 
 
