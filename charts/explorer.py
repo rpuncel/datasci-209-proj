@@ -34,33 +34,41 @@ from wrangle import water as ww
 # Layout knobs, in one place. Three albersUsa maps sit side by side at these
 # dimensions, inside a dashboard card that offers roughly (viewport - 120) px.
 #
-# MAP_WIDTH is bounded by two things that have nothing to do with the maps:
+# The width the explorer actually renders at was measured against Altair 6.2.2
+# with vl_convert, and over the whole usable range it is linear in MAP_WIDTH:
 #
-#   * a ~154px left gutter on *every* row. Vega lays the outer concat out with
-#     bounds "full", so it reserves the largest left overhang of any row — here
-#     the owner bars' y-axis (minExtent=130 below) — and shifts the whole spec
-#     right by it. `align: "none"` does not opt out of this.
-#   * each map's bottom legend row, which can be wider than the map itself and
-#     then overhangs to the right. Only a map wider than its own legend row adds
-#     to the total, so the row costs max(W, legend_1) + 18 + max(W, legend_2)
-#     + 18 + max(W, legend_3).
+#     total = 3 * MAP_WIDTH + 70 + minExtent            (default state)
+#     total = 3 * MAP_WIDTH + 70 + minExtent + 16       ("show proposed sites")
 #
-# The card is about (viewport - 120) px, i.e. ~1321px on a 1440px-wide window,
-# past which styles.css turns the card into a horizontal scroller and the third
-# map is clipped until you scroll. 154 + 3W + 36 <= 1321 puts the hard ceiling
-# at W=377 — so the legends are trimmed (short titles, short gradients) to get
-# under W, and 370 is the largest round width that fits. Measured, not derived:
-# re-render and check the SVG width if you touch any legend here.
+# where minExtent is the owner bars' y-axis gutter (see the axis at line ~276).
+# Vega lays the outer concat out with bounds "full", so that gutter is reserved
+# on *every* row and shifts the whole spec right by it; `align: "none"` does not
+# opt out. The constant 70 is the two 18px map gaps, 13px of root padding, and
+# ~21px of axis-title overhead. Because the relationship is exactly 3px of total
+# per 1px of map, no map's bottom legend row currently overhangs its map — the
+# legends cost nothing at these sizes, and the checkbox-on state is the +16px
+# worst case the width test has to clear.
 #
-# MAP_HEIGHT only has to stay out of the projection's way: albersUsa auto-fits
-# to the view with no explicit scale, and its native aspect is ~1.72:1, so a
-# 370px-wide map needs ~215px. Going much taller just pads dead space below the
-# geometry, which is what the old 320x260 was doing.
-MAP_WIDTH = 480
-#MAP_HEIGHT = 224
-# Sized so the bottom row (bars + their ~148px axis gutter, then the delta
-# chart) comes out about as wide as the maps row above it.
-BAR_WIDTH = 480
+# The budget is a 1536px viewport floor (a 1920x1080 Windows laptop at the
+# default 125% scaling reports 1536 CSS px; MacBook logical widths sit at
+# 1440-1512 and degrade to the styles.css horizontal scroller). The card offers
+# about (viewport - 120) px, so 1416px is the ceiling: 3*410 + 70 + 90 = 1390
+# default, 1406 with the checkbox on.
+#
+# To readjust: change MAP_WIDTH (MAP_HEIGHT follows from it), keep BAR_WIDTH at
+# or below (3*MAP_WIDTH - 260)/2 so the bottom row never becomes the widest one,
+# and run charts/test_explorer.py::test_rendered_width_fits_the_dashboard_card.
+# Red prints the rendered width; every 3px over costs 1px of MAP_WIDTH.
+MAP_WIDTH = 410
+# albersUsa auto-fits to the view with no explicit scale, so the projection's
+# native ~1.72:1 aspect is what decides how tall a map needs to be. Deriving the
+# height keeps the two in step, and the +2 leaves width the binding constraint
+# rather than height; anything taller is dead space below the geometry.
+MAP_ASPECT = 1.72
+MAP_HEIGHT = round(MAP_WIDTH / MAP_ASPECT) + 2
+# Sized so the bottom row (bars + their axis gutter, then the delta chart) comes
+# out about as wide as the maps row above it.
+BAR_WIDTH = 540
 BAR_HEIGHT = 330
 MAP_SPACING = 18
 ROW_SPACING = 30
@@ -272,8 +280,13 @@ def _owner_bars(
                 title="Owner / operator",
                 # minExtent locks the reserved label width so the chart's left
                 # margin (and title position) don't shift as the timeline or
-                # brush changes which owner names are shown.
-                axis=alt.Axis(labelLimit=130, minExtent=130),
+                # brush changes which owner names are shown. It is also a left
+                # gutter on every row of the outer concat, so it trades against
+                # map width 1:1 — 90px clears every top-12 owner name in the
+                # default Baseline ranking and only truncates the long proposed
+                # -project owners, which 130 was already truncating. Tooltips
+                # still carry the full name.
+                axis=alt.Axis(labelLimit=90, minExtent=90),
             ),
             x=alt.X("total_capacity:Q", title="Total capacity (MW)"),
             color=owner_focus_color,
@@ -308,7 +321,7 @@ def ai_economy_explorer(
     *,
     orientation: str = "row",
     map_width: int = MAP_WIDTH,
-    #map_height: int = MAP_HEIGHT,
+    map_height: int = MAP_HEIGHT,
     bar_width: int = BAR_WIDTH,
     bar_height: int = BAR_HEIGHT,
 ) -> alt.VConcatChart:
@@ -365,10 +378,11 @@ def ai_economy_explorer(
     capital_map = _map(
         money.capital_choropleth(
             # This legend and the capacity legend below sit side by side under
-            # the first map, and that pair is the widest element in the whole
-            # explorer — it, not the maps, sets the total SVG width. Both the
-            # short title and the short gradient are there to keep the pair
-            # inside MAP_WIDTH. See the layout note at the top of this module.
+            # the first map. Both the short title and the short gradient are
+            # there to keep that pair inside MAP_WIDTH: at the current sizes no
+            # legend row overhangs its map, so the maps alone set the total SVG
+            # width, but a legend that outgrows its map starts adding width
+            # again. See the layout note at the top of this module.
             legend=alt.Legend(
                 title="Capital (USD B)",
                 orient="bottom",
@@ -394,7 +408,7 @@ def ai_economy_explorer(
             ),
         ),
         width=map_width,
-        #height=map_height,
+        height=map_height,
         title="💰 Capital invested",
     )
 
@@ -407,7 +421,7 @@ def ai_economy_explorer(
             ],
         ),
         width=map_width,
-        #height=map_height,
+        height=map_height,
         title="⚡ Grid capacity",
     )
 
@@ -442,7 +456,7 @@ def ai_economy_explorer(
             ),
         ),
         width=map_width,
-        #height=map_height,
+        height=map_height,
         title="💧 Water stress",
     )
 

@@ -6,6 +6,7 @@ maps, one owner selection driving every view — is produced by Altair's
 subchart parameter merge at ``to_dict()`` time, not by the builder calls.
 """
 
+import json
 import re
 
 import altair as alt
@@ -329,31 +330,49 @@ def test_orientation_rejects_unknown_values():
         explorer.ai_economy_explorer(orientation="diagonal")
 
 
-# Measured from the rendered dashboard: the explorer card's content box is
-# about (viewport - 120) px, so a 1440px-wide window leaves 1321px. Beyond that
-# styles.css turns the card into a horizontal scroller and the third map is
-# clipped until you scroll.
-CARD_WIDTH_AT_1440 = 1321
+# The floor we size for is a 1536 CSS px viewport: a 1920x1080 Windows laptop
+# at the default 125% display scaling reports exactly 1536 CSS px, and MacBook
+# logical widths (~1440-1512) are close enough that they fall back gracefully to
+# the styles.css horizontal scroller. Measured from the rendered dashboard, the
+# explorer card's content box is about (viewport - 120) px, so 1536 leaves
+# 1416px. Beyond that the card scrolls and the third map is clipped.
+CARD_WIDTH_AT_1536 = 1416
 
 
 def test_rendered_width_fits_the_dashboard_card():
     """The explorer's total width is only loosely related to MAP_WIDTH.
 
-    Each map's bottom legend row can be *wider* than the map and overhangs to
-    the right, and Vega reserves the owner bars' y-axis extent as a left gutter
-    on every row of the concat. Both are easy to inflate by accident — a longer
-    legend title or a bigger ``gradientLength`` costs real map width — and the
-    symptom (a horizontal scrollbar on a 1440px laptop) is invisible from the
+    Each map's bottom legend row can be *wider* than the map and overhang to the
+    right, and Vega reserves the owner bars' y-axis extent as a left gutter on
+    every row of the concat. Both are easy to inflate by accident — a longer
+    legend title or a bigger ``minExtent`` costs real map width — and the
+    symptom (a horizontal scrollbar on a 1536px laptop) is invisible from the
     spec alone. So render it and measure.
+
+    Both interactive states are gated: checking "show proposed data centers"
+    widens the shape legend and adds ~16px, so the default state fitting is not
+    on its own enough.
     """
     vlc = pytest.importorskip("vl_convert")
-    svg = vlc.vegalite_to_svg(explorer.ai_economy_explorer().to_json())
-    width = int(re.search(r'width="(\d+)"', svg).group(1))
+    spec = explorer.ai_economy_explorer().to_dict()
 
-    assert width <= CARD_WIDTH_AT_1440, (
-        f"explorer renders {width}px wide, over the {CARD_WIDTH_AT_1440}px card. "
-        "Shrink a legend (title or gradientLength) or MAP_WIDTH."
-    )
+    def rendered_width(spec_dict) -> int:
+        svg = vlc.vegalite_to_svg(json.dumps(spec_dict))
+        return int(re.search(r'width="(\d+)"', svg).group(1))
+
+    default_width = rendered_width(spec)
+
+    show_future = _params_by_name(spec)["show_future_sites"]
+    show_future["value"] = True
+    checked_width = rendered_width(spec)
+
+    for state, width in (("default", default_width), ("checkbox on", checked_width)):
+        assert width <= CARD_WIDTH_AT_1536, (
+            f"explorer renders {width}px wide in the {state} state, over the "
+            f"{CARD_WIDTH_AT_1536}px card. Shrink MAP_WIDTH (3px of total per "
+            "1px of map), a legend (title or gradientLength), or the owner "
+            "bars' y-axis minExtent."
+        )
 
 
 def _enclosing_width(node, view_name):
