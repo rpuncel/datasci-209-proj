@@ -324,10 +324,9 @@ def _site_concentration(owner_select, geo_brush, sites: pd.DataFrame, color: alt
             color=color,
             tooltip=[
                 alt.Tooltip("rank:O", title="Rank"),
-                alt.Tooltip("Name:N", title="Data center"),
+                alt.Tooltip("site_name:N", title="Site"),
                 alt.Tooltip("owner_clean:N", title="Owner"),
                 alt.Tooltip("capacity_mw:Q", title="Power (MW)", format=",.0f"),
-                alt.Tooltip("Country:N", title="Country"),
             ],
         )
         .add_params(owner_select)
