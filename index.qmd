@@ -79,7 +79,7 @@ charts.interactive(
 
 ### Power capacity is used to express the capability of data centers.
 
-There are three key measures we are especially interested in when talking about data centers:
+There are three key measures we are especially interested in when characterizing a data center's scope:
 
 1. How much money does it cost?
 2. How much energy does it need at full capacity?
@@ -115,21 +115,33 @@ charts.interactive(
 
 :::
 
-## So are these **good** investments?
 
-Two key necessities for data centers is the availability of power and the availbility of water.
+## So are these **good** investments? It depends where.
+
+Two key necessities for data centers is the availability of power and the availability of water, which are driven in large
+part by geography. For example, a given region might have more water available because it has a wetter climate, and another region
+might have more power available because of availability of reliable solar power.
+
+A risk to power or water availability is a risk to the investment, so we'll take a look at where investment is going next to power and water information.
+
+### Power Availability
+
+Electricity availability has become one of the primary constraints on AI expansion. The electricity picture is complicated to
+understand - some data centers are tapping into the existing grid, and some data centers are planning to build a substantial amount
+of dedicated power. Since we can't get exact, our explore tool will set up scale comparisons primarily in the form of grid capacity for each state's peak total installed generating capacity rather than unused available capacity. Only a portion of installed capacity is available to support new demand, as existing generation already serves current consumption and output varies across energy sources.
 
 If there's not enough power, the data center can't run to its full capacity, and electricity rates might go up for both
 the data center operator and the people who share an electrical grid.
 
-If there's not enough water, a data center may not be able cool its hardware fast enough. There's a lot of chatter about
-data cetners being water wasters - water being a scarce resource in some places, hopefully it is in abundance where data centers are.
+### Water availability 
+
+If there's not enough water, a data center may not be able to cool its hardware fast enough. There's a lot of chatter about
+data centers being water wasters, but it's difficult to know whether water is a scarce resource in some places, hopefully it is in abundance where data centers are.
+
+However, a data center's water use is harder to pin down than power use. Companies rarely disclose facility-level water use, and published estimates vary widely because consumption depends heavily on cooling technology, climate, and facility design — conversion rates range from 0.1 L/kWh to 2.5 L/kWh. Rather than presenting highly uncertain estimates, the exploration tool below juxtaposes estimated power demand with regional water stress, treating power demand as a reasonable proxy for relative cooling demand.
 
 As we evaluate investments and data center activity, it's of interest to both investors and concerned citizens to know who is
 putting money on the line.
-
-Use the explorer below to answer these questions.
-
 
 ## Interactive Explorer
 
@@ -151,32 +163,11 @@ charts.interactive(
 ```
 
 
-
-##
-The AI economy begins with capital investment. Building and operating large-scale AI systems requires significant spending on data centers, computing hardware, and supporting infrastructure. AI companies are investing billions of dollars in new infrastructure. These invesments determine who has access to the computing power needed to support current use and train the next generation of AI models.
-
-The plots below compare estimated capital investment with estimated power capacity of major AI data centers. Larger facilities require greater electrical capacity, making power demand a useful proxy for future computing capability. Greater power capacity generally means greater computing capacity. Companies making the largest infrastructure investments are positioned to support larger-scale AI training and inference, giving them a potential advantage in developing future AI systems.  
-
 ::: {.data-source}
 
 **Data source:** This data is sourced by Epoch AI, which is a research non-profit focused on compiling data estimates related to current and future AI. This specific data center dataset estimates the power, compute capacity, and cost of AI data centers using permit information and satellite imagery.
 
 :::
-##
-Financial investment alone does not create AI capability. Those dollars are converted into physical infrastructure—primarily GPUs housed in energy-intensive data centers, drawing on a limited electrical grid and on the water needed to cool them.
-
-## {.section-divider}
-<span id="explorer-section"></span>⚡ Power & 💧 Water
-
-##
-AI's rapid growth is creating unprecedented demand for electricity, and the power consumed by AI hardware is largely converted into heat — making cooling, and therefore water, the constraint behind the constraint. The explorer below puts all three dimensions in one linked view.
-
-Electricity availability has become one of the primary constraints on AI expansion. The grid capacity map shows each state's peak total installed generating capacity rather than unused available capacity. Only a portion of installed capacity is available to support new demand, as existing generation already serves current consumption and output varies across energy sources.
-
-Water use is harder to pin down. Companies rarely disclose facility-level water use, and published estimates vary widely because consumption depends heavily on cooling technology, climate, and facility design — conversion rates range from 0.1 L/kWh to 2.5 L/kWh. Rather than presenting highly uncertain estimates, this dashboard compares estimated power demand with regional water stress, treating power demand as a reasonable proxy for relative cooling demand.
-
-**How to use it:** every site appears on all three maps, sized by capacity. **Click an owner** in the ranking to highlight its sites everywhere at once. **Drag a box on any map** to re-rank owners within that region. **Check "show proposed data centers"** to add planned projects, and move the **timeline** to compare today's water stress with projections for 2030, 2050, and 2080 — hovering or clicking a state links it to the change chart.
-
 
 ##
 ::: {.data-source}
@@ -190,8 +181,7 @@ Water stress: The World Resources Institute publishes an Aqueduct dataset which 
 Future data center locations: Proposed data center locations were obtained from the FracTracker Alliance Open U.S. Data Centers Tracker, an interactive dataset that compiles publicly available information on existing, permitted, and proposed data center projects across the United States. The dataset includes the geographic locations of facilities along with project-level metadata such as development status. Operator names are self-reported and often absent, so a large share of proposed capacity is attributed to "Unknown".
 
 :::
-##
-The expansion of AI is therefore not only a question of algorithms and models, but also a question of physical infrastructure. Understanding where investment, electricity, and water resources intersect provides insight into the opportunities, constraints, and risks shaping the future AI economy.
+
 
 # Acknowledgements
 **Epoch AI:** Estimates of frontier AI data center capital investment, power capacity, and compute capacity. 
