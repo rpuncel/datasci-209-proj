@@ -70,12 +70,18 @@ const enhanceWaterStepControl = () => {
   if (!container) return;
   const input = container.querySelector('input[type="range"]');
   if (!input) return;
-  let label = container.querySelector(".water-step-label");
-  if (!label) {
-    label = document.createElement("span");
-    label.className = "water-step-label";
-    input.insertAdjacentElement("afterend", label);
-  }
+  // Vega's own raw-value echo, appended as the input's next sibling. When
+  // bind targets a custom `element` (as here) this isn't wrapped in the
+  // `.vega-bind-range` div vega-embed's default form uses, so the CSS rule
+  // hiding `output` there doesn't reach it -- hide it directly instead,
+  // captured before we insert our own label so we grab the right node.
+  const echo = input.nextElementSibling;
+  if (echo) echo.style.display = "none";
+
+  const label = document.createElement("span");
+  label.className = "water-step-label";
+  input.insertAdjacentElement("afterend", label);
+
   const stepLabels = ["Current", "2030", "2050", "2080"];
   const update = () => {
     label.textContent = stepLabels[Number(input.value)] ?? input.value;
