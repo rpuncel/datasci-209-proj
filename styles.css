@@ -97,7 +97,7 @@
 .water-time-control .vega-bind,
 .water-time-control .vega-bind-range {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
   column-gap: 0.65rem;
   width: 100%;
@@ -111,6 +111,17 @@
   font-size: 0.9rem;
   font-weight: 600;
   color: #334155;
+}
+
+.water-time-control .vega-bind-range output {
+  display: none;
+}
+
+.water-time-control .water-step-label {
+  min-width: 4.5rem;
+  text-align: right;
+  font-weight: 700;
+  color: #b91c1c;
 }
 
 .water-time-control input[type="range"] {
