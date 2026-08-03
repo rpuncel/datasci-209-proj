@@ -172,13 +172,22 @@ def _projection_fields() -> list[str]:
     return fields
 
 
-def water_step_param() -> alt.Parameter:
-    """The 0-3 timeline slider. ``charts/_theme.py`` restyles it into buttons."""
+def water_step_param(element: str | None = None) -> alt.Parameter:
+    """The 0-3 timeline slider.
+
+    Pass ``element`` (a CSS selector) to render the slider into a specific,
+    pre-existing DOM node instead of the chart's default shared controls
+    form -- see ``charts/explorer.py``'s ``WATER_TIME_CONTROL``.
+    """
     return alt.param(
         name="water_step",
         value=0,
         bind=alt.binding_range(
-            min=0, max=3, step=1, name="Explore Water Stress over Time: "
+            min=0,
+            max=3,
+            step=1,
+            name="Explore Water Stress over Time: ",
+            element=element,
         ),
     )
 

@@ -21,7 +21,7 @@ format:
         </style>
     include-after-body:
       text: |
-          <script src="driver_config.js" />
+          <script src="driver_config.js"></script>
 nocite: |
   @*
 ---
@@ -147,10 +147,10 @@ putting money on the line.
 
 <button id="power-help">Need help? Click for a guided tour.</button>
 
+::: {.column-screen}
 
 ```{python}
 #| echo: false
-#| classes: .column-screen
 #| warning: false
 # One unified spec, deliberately: Vega selections cannot cross vega-embed
 # instances, so rendering these maps as separate charts.interactive() cells
@@ -162,6 +162,10 @@ charts.interactive(
     responsive=True,
 )
 ```
+
+<div id="water-time-control" class="water-time-control"></div>
+
+:::
 
 
 ::: {.data-source}

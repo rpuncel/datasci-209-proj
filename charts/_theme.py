@@ -21,46 +21,6 @@ def svg_renderer(spec, **metadata):
     return {"text/html": f'<div class="altair-svg-chart">{bundle["image/svg+xml"]}</div>'}
 
 
-# The water timeline's play/step buttons replace vega-embed's native range
-# input with a custom button row, wired up to the same underlying input so
-# Vega still sees ordinary input/change events. Re-run after every embed (the
-# responsive path re-embeds on resize, which regenerates the bind controls).
-_SETUP_TIMELINE_JS = """
-const setupTimeline = () => {
-  const controls = document.getElementById(controlsId);
-  const timeline = controls.querySelector('input[name="water_step"]');
-  if (!timeline) return;
-  const nativeTimeline = timeline.closest(".vega-bind");
-  const storyTimeline = document.createElement("div");
-  storyTimeline.className = "water-story-timeline";
-  storyTimeline.innerHTML =
-    '<div class="water-control-label">Explore time</div>' +
-    '<div class="water-story-steps"></div>';
-  const steps = storyTimeline.querySelector(".water-story-steps");
-  ["Baseline", "2030", "2050", "2080"].forEach((label, index) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.dataset.step = index;
-    button.textContent = label;
-    button.addEventListener("click", () => {
-      timeline.value = index;
-      timeline.dispatchEvent(new Event("input", {bubbles: true}));
-      timeline.dispatchEvent(new Event("change", {bubbles: true}));
-    });
-    steps.appendChild(button);
-  });
-  nativeTimeline.hidden = true;
-  nativeTimeline.insertAdjacentElement("afterend", storyTimeline);
-  const syncTimeline = () => {
-    const step = Number(timeline.value);
-    steps.querySelectorAll("button").forEach((button, index) =>
-      button.classList.toggle("active", index === step));
-  };
-  timeline.addEventListener("input", syncTimeline);
-  syncTimeline();
-};
-"""
-
 # A fixed pixel width baked into the spec can only ever be right for one
 # screen. Vega-Lite's own "container" autosize collapses to a small fixed
 # default once a view sits inside an hconcat/vconcat (confirmed on the money
@@ -151,7 +111,6 @@ const renderAt = async (factor) => {{
   if (naturalWidth === null) {{
     naturalWidth = renderedWidth;
   }}
-  setupTimeline();
   return renderedWidth;
 }};
 
@@ -190,7 +149,6 @@ def esm_vega_renderer(spec, div_id=None, responsive=False, **metadata):
         f'  const viewId = "{view_id}";\n'
         f'  const controlsId = "{controls_id}";\n'
         f'{_RESPONSIVE_RENDER_JS if responsive else ""}'
-        f'{_SETUP_TIMELINE_JS}'
         f'{_render_at_js(responsive)}'
         f'</script>'
     )

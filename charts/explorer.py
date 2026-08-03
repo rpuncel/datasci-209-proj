@@ -114,6 +114,10 @@ OWNER_BARS = "owner_power_bars"
 # under the tour's element-scoped overlay cutout, even though the brush itself
 # works anywhere on the map once the tour isn't constraining interaction.
 CAPITAL_MAP_VIEW = "capital_map_view"
+# Static anchor div (see index.qmd) that the water timeline slider renders
+# into directly, via alt.binding_range's `element`, so it sits next to the
+# water views instead of the shared controls form above the whole chart.
+WATER_TIME_CONTROL = "water-time-control"
 
 # Which views each param that crosses a layer boundary is supposed to drive.
 # Only these need declaring: `owner_select` lives on the bars, a direct concat
@@ -424,7 +428,7 @@ def ai_economy_explorer(
     if sites is None:
         sites = ww.explorer_sites()
 
-    period = water.water_step_param()
+    period = water.water_step_param(element=f"#{WATER_TIME_CONTROL}")
     show_future = water.show_future_sites_param()
     state_hover, state_pin = water.state_selections()
 

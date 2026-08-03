@@ -66,59 +66,77 @@
   margin-top: -0.32rem;
 }
 
-#ai-economy-explorer .water-story-timeline {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  width: 100%;
-}
-
-#ai-economy-explorer .water-control-label {
-  flex-shrink: 0;
-  color: #334155;
-  font-size: 0.9rem;
-  font-weight: 700;
-}
-
-#ai-economy-explorer .water-story-steps {
-  display: flex;
-  flex: 1;
-  gap: 0.3rem;
-  padding: 0.22rem;
-  border: 1px solid #e2e8f0;
+#ai-economy-explorer input[type="range"]::-moz-range-track {
+  height: 0.35rem;
   border-radius: 999px;
-  background: #ffffff;
+  background: linear-gradient(90deg, #fecaca, #b91c1c);
 }
 
-#ai-economy-explorer .water-story-steps button {
-  flex: 1;
-  border: 0;
-  border-radius: 999px;
-  padding: 0.5rem 0.75rem;
-  background: transparent;
-  color: #64748b;
-  font-size: 0.86rem;
-  font-weight: 650;
-  cursor: pointer;
-  transition:
-    background 180ms ease,
-    color 180ms ease,
-    box-shadow 180ms ease;
-}
-
-#ai-economy-explorer .water-story-steps button:hover {
-  color: #991b1b;
-  background: #fff1f2;
-}
-
-#ai-economy-explorer .water-story-steps button.active {
-  color: #ffffff;
+#ai-economy-explorer input[type="range"]::-moz-range-thumb {
+  border: none;
   background: #b91c1c;
-  box-shadow: 0 2px 7px rgb(185 28 28 / 0.22);
 }
 
 #ai-economy-explorer .vega-bind-range output {
   display: none;
+}
+
+/* The water timeline slider renders directly into this anchor (via
+   alt.binding_range's `element`, see charts/explorer.py's
+   WATER_TIME_CONTROL) so it sits next to the water views it drives instead
+   of the shared controls form above the whole chart. Placed below the chart
+   in index.qmd and right-aligned here so it floats under "What changes most
+   from today?", the rightmost chart of the bottom row (the same edge the
+   water map sits on in the row above it). */
+.water-time-control {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0.75rem 0 0;
+}
+
+.water-time-control .vega-bind,
+.water-time-control .vega-bind-range {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: 0.65rem;
+  width: 100%;
+  max-width: 460px;
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.9rem;
+  background: linear-gradient(135deg, #fffafa 0%, #f8fafc 100%);
+  box-shadow: 0 4px 14px rgb(15 23 42 / 0.06);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.water-time-control input[type="range"] {
+  width: 100%;
+  accent-color: #b91c1c;
+}
+
+.water-time-control input[type="range"]::-webkit-slider-runnable-track {
+  height: 0.35rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #fecaca, #b91c1c);
+}
+
+.water-time-control input[type="range"]::-webkit-slider-thumb {
+  margin-top: -0.32rem;
+}
+
+.water-time-control input[type="range"]::-moz-range-track {
+  height: 0.35rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #fecaca, #b91c1c);
+}
+
+.water-time-control input[type="range"]::-moz-range-thumb {
+  border: none;
+  background: #b91c1c;
 }
 
 #ai-economy-explorer .vega-chart-view {

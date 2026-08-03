@@ -169,26 +169,25 @@ button.addEventListener('click', () => {
         element.addEventListener("click", barClickHandler);
     }
 
-    // Generic "wait for a click on any button in this group" gate, for the
-    // restyled timeline step buttons.
-    let stepClickHandler = null;
+    // Generic "wait for the slider to move" gate for the water timeline.
+    // Delegated (bubbling `input`) rather than bound to the <input> itself,
+    // since the spotlighted element is the anchor div it renders into.
+    let timeControlInputHandler = null;
 
-    function stopWatchingStepClick(element) {
-        if (stepClickHandler) {
-            element.removeEventListener("click", stepClickHandler);
-            stepClickHandler = null;
+    function stopWatchingTimeControlInput(element) {
+        if (timeControlInputHandler) {
+            element.removeEventListener("input", timeControlInputHandler);
+            timeControlInputHandler = null;
         }
     }
 
-    function watchForStepClick(element) {
-        stopWatchingStepClick(element);
-        stepClickHandler = (event) => {
-            if (event.target && event.target.tagName === "BUTTON") {
-                stopWatchingStepClick(element);
-                driverObj.moveNext();
-            }
+    function watchForTimeControlInput(element) {
+        stopWatchingTimeControlInput(element);
+        timeControlInputHandler = () => {
+            stopWatchingTimeControlInput(element);
+            driverObj.moveNext();
         };
-        element.addEventListener("click", stepClickHandler);
+        element.addEventListener("input", timeControlInputHandler);
     }
 
     function cleanup() {
@@ -310,16 +309,6 @@ button.addEventListener('click', () => {
             }
         },
         {
-            element: "#ai-economy-explorer-controls .water-story-timeline",
-            onHighlightStarted: (element) => watchForStepClick(element),
-            onDeselected: (element) => element && stopWatchingStepClick(element),
-            popover: {
-                title: "Step through time",
-                description: "Click 2030, 2050, or 2080 to see a projection.",
-                side: "top",
-            }
-        },
-        {
             // No `path` suffix: the delta bars sit in an unnamed nested layer
             // scope inside this group (only the outer layer chart is named),
             // and this group's own first path is a `.background` hit-area, so
@@ -328,6 +317,21 @@ button.addEventListener('click', () => {
             popover: {
                 title: "What's changing",
                 description: "The 12 states with the largest forecast change.",
+            }
+        },
+        {
+            // Spotlight just the visible control card, not the full-width
+            // flex container it renders into (#water-time-control): that
+            // outer div spans the whole row so the slider can right-align
+            // under the water map/changes chart column, which would
+            // otherwise highlight a lot of empty space around it.
+            element: "#water-time-control .vega-bind",
+            onHighlightStarted: (element) => watchForTimeControlInput(element),
+            onDeselected: (element) => element && stopWatchingTimeControlInput(element),
+            popover: {
+                title: "Drag through time",
+                description: "Drag the slider to see water stress projected to 2030, 2050, or 2080.",
+                side: "top",
             }
         },
         {
