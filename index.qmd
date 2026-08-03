@@ -168,16 +168,12 @@ charts.interactive(
 :::
 
 
-::: {.data-source}
-
-**Data source:** This data is sourced by Epoch AI, which is a research non-profit focused on compiling data estimates related to current and future AI. This specific data center dataset estimates the power, compute capacity, and cost of AI data centers using permit information and satellite imagery.
-
-:::
-
 ##
 ::: {.data-source}
 
 **Data sources:**
+
+Current Data center location, power, and capital: This data is sourced by Epoch AI, which is a research non-profit focused on compiling data estimates related to current and future AI. This specific data center dataset estimates the power, compute capacity, and cost of AI data centers using permit information and satellite imagery.
 
 Electricity: Grid capacity by state comes from the U.S. Energy Information Administration’s (EIA) 2024 US Electricity Profile, which tracked all energy providers and sources within the United States over the course of 2024. Data center electricity demand is sourced from the Epoch AI dataset introduced above.
 
