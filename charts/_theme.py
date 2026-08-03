@@ -56,6 +56,34 @@ const rescale = (node, factor) => {
 };
 """
 
+# alt.binding_range has no notion of custom tick labels -- the browser <input
+# type="range"> just carries the raw 0-3 value, and vega-embed's own <output>
+# echoes that number back verbatim. Rather than fight the binding for
+# labeled positions, let it render normally and relabel it after the fact:
+# hide the numeric output (styles.css) and drive a text span off the same
+# input's `input` event instead. Re-run after every embed, not just once --
+# `renderAt` finalizes and recreates the view (and its bind form) on each
+# resize, so the input this attaches to does not survive a rescale.
+_WATER_STEP_LABELS_JS = """
+const enhanceWaterStepControl = () => {
+  const container = document.getElementById("water-time-control");
+  if (!container) return;
+  const input = container.querySelector('input[type="range"]');
+  if (!input) return;
+  let label = container.querySelector(".water-step-label");
+  if (!label) {
+    label = document.createElement("span");
+    label.className = "water-step-label";
+    input.insertAdjacentElement("afterend", label);
+  }
+  const stepLabels = ["Current", "2030", "2050", "2080"];
+  const update = () => {
+    label.textContent = stepLabels[Number(input.value)] ?? input.value;
+  };
+  input.addEventListener("input", update);
+  update();
+};
+"""
 
 def _render_at_js(responsive: bool) -> str:
     rescale_call = "factor === 1 ? baseSpec : rescale(baseSpec, factor)"
@@ -96,6 +124,7 @@ def _render_at_js(responsive: bool) -> str:
     }).observe(measureEl);
     """ if responsive else ""
     return f"""
+{_WATER_STEP_LABELS_JS}
 let currentView = null;
 let naturalWidth = null;
 
@@ -106,6 +135,7 @@ const renderAt = async (factor) => {{
     actions: true, renderer: "svg", bind: document.getElementById(controlsId),
   }});
   currentView = result.view;
+  enhanceWaterStepControl();
   const renderedWidth = document.getElementById(viewId)
     .querySelector("svg").width.baseVal.value;
   if (naturalWidth === null) {{
