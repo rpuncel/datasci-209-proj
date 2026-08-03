@@ -8,7 +8,6 @@ Every chart that encodes owner/operator as color should use ``owner_scale`` /
 
 from __future__ import annotations
 
-import hashlib
 from functools import lru_cache
 from typing import Iterable
 
@@ -41,29 +40,11 @@ OWNER_COLORS: dict[str, str] = {
     "Unknown": "#9CA3AF",
 }
 
-# Fallback cycle for proposed-project operators and any new owner labels.
-_FALLBACK_PALETTE: tuple[str, ...] = (
-    "#4E79A7",
-    "#F28E2B",
-    "#59A14F",
-    "#B07AA1",
-    "#EDC948",
-    "#76B7B2",
-    "#9C755F",
-    "#FF9D57",
-    "#8CD17D",
-    "#499894",
-    "#A0CBE8",
-    "#8A6DCE",
-    "#FFBE7D",
-    "#86BCB6",
-    "#6B9AC4",
-    "#D4A6C8",
-    "#B6992D",
-    "#3A7D44",
-    "#D7B5A6",
-    "#5B6E8C",
-)
+# Every owner not explicitly pinned above (mostly one-off proposed-project
+# operators) shares this single color rather than each getting its own hue —
+# there are ~180 of them, far more than any categorical palette can keep
+# visually distinct. Kept visually distinct from OWNER_COLORS["Unknown"].
+OTHER_COLOR = "#6B7280"
 
 _KNOWN_BY_LENGTH = sorted(
     (name for name in OWNER_COLORS if name != "Unknown"),
@@ -91,8 +72,7 @@ def color_for(name: str) -> str:
     key = resolve_owner_key(name)
     if key is not None:
         return OWNER_COLORS[key]
-    digest = hashlib.md5(str(name).strip().encode("utf-8")).hexdigest()
-    return _FALLBACK_PALETTE[int(digest, 16) % len(_FALLBACK_PALETTE)]
+    return OTHER_COLOR
 
 
 @lru_cache(maxsize=None)

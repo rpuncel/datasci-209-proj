@@ -1,9 +1,10 @@
 """electricity choropleths (EIA 2024) with data center overlays."""
 
-from wrangle.datacenters import enriched_centers
+from wrangle.datacenters import us_centers
 import altair as alt
 import pandas as pd
 
+from charts import overlay
 #from wrangle import electricity as we
 from wrangle.datacenters import POWER
 from constants.states import STATE_FIPS
@@ -49,7 +50,7 @@ def electricity_capacity_choropleth():
                 # Positioned like water.py's map legends: orient="none" +
                 # explicit legendX/legendY puts this and the size legend below
                 # side by side on one row, instead of bottom's auto-stack.
-                legend=alt.Legend(orient="none", legendX=0, legendY=555, direction="horizontal", gradientLength=250),
+                legend=alt.Legend(orient='bottom', direction="horizontal", gradientLength=250),
             ),
             tooltip=[
                 alt.Tooltip("stateDescription:N", title="State"),
@@ -66,51 +67,32 @@ def electricity_capacity_choropleth():
         )
         .project(type="albersUsa")
         .properties(
-            width=1080,
-            height=540,
             title="Installed Electricity Capacity by State (2024)",
         )
     )
 
-def electricity_capacity_with_datacenters() -> alt.LayerChart:
-    """Installed generation capacity with AI data centers."""
-    eia_df = us_electricity_capacity().copy()
+def electricity_capacity_with_datacenters(
+    df: pd.DataFrame | None = None,
+    *, color=None, size_legend: bool | alt.Legend = True
+) -> alt.LayerChart:
+    """Installed generation capacity with AI data centers.
 
-    # Non-US sites (China, Malaysia, Indonesia, Portugal, UAE in the current
-    # data) have longitudes far outside the continental range and don't
-    # belong on a US-only albersUsa map.
-    us_centers = enriched_centers()
-    us_centers = us_centers[us_centers["Country"] == "United States"]
-    points = (
-        alt.Chart(
-            us_centers.dropna(subset=["Latitude", "Longitude"])
-        )
-        .mark_circle(
-            color="black",
-            opacity=0.7,
-            stroke="white",
-            strokeWidth=1,
-        )
-        .encode(
-            longitude="Longitude:Q",
-            latitude="Latitude:Q",
-            size=alt.Size(
-                POWER,
-                scale=alt.Scale(range=[20, 1000]),
-                legend=alt.Legend(
-                    title="Data Center Power Use (MW)",
-                    orient="none",
-                    legendX=420,
-                    legendY=555,
-                    direction="horizontal",
-                ),
-            ),
-            tooltip=[
-                "Name:N",
-                "Address:N",
-                alt.Tooltip(f"{POWER}:Q", title="Data Center MW"),
-            ],
-        )
+    ``df`` defaults to the US-only enriched centers frame. ``color`` overrides
+    the data center point color encoding (e.g. a shared owner-selection
+    condition when composited into the unified explorer); when ``None`` the
+    points use the standard owner palette so the map still reads on its own.
+    ``size_legend=False`` suppresses the size legend so a concatenated layout
+    can host a single shared one.
+    """
+    if df is None:
+        df = us_centers()
+    color_kwargs = {} if color is None else {"color": color}
+    points = overlay.datacenter_points(
+        df,
+        size_field=POWER,
+        size_title="Data Center Power Use (MW)",
+        size_legend=size_legend,
+        **color_kwargs,
     )
 
     return (
@@ -126,12 +108,4 @@ def electricity_capacity_with_datacenters() -> alt.LayerChart:
             "2024 Installed Electrical Grid Capacity and AI Data Centers Power Use",
             anchor="start",
         ),
-        # The water map's map_chart sits inside a vconcat with a title dx
-        # hack and wider legends, both of which push its rendered content
-        # right by ~158px more than this chart gets on its own. Padding is
-        # the deterministic way to reproduce that offset here (verified by
-        # comparing rendered pixel positions of both maps' west coasts)
-        # instead of chasing the same fragile auto-fit/legend-overflow
-        # interaction that produced it for water.
-        padding={"left": 158, "top": 5, "right": 5, "bottom": 5},
     )

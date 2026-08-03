@@ -10,7 +10,7 @@ import pandas as pd
 
 from charts.owner_colors import owner_color
 from wrangle import datacenters as dc
-from wrangle.datacenters import CAPEX, POWER
+from wrangle.datacenters import CAPEX, POWER, H100
 
 
 def cost_vs_energy() -> alt.Chart:
@@ -30,6 +30,25 @@ def cost_vs_energy() -> alt.Chart:
         width=800,
         height=400,
     )
+
+def compute_vs_power() -> alt.Chart:
+    centers = dc.enriched_centers()
+    return alt.Chart(centers, title="Data Center Compute Power vs Energy Use").mark_circle(
+        opacity=0.78, stroke="white", strokeWidth=1
+    ).encode(
+        x=alt.X(f"{H100}:Q", title=H100),
+        y=alt.Y(f"{POWER}:Q", title=POWER),
+        color=owner_color(legend=None),
+        tooltip=[
+            alt.Tooltip(f"{CAPEX}:Q"),
+            alt.Tooltip(f"{POWER}:Q"),
+            alt.Tooltip("owner_clean:N", title="Owner"),
+        ],
+    ).properties(
+        width=800,
+        height=400,
+    )
+
 
 
 def state_power() -> alt.Chart:
@@ -74,11 +93,14 @@ def owner_power() -> alt.Chart:
     )
 
 
-def site_concentration(df: pd.DataFrame, lines=True) -> alt.LayerChart:
-    site_rank = df.sort_values("rank")
-    site_bars = alt.Chart(site_rank.head(20), name="site_bars").mark_bar(color="#3b73b9").encode(
+def site_concentration(*params, df: pd.DataFrame | None = None, lines=True, color: alt.Color | None) -> alt.LayerChart:
+    if color is None:
+        color = owner_color()
+    site_rank = (dc.us_centers() if df is None else df).sort_values("rank")
+    site_bars = alt.Chart(site_rank.head(20), name="site_bars").mark_bar().encode(
         x=alt.X("rank:O", title="Site rank by current power"),
         y=alt.Y(f"{POWER}:Q", title="Current power (MW)"),
+        color=color,
         tooltip=[
             alt.Tooltip("rank:O", title="Rank"),
             alt.Tooltip("Name:N", title="Data center"),
@@ -86,10 +108,10 @@ def site_concentration(df: pd.DataFrame, lines=True) -> alt.LayerChart:
             alt.Tooltip(f"{POWER}:Q", title="Power (MW)", format=",.0f"),
             alt.Tooltip("Country:N", title="Country"),
         ],
-    )
+    ).add_params(*params)
     if lines:
         site_line = alt.Chart(site_rank.head(20)).mark_line(
-            point=True, color="#c84f2b", strokeWidth=3
+            point=True, strokeWidth=3
         ).encode(
             x=alt.X("rank:O"),
             y=alt.Y("cumulative_power_share:Q", title="Cumulative share", axis=alt.Axis(format="%")),
@@ -146,7 +168,7 @@ def power_vs_capital_cost() -> alt.Chart:
         ],
     ).properties(
         title=alt.Title(
-            "Power concentration and capital concentration move together",
+            "The amount of power capacity a data center correlates to the amount of investment",
             subtitle="Owner groups with the most power also carry the largest estimated capital footprint.",
             anchor="start",
         ),
@@ -228,11 +250,9 @@ def capital_pipeline() -> alt.Chart:
         ],
     ).properties(
         title=alt.Title(
-            "Capital cost rises with the power pipeline",
-            subtitle="The same upward pattern appears in estimated capital cost.",
+            "By 2030, over a trillion dollars will be spent to build data centers",
             anchor="start",
         ),
-        height=360,
     )
 
 

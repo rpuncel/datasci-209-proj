@@ -140,6 +140,24 @@ def enriched_centers() -> pd.DataFrame:
 
 
 @lru_cache(maxsize=None)
+def us_centers() -> pd.DataFrame:
+    """US-only enriched centers with usable coordinates.
+
+    Every albersUsa map overlay wants exactly this frame: non-US sites (China,
+    Malaysia, Indonesia, Portugal, UAE in the current data) have longitudes far
+    outside the continental range and would either distort the projection's
+    auto-fit or be silently dropped, and rows without coordinates can't be
+    plotted at all.
+    """
+    return (
+        enriched_centers()
+        .query('Country == "United States"')
+        .dropna(subset=["Latitude", "Longitude"])
+        .reset_index(drop=True)
+    )
+
+
+@lru_cache(maxsize=None)
 def timeline() -> pd.DataFrame:
     """Per-site timeline records with dates and metrics coerced to numerics."""
     frame = datasets.data_center_timelines().copy()

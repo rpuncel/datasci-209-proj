@@ -6,19 +6,19 @@ sized by per-site capital cost instead of power.
 """
 
 import altair as alt
-from altair.datasets import data
 import pandas as pd
 
 from charts import overlay
+# Reuse water.py's cached, PR/USVI-filtered state features instead of the
+# us_10m CDN topojson: it keeps albersUsa's auto-fit consistent with the other
+# two maps, needs no runtime network fetch, and lets Altair's dataset
+# consolidation embed the geometry once for all three maps in the explorer.
+from charts.water import _states_map
 from constants.states import STATE_FIPS, STATE_NAMES
 from wrangle import datacenters as wd
 from wrangle.datacenters import CAPEX
 
 _ABBR_TO_NAME = {abbr: name for name, abbr in STATE_NAMES.items()}
-
-
-def _states_map():
-    return alt.topo_feature(data.us_10m.url, feature="states")
 
 
 def _capex_by_state():
@@ -41,8 +41,17 @@ def _capex_by_state():
     return out
 
 
-def capital_choropleth() -> alt.Chart:
+def capital_choropleth(*, legend: alt.Legend | None = None) -> alt.Chart:
+    """State-level capital choropleth.
+
+    ``legend`` lets a caller trade legend width for map width: at the default
+    size the long title and full-length gradient are fine, but in
+    ``charts.explorer`` this legend shares a narrow map's footprint with the
+    site-capacity legend, and the pair together set the whole explorer's width.
+    """
     capex = _capex_by_state()
+    if legend is None:
+        legend = alt.Legend(orient="bottom")
     return (
         alt.Chart(_states_map())
         .mark_geoshape(stroke="white", strokeWidth=0.5)
@@ -51,7 +60,7 @@ def capital_choropleth() -> alt.Chart:
                 "capex_b:Q",
                 title="Data Center Capital (2025 USD B)",
                 scale=alt.Scale(scheme="greens"),
-                legend=alt.Legend(orient='bottom'),
+                legend=legend,
             ),
             tooltip=[
                 alt.Tooltip("stateName:N", title="State"),
@@ -65,35 +74,37 @@ def capital_choropleth() -> alt.Chart:
         )
         .project(type="albersUsa")
         .properties(
-            width=1080,
-            height=540,
             title="AI Data Center Capital by State (2025 USD Billions)",
         )
     )
 
 
-def capital_with_datacenters(controls: bool = False) -> alt.LayerChart:
+def capital_with_datacenters(
+    df: pd.DataFrame | None = None,
+    controls: bool = False, *, color=None, size_legend: bool | alt.Legend = True
+) -> alt.LayerChart:
     """Per-state capital choropleth with current AI data centers sized by capex.
 
-    ``controls=True`` adds live jitter slider/checkbox (needs an interactive
-    renderer); see ``jitter-lab.qmd``.
+    ``df`` defaults to the US-only enriched centers frame. ``controls=True``
+    adds live jitter slider/checkbox (needs an interactive renderer); see
+    ``jitter-lab.qmd``. ``color`` overrides the point color encoding (e.g. a
+    shared owner-selection condition in the unified explorer); ``None`` keeps
+    the standard owner palette. ``size_legend=False`` suppresses the size
+    legend so a concatenated layout can host a single shared one.
     """
-    df = (
-        wd.enriched_centers().dropna(subset=["Latitude", "Longitude"])
-        .query('Country == "United States"')
-    )
+    if df is None:
+        df = wd.us_centers()
+    color_kwargs = {} if color is None else {"color": color}
     points = overlay.datacenter_points(
         df,
         size_field=CAPEX,
         size_title="Capital Cost (2025 USD B)",
         size_range=(30, 1200),
-        tooltip=[
-            "Name:N",
-            "Address:N",
-            alt.Tooltip(f"{CAPEX}:Q", title="Capital (USD B)", format=",.1f"),
-            alt.Tooltip("owner_clean:N", title="Owner"),
-        ],
+        size_legend=size_legend,
+        **color_kwargs,
     )
-    return (capital_choropleth() + points).properties(
+    return (capital_choropleth() + points).resolve_scale(
+        color="independent"
+    ).properties(
         title="AI Data Center Capital by State with Site Locations",
     )

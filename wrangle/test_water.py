@@ -55,3 +55,55 @@ def test_site_comparison_switches_between_current_and_proposed():
     assert set(sites["site_period"]) == {"Baseline", "Future"}
     assert set(sites["site_type"]) == {"Current AI site", "Proposed project"}
     assert sites["site_id"].is_unique
+
+
+def test_explorer_sites_schema():
+    sites = water.explorer_sites()
+
+    expected = {
+        "site_id", "site_name", "address", "owner_clean", "capacity_mw",
+        "capex_b", "h100_eq", "rank", "latitude", "longitude",
+        "site_period", "site_type",
+    }
+    assert expected <= set(sites.columns)
+    assert sites["site_id"].is_unique
+    assert set(sites["site_period"]) == {"Baseline", "Future"}
+    assert set(sites["site_type"]) == {"Current AI site", "Proposed project"}
+
+
+def test_explorer_sites_have_plottable_coordinates():
+    """A null coordinate silently drops a site from every map and from the
+    brushed owner ranking, so it must never reach the spec."""
+    sites = water.explorer_sites()
+    assert not sites["latitude"].isna().any()
+    assert not sites["longitude"].isna().any()
+    assert not sites["capacity_mw"].isna().any()
+
+
+def test_explorer_sites_carry_enrichment_only_on_baseline_rows():
+    """The Epoch capital/compute columns exist for current sites only; the
+    maps rely on that (they size by capacity_mw, not capex, so proposed rows
+    still render)."""
+    sites = water.explorer_sites()
+    baseline = sites[sites["site_period"] == "Baseline"]
+    future = sites[sites["site_period"] == "Future"]
+
+    assert baseline["capex_b"].notna().any()
+    assert baseline["h100_eq"].notna().any()
+    assert future["capex_b"].isna().all()
+    assert future["h100_eq"].isna().all()
+
+
+def test_explorer_sites_canonicalize_owner_across_both_layers():
+    """Owner labels must collapse onto the same canonical names in both
+    layers, otherwise a company splits into two bars and two colors."""
+    sites = water.explorer_sites()
+
+    assert "owner_clean" in sites
+    assert not sites["owner_clean"].isna().any()
+
+    future_owners = set(sites.query("site_period == 'Future'")["owner_clean"])
+    baseline_owners = set(sites.query("site_period == 'Baseline'")["owner_clean"])
+    # The FracTracker operator strings are free text; clean_party should map at
+    # least the big builders onto labels the Epoch rows already use.
+    assert future_owners & baseline_owners

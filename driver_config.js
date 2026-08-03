@@ -6,23 +6,35 @@ window.addEventListener("load", () => {
             overlayOpacity: 0.5,
             hints: [
                 {
-                    element: "#tour-power-owner [class*='site_bars'] path",
+                    // Vega emits each unit view's `name` as an SVG group class, so the
+            // owner ranking in charts/explorer.py is reachable by its OWNER_BARS
+            // name. (The old `site_bars` chart is no longer on the page.) The
+            // marks themselves live in a nested `_marks`-suffixed group: `cursor`
+            // on the mark makes Vega-Lite emit a `path.background` hit-area first,
+            // so a bare `path` selector spotlights that invisible rect instead of
+            // an actual bar.
+            element: "#ai-economy-explorer [class*='owner_power_bars_marks'] path",
                     id: "hover-bars-power",
                     popover: {
-                        title: "Export your data",
-                        description: "Hover over a bar for to see more details.",
+                        title: "Explore the data",
+                        description: "Hover over a bar to see more details.",
                     },
                 },
                 {
-                    element: "#summary",
-                    id: "summary",
-                    beacon: { side: "left", align: "center" },
+                    element: "#power-help",
                     popover: {
-                        title: "Auto-generated summary",
-                        description: "This paragraph is written for you from the quarter's numbers.",
-                        side: "bottom",
+                        title: "Take the guided tour",
+                        description: "Click here for a full walkthrough of the explorer.",
+                        side: "top",
+                        // driver.js hints reads onButtonClick off the popover
+                        // config (not the hint object itself) when deciding what
+                        // the "Got it" button does.
+                        onButtonClick: (element, hint, { hints: instance }) => {
+                            instance.close();
+                            document.getElementById("power-help").click();
+                        },
                     },
-                },
+                }
             ],
         });
 
@@ -105,6 +117,79 @@ button.addEventListener('click', () => {
         });
     }
 
+    // Generic "wait for a drag" gate: a map's geo-brush is a mousedown then a
+    // mouseup, possibly far from where it started, so the mouseup listener is
+    // attached to the document rather than the spotlighted element itself.
+    let dragMouseDownHandler = null;
+    let dragMouseUpHandler = null;
+
+    function stopWatchingDrag(element) {
+        if (dragMouseDownHandler) {
+            element.removeEventListener("mousedown", dragMouseDownHandler);
+            dragMouseDownHandler = null;
+        }
+        if (dragMouseUpHandler) {
+            document.removeEventListener("mouseup", dragMouseUpHandler);
+            dragMouseUpHandler = null;
+        }
+    }
+
+    function watchForDrag(element) {
+        stopWatchingDrag(element);
+        dragMouseDownHandler = () => {
+            dragMouseUpHandler = () => {
+                stopWatchingDrag(element);
+                driverObj.moveNext();
+            };
+            document.addEventListener("mouseup", dragMouseUpHandler);
+        };
+        element.addEventListener("mousedown", dragMouseDownHandler);
+    }
+
+    // Generic "wait for a click on any mark in this group" gate. The
+    // spotlighted element is the whole bar-chart group (many `path` marks),
+    // so the listener is delegated rather than attached to one mark.
+    let barClickHandler = null;
+
+    function stopWatchingBarClick(element) {
+        if (barClickHandler) {
+            element.removeEventListener("click", barClickHandler);
+            barClickHandler = null;
+        }
+    }
+
+    function watchForBarClick(element) {
+        stopWatchingBarClick(element);
+        barClickHandler = (event) => {
+            if (event.target && event.target.tagName === "path") {
+                stopWatchingBarClick(element);
+                driverObj.moveNext();
+            }
+        };
+        element.addEventListener("click", barClickHandler);
+    }
+
+    // Generic "wait for the slider to move" gate for the water timeline.
+    // Delegated (bubbling `input`) rather than bound to the <input> itself,
+    // since the spotlighted element is the anchor div it renders into.
+    let timeControlInputHandler = null;
+
+    function stopWatchingTimeControlInput(element) {
+        if (timeControlInputHandler) {
+            element.removeEventListener("input", timeControlInputHandler);
+            timeControlInputHandler = null;
+        }
+    }
+
+    function watchForTimeControlInput(element) {
+        stopWatchingTimeControlInput(element);
+        timeControlInputHandler = () => {
+            stopWatchingTimeControlInput(element);
+            driverObj.moveNext();
+        };
+        element.addEventListener("input", timeControlInputHandler);
+    }
+
     function cleanup() {
         stopWatchingTooltip();
         removeFrozen();
@@ -113,18 +198,71 @@ button.addEventListener('click', () => {
     driverObj.setConfig({
         showProgress: true,
         onDestroyed: cleanup,
-        steps: [{
-            element: 'a[data-value="⚡ Power"]',
+        steps: [
+        {
+            element: "#ai-economy-explorer",
             popover: {
-                title: "Dimension tabs",
-                description: "These tabs switch between dimensions of the AI economy — money, power, and water.",
+                title: "One linked view of the AI economy",
+                description: "Capital, grid capacity, and water stress share a single linked view. Click an owner in the ranking to highlight its sites on all three maps, or drag a box on any map to re-rank owners for that region.",
                 align: "start",
+                side: "top",
+            }
+        },
+        {
+            element: "#ai-economy-explorer-view [class*='money_summary']",
+            popover: {
+                title: "Total capital",
+                description: "Sums capital across every filtered site.",
+            }
+        },
+        {
+            element: "#ai-economy-explorer-view [class*='power_summary']",
+            popover: {
+                title: "Total power",
+                description: "Sums power capacity across every filtered site.",
+            }
+        },
+        {
+            element: "#ai-economy-explorer-controls input[name='show_future_sites']",
+            popover: {
+                title: "Toggle proposed sites",
+                description: "Show or hide proposed data centers on every map.",
                 side: "bottom",
             }
         },
         {
-            // Keep the tight, single-bar spotlight for the hover step.
-            element: "#tour-power-owner [class*='site_bars'] path",
+            // Spotlight the whole map (CAPITAL_MAP_VIEW), not just the site
+            // markers: the geo-brush drag works anywhere on the map, including
+            // the choropleth fill, but the tour's overlay only allows
+            // interaction inside the spotlighted element's bounding box.
+            // Starting the drag outside the markers' box would silently fail.
+            element: "#ai-economy-explorer-view [class*='capital_map_view']",
+            onHighlightStarted: (element) => watchForDrag(element),
+            onDeselected: (element) => element && stopWatchingDrag(element),
+            popover: {
+                title: "Drag to filter by region",
+                description: "Drag a box here to filter all views for only area. Only this map supports drag-select, but the others will update too. Give it a try!",
+            }
+        },
+        {
+            element: "#ai-economy-explorer-view [class*='electricity_sites']",
+            popover: {
+                title: "Grid capacity",
+                description: "Compares available power capacity by site. Note that the site selection on the left-most map applies here too.",
+            }
+        },
+        {
+            element: "#ai-economy-explorer-view [class*='water_stress_states']",
+            popover: {
+                title: "Water stress",
+                description: "Compares water stress by state.",
+            }
+        },
+        {
+            // Keep the tight, single-bar spotlight for the hover step. The
+            // marks live in a nested `_marks`-suffixed group (see the hint
+            // above for why a bare `path` selector is wrong here).
+            element: "#ai-economy-explorer [class*='owner_power_bars_marks'] path",
             onHighlightStarted: watchForTooltip,
             onDeselected: stopWatchingTooltip,
             popover: {
@@ -138,16 +276,84 @@ button.addEventListener('click', () => {
             onDeselected: removeFrozen,
             popover: {
                 title: "That's the tooltip",
-                description: "It shows the exact numbers for the bar you hovered. These details appear on every bar and map point across the dashboard.",
+                description: "It shows the exact numbers for the bar you hovered. You can do this on appear on every bar and map point across the dashboard.",
                 side: "right",
                 align: "start",
             }
         },
+        {
+            element: "#ai-economy-explorer-view [class*='owner_power_bars']",
+            onHighlightStarted: (element) => watchForBarClick(element),
+            onDeselected: (element) => element && stopWatchingBarClick(element),
+            popover: {
+                title: "This view shows the company that owns the most data center capacity out of what you've filtered.",
+                description: "Click a bar to filter every view to that owner. Give it a try!",
+            }
+        },
+        {
+            element: "#ai-economy-explorer-view [class*='owner_power_bars']",
+            onHighlightStarted: (element) => watchForBarClick(element),
+            onDeselected: (element) => element && stopWatchingBarClick(element),
+            popover: {
+                title: "Click another to add",
+                description: "Shift-click another owner to add it to the filter.",
+            }
+        },
+        {
+            element: "#ai-economy-explorer-view [class*='site_bars']",
+            onHighlightStarted: (element) => watchForBarClick(element),
+            onDeselected: (element) => element && stopWatchingBarClick(element),
+            popover: {
+                title: "Top 10 data center sites",
+                description: "See the top 10 individual data center sites out of what has been selected here. Click a site to make that site stand out on the other charts.",
+            }
+        },
+        {
+            // No `path` suffix: the delta bars sit in an unnamed nested layer
+            // scope inside this group (only the outer layer chart is named),
+            // and this group's own first path is a `.background` hit-area, so
+            // spotlight the whole panel instead of one mark.
+            element: "#ai-economy-explorer-view [class*='water_delta_chart']",
+            popover: {
+                title: "What's changing",
+                description: "The 12 states with the largest forecast change.",
+            }
+        },
+        {
+            // Spotlight just the visible control card, not the full-width
+            // flex container it renders into (#water-time-control): that
+            // outer div spans the whole row so the slider can right-align
+            // under the water map/changes chart column, which would
+            // otherwise highlight a lot of empty space around it.
+            element: "#water-time-control .vega-bind",
+            onHighlightStarted: (element) => watchForTimeControlInput(element),
+            onDeselected: (element) => element && stopWatchingTimeControlInput(element),
+            popover: {
+                title: "Drag through time",
+                description: "Drag the slider to see water stress projected to 2030, 2050, or 2080.",
+                side: "top",
+            }
+        },
+        {
+            element: "#ai-economy-explorer-view [class*='owner_power_bars']",
+            onHighlightStarted: (element) => watchForBarClick(element),
+            onDeselected: (element) => element && stopWatchingBarClick(element),
+            popover: {
+                title: "Double click anywhere to clear all your filters",
+                description: "Since we've added a few filters, try double clicking anywhere to clear them.",
+            }
+        },
+        {
+            element: "#ai-economy-explorer-view [class*='owner_power_bars']",
+            onHighlightStarted: (element) => watchForBarClick(element),
+            onDeselected: (element) => element && stopWatchingBarClick(element),
+            popover: {
+                title: "That ends the tour!",
+                description: 'Click the "Need help" button again anytime to re-take the tour.'
+            }
+        }
         ]
     });
     driverObj.drive();
 
 });
-
-
-
