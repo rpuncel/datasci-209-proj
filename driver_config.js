@@ -21,13 +21,18 @@ window.addEventListener("load", () => {
                     },
                 },
                 {
-                    element: "#tour-trigger",
+                    element: "#power-help",
                     popover: {
-                        title: "test"
-                    },
-                    onButtonClick: (element, hint, { hints: instance }) => {
-                    instance.close();
-                    tour.drive();
+                        title: "Take the guided tour",
+                        description: "Click here for a full walkthrough of the explorer.",
+                        side: "top",
+                        // driver.js hints reads onButtonClick off the popover
+                        // config (not the hint object itself) when deciding what
+                        // the "Got it" button does.
+                        onButtonClick: (element, hint, { hints: instance }) => {
+                            instance.close();
+                            document.getElementById("power-help").click();
+                        },
                     },
                 }
             ],
