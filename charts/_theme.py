@@ -21,10 +21,152 @@ def svg_renderer(spec, **metadata):
     return {"text/html": f'<div class="altair-svg-chart">{bundle["image/svg+xml"]}</div>'}
 
 
+# The water timeline's play/step buttons replace vega-embed's native range
+# input with a custom button row, wired up to the same underlying input so
+# Vega still sees ordinary input/change events. Re-run after every embed (the
+# responsive path re-embeds on resize, which regenerates the bind controls).
+_SETUP_TIMELINE_JS = """
+const setupTimeline = () => {
+  const controls = document.getElementById(controlsId);
+  const timeline = controls.querySelector('input[name="water_step"]');
+  if (!timeline) return;
+  const nativeTimeline = timeline.closest(".vega-bind");
+  const storyTimeline = document.createElement("div");
+  storyTimeline.className = "water-story-timeline";
+  storyTimeline.innerHTML =
+    '<div class="water-control-label">Explore time</div>' +
+    '<div class="water-story-steps"></div>';
+  const steps = storyTimeline.querySelector(".water-story-steps");
+  ["Baseline", "2030", "2050", "2080"].forEach((label, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.dataset.step = index;
+    button.textContent = label;
+    button.addEventListener("click", () => {
+      timeline.value = index;
+      timeline.dispatchEvent(new Event("input", {bubbles: true}));
+      timeline.dispatchEvent(new Event("change", {bubbles: true}));
+    });
+    steps.appendChild(button);
+  });
+  nativeTimeline.hidden = true;
+  nativeTimeline.insertAdjacentElement("afterend", storyTimeline);
+  const syncTimeline = () => {
+    const step = Number(timeline.value);
+    steps.querySelectorAll("button").forEach((button, index) =>
+      button.classList.toggle("active", index === step));
+  };
+  timeline.addEventListener("input", syncTimeline);
+  syncTimeline();
+};
+"""
+
+# A fixed pixel width baked into the spec can only ever be right for one
+# screen. Vega-Lite's own "container" autosize collapses to a small fixed
+# default once a view sits inside an hconcat/vconcat (confirmed on the money
+# charts in index.qmd), so it can't rescale a multi-map concat like this one.
+#
+# CSS-transform-scaling the rendered SVG was tried and rejected: it visually
+# resizes the chart, but Vega's pixel-to-data mapping for interval selections
+# on a projected geo brush does not correctly invert an ancestor CSS
+# transform (confirmed empirically: a drag landed with the brush rectangle's
+# y-extent off by hundreds of pixels, sometimes rendering off-canvas).
+#
+# Instead, re-derive the actual Vega-Lite spec at the target width: walk the
+# JSON and multiply every `width`/`height` key by the container/natural-width
+# ratio, then re-embed. Vega then computes its own scales and hit-testing
+# natively at that size, so pointer interactions are exact at any width. This
+# re-embeds (and drops any live selection) on each resize, which is an
+# acceptable cost for a rare event; legend/axis pixel constants (minExtent,
+# gradientLength, symbolSize, labelLimit) are untouched, so they don't scale
+# with the marks -- a cosmetic tradeoff, not a correctness one.
+_RESPONSIVE_RENDER_JS = """
+const rescale = (node, factor) => {
+  if (Array.isArray(node)) return node.map((n) => rescale(n, factor));
+  if (node && typeof node === "object") {
+    const out = {};
+    for (const [k, v] of Object.entries(node)) {
+      out[k] = (k === "width" || k === "height") && typeof v === "number"
+        ? v * factor
+        : rescale(v, factor);
+    }
+    return out;
+  }
+  return node;
+};
+"""
+
+
+def _render_at_js(responsive: bool) -> str:
+    rescale_call = "factor === 1 ? baseSpec : rescale(baseSpec, factor)"
+    fit_block = """
+    // Measure the wrapper div (display: block, sized by the dashboard card),
+    // not the chart-view div itself: that one is `display: inline-block` (see
+    // styles.css), which shrink-wraps to its own content -- so its clientWidth
+    // would just mirror back whatever we last rendered, a self-referential
+    // measurement that drifts on every pass instead of settling.
+    const measureEl = document.getElementById(divId);
+    let lastWidth = null;
+    let resizeTimer = null;
+    const fitToContainer = async () => {
+      const available = measureEl.clientWidth;
+      if (!available || available === lastWidth) return;
+      lastWidth = available;
+      // width/height keys scale linearly with `factor`, but legend/axis pixel
+      // constants (minExtent, gradientLength, spacing, padding) don't, so
+      // rendered width is an affine function of factor, not a proportional
+      // one -- a single `available / naturalWidth` estimate overshoots by
+      // however much of the render is that fixed overhead. Refine by
+      // measuring the actual result and correcting, converging in a couple
+      // of passes regardless of how big that fixed portion turns out to be.
+      let factor = available / naturalWidth;
+      for (let i = 0; i < 4; i++) {
+        const actual = await renderAt(factor);
+        const error = available - actual;
+        if (Math.abs(error) < 2) break;
+        factor *= available / actual;
+      }
+    };
+    new ResizeObserver(() => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(
+        () => fitToContainer().catch((err) => console.error("vega-embed error:", err)),
+        150
+      );
+    }).observe(measureEl);
+    """ if responsive else ""
+    return f"""
+let currentView = null;
+let naturalWidth = null;
+
+const renderAt = async (factor) => {{
+  if (currentView) currentView.finalize();
+  const spec = {rescale_call};
+  const result = await embed(document.getElementById(viewId), spec, {{
+    actions: true, renderer: "svg", bind: document.getElementById(controlsId),
+  }});
+  currentView = result.view;
+  const renderedWidth = document.getElementById(viewId)
+    .querySelector("svg").width.baseVal.value;
+  if (naturalWidth === null) {{
+    naturalWidth = renderedWidth;
+  }}
+  setupTimeline();
+  return renderedWidth;
+}};
+
+renderAt(1)
+  .then(() => {{
+{fit_block}
+  }})
+  .catch((err) => console.error("vega-embed error:", err));
+"""
+
+
 # Opt-in interactive embed for charts that need selections. `data-external`
 # tells Quarto not to inline the ESM package into embed-resources output; keeping
 # it at its CDN origin also keeps all of Vega's relative module imports valid.
-def esm_vega_renderer(spec, div_id=None, **metadata):
+def esm_vega_renderer(spec, div_id=None, responsive=False, **metadata):
     # Resolve the wrapper id BEFORE compile_with_vegafusion, which nulls the
     # top-level `name`. Precedence: explicit div_id > chart name > random uuid.
     div_id = div_id or spec.get("name") or ("vega-" + uuid.uuid4().hex)
@@ -43,56 +185,29 @@ def esm_vega_renderer(spec, div_id=None, **metadata):
         f'</div>\n'
         f'<script type="module" data-external="1">\n'
         f'  import embed from "https://cdn.jsdelivr.net/npm/vega-embed@7/+esm";\n'
-        f'  embed(document.getElementById("{view_id}"), {spec_json}, '
-        f'{{actions: true, renderer: "svg", '
-        f'bind: document.getElementById("{controls_id}")}})\n'
-        f'    .then(() => {{\n'
-        f'      const controls = document.getElementById("{controls_id}");\n'
-        f'      const timeline = controls.querySelector('
-        f'\'input[name="water_step"]\');\n'
-        f'      if (timeline) {{\n'
-        f'        const nativeTimeline = timeline.closest(".vega-bind");\n'
-        f'        const storyTimeline = document.createElement("div");\n'
-        f'        storyTimeline.className = "water-story-timeline";\n'
-        f'        storyTimeline.innerHTML = '
-        f'\'<div class="water-control-label">Explore time</div>\' +\n'
-        f'          \'<div class="water-story-steps"></div>\';\n'
-        f'        const steps = storyTimeline.querySelector(".water-story-steps");\n'
-        f'        ["Baseline", "2030", "2050", "2080"].forEach((label, index) => {{\n'
-        f'          const button = document.createElement("button");\n'
-        f'          button.type = "button";\n'
-        f'          button.dataset.step = index;\n'
-        f'          button.textContent = label;\n'
-        f'          button.addEventListener("click", () => {{\n'
-        f'            timeline.value = index;\n'
-        f'            timeline.dispatchEvent(new Event("input", {{bubbles: true}}));\n'
-        f'            timeline.dispatchEvent(new Event("change", {{bubbles: true}}));\n'
-        f'          }});\n'
-        f'          steps.appendChild(button);\n'
-        f'        }});\n'
-        f'        nativeTimeline.hidden = true;\n'
-        f'        nativeTimeline.insertAdjacentElement("afterend", storyTimeline);\n'
-        f'        const syncTimeline = () => {{\n'
-        f'          const step = Number(timeline.value);\n'
-        f'          steps.querySelectorAll("button").forEach((button, index) => '
-        f'button.classList.toggle("active", index === step));\n'
-        f'        }};\n'
-        f'        timeline.addEventListener("input", syncTimeline);\n'
-        f'        syncTimeline();\n'
-        f'      }}\n'
-        f'    }})\n'
-        f'    .catch((err) => console.error("vega-embed error:", err));\n'
+        f'  const baseSpec = {spec_json};\n'
+        f'  const divId = "{div_id}";\n'
+        f'  const viewId = "{view_id}";\n'
+        f'  const controlsId = "{controls_id}";\n'
+        f'{_RESPONSIVE_RENDER_JS if responsive else ""}'
+        f'{_SETUP_TIMELINE_JS}'
+        f'{_render_at_js(responsive)}'
         f'</script>'
     )
     return {"text/html": html}
 
 
-def interactive(chart, id=None):
+def interactive(chart, id=None, responsive=False):
     """Render one chart with the browser-side ESM vega-embed instead of the
     static SVG default, keeping selections and tooltips alive.
 
     Pass ``id`` to give the wrapper div a deterministic id (e.g. for a
     driver.js tour selector) instead of a random per-render uuid.
+
+    Pass ``responsive=True`` to re-embed the chart, rescaled to its
+    container's actual width, on load and on resize, instead of rendering
+    once at the spec's fixed authored size. Opt-in: most charts already fit
+    their card, and re-embedding on resize drops any live selection.
     """
     from IPython.display import HTML
 
@@ -101,7 +216,8 @@ def interactive(chart, id=None):
     # server-only `vegafusion+dataset://...` placeholders.
     with alt.data_transformers.enable("default", max_rows=None):
         spec = chart.to_dict(context={"pre_transform": False})
-        return HTML(esm_vega_renderer(spec, div_id=id)["text/html"])
+        rendered = esm_vega_renderer(spec, div_id=id, responsive=responsive)
+        return HTML(rendered["text/html"])
 
 
 def setup():

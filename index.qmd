@@ -159,6 +159,7 @@ putting money on the line.
 charts.interactive(
     charts.explorer.ai_economy_explorer(),
     id="ai-economy-explorer",
+    responsive=True,
 )
 ```
 

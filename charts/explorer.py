@@ -56,11 +56,18 @@ from wrangle import water as ww
 # about (viewport - 120) px, so 1416px is the ceiling: 3*410 + 70 + 90 = 1390
 # default, 1406 with the checkbox on.
 #
+# This is now a *design* size, not the literal overflow limit: index.qmd embeds
+# the explorer with responsive=True (see charts/_theme.py), which CSS-scales
+# the whole rendered chart to whatever width the dashboard card actually has.
+# It still needs to fit this budget so the design looks right at 1x scale (a
+# real-world Mac may render narrower than this and get scaled down) and so
+# the no-JS overflow-x fallback in styles.css stays sane.
+#
 # To readjust: change MAP_WIDTH (MAP_HEIGHT follows from it), keep BAR_WIDTH at
 # or below (3*MAP_WIDTH - 260)/2 so the bottom row never becomes the widest one,
 # and run charts/test_explorer.py::test_rendered_width_fits_the_dashboard_card.
 # Red prints the rendered width; every 3px over costs 1px of MAP_WIDTH.
-MAP_WIDTH = 600
+MAP_WIDTH = 410
 # albersUsa auto-fits to the view with no explicit scale, so the projection's
 # native ~1.72:1 aspect is what decides how tall a map needs to be. Deriving the
 # height keeps the two in step, and the +2 leaves width the binding constraint
