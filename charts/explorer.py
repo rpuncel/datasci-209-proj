@@ -77,7 +77,7 @@ MAP_HEIGHT = round(MAP_WIDTH / MAP_ASPECT) + 2
 # Sized so the bottom row (bars + their axis gutter, then the delta chart) comes
 # out about as wide as the maps row above it.
 BAR_WIDTH = 540
-BAR_HEIGHT = 330
+BAR_HEIGHT = 160
 MAP_SPACING = 18
 ROW_SPACING = 30
 BOTTOM_SPACING = 24
@@ -404,7 +404,7 @@ def _site_concentration(owner_select, geo_brush, site_select, sites: pd.DataFram
             #subtitle=f"The top 10 sites represent {dc.stats().top10_power_share:.1%} of estimated current power.",
             anchor="start",
         ),
-        height=390,
+        height=BAR_HEIGHT,
     )
 
 
