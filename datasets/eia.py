@@ -1,10 +1,11 @@
+import os
 import requests
 import pandas as pd
 import time
 
 # Download EIA Electricity data for all States
 
-API_KEY = "vl0kD6P9pkTuwkN1aPFMDyvFRfDWetLBknZxsVGu"
+API_KEY = os.environ['EIA_API_KEY']
 
 BASE_URL = "https://api.eia.gov/v2/electricity/state-electricity-profiles/capability/data/"
 
